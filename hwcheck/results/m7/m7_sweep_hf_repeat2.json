@@ -1,0 +1,445 @@
+{
+  "label": "hf_repeat2",
+  "start_hz": 100000.0,
+  "stop_hz": 20000000.0,
+  "points_per_decade": 4,
+  "log": [
+    [
+      "info",
+      "Skew check at 10 MHz: phase +0.52 deg, gain -0.008 dB"
+    ],
+    [
+      "info",
+      "Skew check at 20 MHz: phase +1.14 deg, gain -0.012 dB"
+    ],
+    [
+      "info",
+      "Channel skew correction: +0.15 ns."
+    ]
+  ],
+  "connect_s": 2.002713000001677,
+  "generator_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "skew_s": 7.083953099998325,
+  "skew": {
+    "delay_s": 1.5e-10,
+    "measured_s": 1.514732346093174e-10,
+    "snapped": true,
+    "gain_db": -0.009710518139510587,
+    "freqs_hz": [
+      10000000.0,
+      20000000.0
+    ],
+    "per_freq_delay_s": [
+      1.4415082248091152e-10,
+      1.587956467377233e-10
+    ],
+    "per_freq_gain_db": [
+      -0.007810608709399083,
+      -0.01161042756962209
+    ],
+    "warnings": [],
+    "checked_at": "2026-10-06T02:04:03+03:00",
+    "alignment_epoch": 1
+  },
+  "sweep_s": 13.778975199998968,
+  "points": 11,
+  "error": null,
+  "result": {
+    "config": {
+      "sweep": {
+        "sweep_type": "log",
+        "start_hz": 100000.0,
+        "stop_hz": 20000000.0,
+        "points_per_decade": 4,
+        "n_points": 101,
+        "descending": false
+      },
+      "stimulus": {
+        "gen_channel": 1,
+        "amp_vpp": 1.0,
+        "offset_v": 0.0,
+        "load": "HIGHZ"
+      },
+      "scope": {
+        "ref_channel": 1,
+        "dut_channel": 2,
+        "probe_atten": {
+          "1": 10.0,
+          "2": 10.0
+        },
+        "coupling": "DC",
+        "bw_limit": false,
+        "target_cycles": 5.0,
+        "min_samples_per_cycle": 20
+      },
+      "measure": {
+        "method": "sinefit",
+        "averages": 1,
+        "settle_ms": 50.0,
+        "settle_cycles": 3.0,
+        "autorange_target": [
+          0.6,
+          0.8
+        ],
+        "autorange_max_retries": 3,
+        "floor_fraction": 0.1,
+        "acquire_timeout_s": 5.0,
+        "vdiv_settle_ms": 20.0,
+        "low_snr_db": 20.0
+      }
+    },
+    "points": [
+      {
+        "freq_hz": 100000.0,
+        "h": [
+          1.0000220963105406,
+          4.329054455956445e-05
+        ],
+        "gain_db": 0.0001919321329942203,
+        "phase_deg": 0.00248031068881005,
+        "vref_amp": 0.4916460491158332,
+        "vdut_amp": 0.4916569131402902,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-06,
+        "n_avg": 1,
+        "snr_ref_db": 35.10163372288484,
+        "snr_dut_db": 36.10358402786338,
+        "flags": "",
+        "duration_s": 0.8773798000001989,
+        "skew_corr_deg": 0.0054,
+        "retries": 0
+      },
+      {
+        "freq_hz": 169864.64646342475,
+        "h": [
+          0.9987508816444337,
+          -0.0011879300013420953
+        ],
+        "gain_db": -0.010850342109784783,
+        "phase_deg": -0.06814846884060444,
+        "vref_amp": 0.492646512564165,
+        "vdut_amp": 0.4920314868030195,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-06,
+        "n_avg": 1,
+        "snr_ref_db": 31.58790303195687,
+        "snr_dut_db": 32.19702504129484,
+        "flags": "",
+        "duration_s": 0.7899600999990071,
+        "skew_corr_deg": 0.009172690909024936,
+        "retries": 0
+      },
+      {
+        "freq_hz": 288539.98118144274,
+        "h": [
+          0.9996916186167825,
+          0.00022845474834387044
+        ],
+        "gain_db": -0.0026787529510616985,
+        "phase_deg": 0.013093530463009984,
+        "vref_amp": 0.4961985523137334,
+        "vdut_amp": 0.4960455468705058,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-06,
+        "n_avg": 1,
+        "snr_ref_db": 34.407710291656755,
+        "snr_dut_db": 34.72569508293474,
+        "flags": "",
+        "duration_s": 1.0513525000023947,
+        "skew_corr_deg": 0.015581158983797907,
+        "retries": 0
+      },
+      {
+        "freq_hz": 490127.4189394899,
+        "h": [
+          1.0003047555851436,
+          -0.0016105530825287046
+        ],
+        "gain_db": 0.0026579283112818596,
+        "phase_deg": -0.09224970096184393,
+        "vref_amp": 0.49810934138852936,
+        "vdut_amp": 0.4982617888133294,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-06,
+        "n_avg": 1,
+        "snr_ref_db": 35.61949289716881,
+        "snr_dut_db": 35.84904948634027,
+        "flags": "",
+        "duration_s": 1.0804208999979892,
+        "skew_corr_deg": 0.026466880622732454,
+        "retries": 0
+      },
+      {
+        "freq_hz": 832553.2074018732,
+        "h": [
+          0.9986468761741861,
+          -0.000875784869092881
+        ],
+        "gain_db": -0.011757703020584908,
+        "phase_deg": -0.050246753976608716,
+        "vref_amp": 0.49892638401214584,
+        "vdut_amp": 0.49825146643188273,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-07,
+        "n_avg": 1,
+        "snr_ref_db": 36.69084933526872,
+        "snr_dut_db": 36.48762321244779,
+        "flags": "",
+        "duration_s": 1.037393599999632,
+        "skew_corr_deg": 0.044957873199701154,
+        "retries": 0
+      },
+      {
+        "freq_hz": 1414213.5623730952,
+        "h": [
+          0.9996936196819391,
+          -0.0005591957689541288
+        ],
+        "gain_db": -0.0026602345099204605,
+        "phase_deg": -0.03204937343824099,
+        "vref_amp": 0.4990208735833594,
+        "vdut_amp": 0.49886806145518814,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-07,
+        "n_avg": 1,
+        "snr_ref_db": 33.04575691903822,
+        "snr_dut_db": 32.92772294855777,
+        "flags": "",
+        "duration_s": 0.7687599000018963,
+        "skew_corr_deg": 0.07636753236814714,
+        "retries": 0
+      },
+      {
+        "freq_hz": 2402248.8679628624,
+        "h": [
+          0.9987421221994536,
+          0.0004171445719671537
+        ],
+        "gain_db": -0.010931907555777713,
+        "phase_deg": 0.023930723957107602,
+        "vref_amp": 0.4960447942473742,
+        "vdut_amp": 0.49542087372524474,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-07,
+        "n_avg": 1,
+        "snr_ref_db": 35.367252757066446,
+        "snr_dut_db": 35.06609115118565,
+        "flags": "",
+        "duration_s": 1.0447492999992392,
+        "skew_corr_deg": 0.12972143886999457,
+        "retries": 0
+      },
+      {
+        "freq_hz": 4080571.5467367377,
+        "h": [
+          0.9985831297008704,
+          -0.0024808678303344664
+        ],
+        "gain_db": -0.012288700480501683,
+        "phase_deg": -0.1423446476678123,
+        "vref_amp": 0.4965577565935437,
+        "vdut_amp": 0.49585572890553165,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-07,
+        "n_avg": 1,
+        "snr_ref_db": 34.449232522104786,
+        "snr_dut_db": 34.20833322005643,
+        "flags": "",
+        "duration_s": 1.027485799997521,
+        "skew_corr_deg": 0.22035086352378383,
+        "retries": 0
+      },
+      {
+        "freq_hz": 6931448.431551466,
+        "h": [
+          0.996635023418579,
+          -0.0006944564529000833
+        ],
+        "gain_db": -0.029274992635477406,
+        "phase_deg": -0.03992375988417507,
+        "vref_amp": 0.49860853059848614,
+        "vdut_amp": 0.4969308452075638,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-07,
+        "n_avg": 1,
+        "snr_ref_db": 29.954628068155117,
+        "snr_dut_db": 29.96663439953459,
+        "flags": "",
+        "duration_s": 0.7309509999977308,
+        "skew_corr_deg": 0.37429821530377916,
+        "retries": 0
+      },
+      {
+        "freq_hz": 11774080.373049494,
+        "h": [
+          0.9974318455054058,
+          -0.00035330902800434494
+        ],
+        "gain_db": -0.022334854270018793,
+        "phase_deg": -0.02029523662503152,
+        "vref_amp": 0.5006825268568754,
+        "vdut_amp": 0.4993967281050384,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-08,
+        "n_avg": 1,
+        "snr_ref_db": 28.824007868887747,
+        "snr_dut_db": 28.734722343836154,
+        "flags": "",
+        "duration_s": 1.0345053000019107,
+        "skew_corr_deg": 0.6358003401446727,
+        "retries": 0
+      },
+      {
+        "freq_hz": 20000000.0,
+        "h": [
+          1.0004964155468459,
+          -6.890089840214109e-05
+        ],
+        "gain_db": 0.00431076138060906,
+        "phase_deg": -0.003945771934326103,
+        "vref_amp": 0.5029861169897685,
+        "vdut_amp": 0.503235808311419,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2.5e-08,
+        "n_avg": 1,
+        "snr_ref_db": 32.805237893765344,
+        "snr_dut_db": 32.52259629095678,
+        "flags": "",
+        "duration_s": 1.1000183999967703,
+        "skew_corr_deg": 1.08,
+        "retries": 0
+      }
+    ],
+    "meta": {
+      "app_version": "0.1.0",
+      "started": "2026-10-06T02:04:03+03:00",
+      "finished": "2026-10-06T02:04:16+03:00",
+      "source_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+      "digitizer_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+      "simulated": false,
+      "aborted": false,
+      "error": null,
+      "skew": {
+        "delay_s": 1.5e-10,
+        "measured_s": 1.514732346093174e-10,
+        "snapped": true,
+        "gain_db": -0.009710518139510587,
+        "freqs_hz": [
+          10000000.0,
+          20000000.0
+        ],
+        "per_freq_delay_s": [
+          1.4415082248091152e-10,
+          1.587956467377233e-10
+        ],
+        "per_freq_gain_db": [
+          -0.007810608709399083,
+          -0.01161042756962209
+        ],
+        "warnings": [],
+        "checked_at": "2026-10-06T02:04:03+03:00",
+        "alignment_epoch": 1
+      },
+      "skew_applied_s": 1.5e-10,
+      "skew_text": "skew: +0.15 ns (snapped, measured +0.15 ns, gain mismatch -0.01 dB, checked 2026-10-06T02:04:03+03:00)"
+    }
+  },
+  "per_point_s": {
+    "mean": 0.9584524181812991,
+    "min": 0.7309509999977308,
+    "max": 1.1000183999967703
+  },
+  "scope_stats": {
+    "queries": 735,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0,
+    "rearms": 0
+  },
+  "generator_stats": {
+    "queries": 28,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  },
+  "outputs_at_end": [
+    false,
+    false
+  ],
+  "panel_locked_at_end": "0",
+  "sweep_mode_at_end": "AUTO",
+  "_identity": {
+    "script": "m7_sweep.py",
+    "sha256": "5602c70727bf686b5b1598d05a8577bb5ff311e47aeb18bfa3b05d68340cc37c",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "8186a4f",
+    "git_dirty": [
+      "?? hwcheck/results/m7/m7_sweep_through_full2.csv",
+      "?? hwcheck/results/m7/m7_sweep_through_full2.json"
+    ]
+  }
+}

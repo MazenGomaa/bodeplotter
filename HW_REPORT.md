@@ -839,3 +839,15 @@ The script uses the same code as the GUI (`drivers/connect.py`, `sweep/core.py`)
 ### 13.4 Not done yet
 
 The known RC low-pass, compared with theory and with the simulation; the timed full-range sweep on a real DUT; a sweep from the GUI on the real instruments (only the headless path has run).
+### 13.5 After the user fixed the wiring (2026-10-06)
+
+The user checked and fixed the wiring (what exactly was wrong was not reported). Two more through runs, nothing else changed:
+
+| Run | Range | Points | Flags | Reference level | Gain | Phase | Sweep time |
+|---|---|---|---|---|---|---|---|
+| through_full2 | 50 Hz to 20 MHz | 30 | none | 0.492 to 0.504 V peak over the whole range (0.504 V at 20 MHz) | -0.015 to +0.042 dB | -0.19 to +0.14 deg | 34.9 s (1.16 s per point) |
+| hf_repeat2 | 100 kHz to 20 MHz | 11 | none | 0.492 to 0.503 V peak | -0.029 to +0.004 dB | -0.14 to +0.02 deg | 13.8 s |
+
+**Problem 1 of 13.3 is closed as a wiring fault**: the level is now flat within 1.3% from 50 Hz to 20 MHz, as in Milestone 0c, and the two runs agree. No auto-range retries and no flags in either run (the hysteresis fix was in). Skew check: +0.148 and +0.151 ns, snapped to +0.15 ns. Scope counters: 0 errors, 0 resyncs after connect; generator outputs OFF at the end.
+
+Lesson for the app: a through measurement shows 0 dB even when the reference level has collapsed, so the reference amplitude itself is worth watching. Not implemented: a warning when the reference level is far below the level the stimulus setting predicts.

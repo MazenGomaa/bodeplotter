@@ -1,0 +1,841 @@
+{
+  "label": "through_full2",
+  "start_hz": 50.0,
+  "stop_hz": 20000000.0,
+  "points_per_decade": 5,
+  "log": [
+    [
+      "info",
+      "Skew check at 10 MHz: phase +0.50 deg, gain -0.020 dB"
+    ],
+    [
+      "info",
+      "Skew check at 20 MHz: phase +1.12 deg, gain -0.005 dB"
+    ],
+    [
+      "info",
+      "Channel skew correction: +0.15 ns."
+    ]
+  ],
+  "connect_s": 2.059835199997906,
+  "generator_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "skew_s": 7.103975600002741,
+  "skew": {
+    "delay_s": 1.5e-10,
+    "measured_s": 1.4757247485631377e-10,
+    "snapped": true,
+    "gain_db": -0.012656340133670122,
+    "freqs_hz": [
+      10000000.0,
+      20000000.0
+    ],
+    "per_freq_delay_s": [
+      1.3905961406700518e-10,
+      1.5608533564562238e-10
+    ],
+    "per_freq_gain_db": [
+      -0.020355535711201668,
+      -0.0049571445561385746
+    ],
+    "warnings": [],
+    "checked_at": "2026-10-06T02:03:18+03:00",
+    "alignment_epoch": 1
+  },
+  "sweep_s": 34.880370999999286,
+  "points": 30,
+  "error": null,
+  "result": {
+    "config": {
+      "sweep": {
+        "sweep_type": "log",
+        "start_hz": 50.0,
+        "stop_hz": 20000000.0,
+        "points_per_decade": 5,
+        "n_points": 101,
+        "descending": false
+      },
+      "stimulus": {
+        "gen_channel": 1,
+        "amp_vpp": 1.0,
+        "offset_v": 0.0,
+        "load": "HIGHZ"
+      },
+      "scope": {
+        "ref_channel": 1,
+        "dut_channel": 2,
+        "probe_atten": {
+          "1": 10.0,
+          "2": 10.0
+        },
+        "coupling": "DC",
+        "bw_limit": false,
+        "target_cycles": 5.0,
+        "min_samples_per_cycle": 20
+      },
+      "measure": {
+        "method": "sinefit",
+        "averages": 1,
+        "settle_ms": 50.0,
+        "settle_cycles": 3.0,
+        "autorange_target": [
+          0.6,
+          0.8
+        ],
+        "autorange_max_retries": 3,
+        "floor_fraction": 0.1,
+        "acquire_timeout_s": 5.0,
+        "vdiv_settle_ms": 20.0,
+        "low_snr_db": 20.0
+      }
+    },
+    "points": [
+      {
+        "freq_hz": 50.0,
+        "h": [
+          1.0045525359545193,
+          0.002503150614282981
+        ],
+        "gain_db": 0.039480052756618006,
+        "phase_deg": 0.14276970463524208,
+        "vref_amp": 0.4978490995066754,
+        "vdut_amp": 0.5001171280635063,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.01,
+        "n_avg": 1,
+        "snr_ref_db": 35.8383140477813,
+        "snr_dut_db": 36.14916690389162,
+        "flags": "",
+        "duration_s": 1.0093207000027178,
+        "skew_corr_deg": 2.7e-06,
+        "retries": 0
+      },
+      {
+        "freq_hz": 78.0089597815142,
+        "h": [
+          1.0048244461175524,
+          0.0008925439983187055
+        ],
+        "gain_db": 0.04180727382259926,
+        "phase_deg": 0.05089345793822986,
+        "vref_amp": 0.4973522115812448,
+        "vdut_amp": 0.49975185768030866,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.005,
+        "n_avg": 1,
+        "snr_ref_db": 37.26154905615321,
+        "snr_dut_db": 38.01024307563723,
+        "flags": "",
+        "duration_s": 1.176487900000211,
+        "skew_corr_deg": 4.212483828201767e-06,
+        "retries": 0
+      },
+      {
+        "freq_hz": 121.70795612387803,
+        "h": [
+          1.003281725391375,
+          0.0008414852714123197
+        ],
+        "gain_db": 0.028461089485522048,
+        "phase_deg": 0.04805583720755635,
+        "vref_amp": 0.4975247972367931,
+        "vdut_amp": 0.49915771256853747,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.005,
+        "n_avg": 1,
+        "snr_ref_db": 34.21231996846603,
+        "snr_dut_db": 34.5430707993523,
+        "flags": "",
+        "duration_s": 0.8149521999985154,
+        "skew_corr_deg": 6.572229630689414e-06,
+        "retries": 0
+      },
+      {
+        "freq_hz": 189.886221087158,
+        "h": [
+          1.0040784311686632,
+          0.00011902424672360282
+        ],
+        "gain_db": 0.0353528210589218,
+        "phase_deg": 0.00679188672253872,
+        "vref_amp": 0.4972594972570563,
+        "vdut_amp": 0.49928753939755705,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.002,
+        "n_avg": 1,
+        "snr_ref_db": 37.44515036757082,
+        "snr_dut_db": 37.77278759011417,
+        "flags": "",
+        "duration_s": 1.1519848999996611,
+        "skew_corr_deg": 1.025385593870653e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 296.25653167703643,
+        "h": [
+          1.0045696937787194,
+          -0.0007473218816401642
+        ],
+        "gain_db": 0.039603844842112365,
+        "phase_deg": -0.042623605034151524,
+        "vref_amp": 0.4963716472309165,
+        "vdut_amp": 0.4986400516379597,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.002,
+        "n_avg": 1,
+        "snr_ref_db": 34.608551618629974,
+        "snr_dut_db": 35.0599165651431,
+        "flags": "",
+        "duration_s": 0.8771125999992364,
+        "skew_corr_deg": 1.5997852710559968e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 462.2132772920966,
+        "h": [
+          1.0044489552124942,
+          -0.0008488267368002103
+        ],
+        "gain_db": 0.03856052876602768,
+        "phase_deg": -0.048418765062137936,
+        "vref_amp": 0.4962109674086508,
+        "vdut_amp": 0.4984187657484836,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.001,
+        "n_avg": 1,
+        "snr_ref_db": 36.447436123309444,
+        "snr_dut_db": 36.55915727814814,
+        "flags": "",
+        "duration_s": 1.140789400000358,
+        "skew_corr_deg": 2.4959516973773218e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 721.1355391752207,
+        "h": [
+          1.0040076367310733,
+          -0.0008775398503640116
+        ],
+        "gain_db": 0.034743641213061366,
+        "phase_deg": -0.05007862005973607,
+        "vref_amp": 0.4950470686303083,
+        "vdut_amp": 0.4970312272972505,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0005,
+        "n_avg": 1,
+        "snr_ref_db": 37.25231206032181,
+        "snr_dut_db": 38.00962708678717,
+        "flags": "",
+        "duration_s": 1.1296585999989475,
+        "skew_corr_deg": 3.894131911546192e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 1125.1006654508074,
+        "h": [
+          1.0023567083208562,
+          -0.0019731840512531617
+        ],
+        "gain_db": 0.02046285478765123,
+        "phase_deg": -0.1127891611492089,
+        "vref_amp": 0.49359747779310476,
+        "vdut_amp": 0.49476170171586636,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0005,
+        "n_avg": 1,
+        "snr_ref_db": 34.936312608089956,
+        "snr_dut_db": 35.318409095704595,
+        "flags": "",
+        "duration_s": 0.8127081000020553,
+        "skew_corr_deg": 6.07554359343436e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 1755.358651226138,
+        "h": [
+          1.0026888359272634,
+          -0.0019496083088198397
+        ],
+        "gain_db": 0.023340008468007507,
+        "phase_deg": -0.11140463823525693,
+        "vref_amp": 0.4905294961499784,
+        "vdut_amp": 0.49184937922637617,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0005,
+        "n_avg": 1,
+        "snr_ref_db": 31.197493020194386,
+        "snr_dut_db": 31.553498623012235,
+        "flags": "",
+        "duration_s": 0.802555599999323,
+        "skew_corr_deg": 9.478936716621143e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 2738.674048512657,
+        "h": [
+          1.0023336803835894,
+          -0.0018908873961927138
+        ],
+        "gain_db": 0.020261930794493285,
+        "phase_deg": -0.10808749714391297,
+        "vref_amp": 0.4897704513563774,
+        "vdut_amp": 0.490914292587975,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0002,
+        "n_avg": 1,
+        "snr_ref_db": 35.18475554332303,
+        "snr_dut_db": 35.596626873103524,
+        "flags": "",
+        "duration_s": 1.0721832000017457,
+        "skew_corr_deg": 0.00014788839861968348,
+        "retries": 0
+      },
+      {
+        "freq_hz": 4272.822274102013,
+        "h": [
+          1.0020611054671276,
+          -0.0033954608227979564
+        ],
+        "gain_db": 0.017933974855208992,
+        "phase_deg": -0.1941446774212352,
+        "vref_amp": 0.4889859879817011,
+        "vdut_amp": 0.48999665266634407,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0001,
+        "n_avg": 1,
+        "snr_ref_db": 36.82527868668854,
+        "snr_dut_db": 37.02905920616156,
+        "flags": "",
+        "duration_s": 1.1044360999985656,
+        "skew_corr_deg": 0.00023073240280150869,
+        "retries": 0
+      },
+      {
+        "freq_hz": 6666.368418679636,
+        "h": [
+          1.0008182798453522,
+          -0.0013179017220289041
+        ],
+        "gain_db": 0.007112112830380634,
+        "phase_deg": -0.07544842491429904,
+        "vref_amp": 0.48861068347950065,
+        "vdut_amp": 0.4890109277322837,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0001,
+        "n_avg": 1,
+        "snr_ref_db": 33.62895014448438,
+        "snr_dut_db": 33.919704765404425,
+        "flags": "",
+        "duration_s": 0.7835383000019647,
+        "skew_corr_deg": 0.00035998389460870035,
+        "retries": 0
+      },
+      {
+        "freq_hz": 10400.729317230725,
+        "h": [
+          1.0007430477622572,
+          -0.00043994290569005607
+        ],
+        "gain_db": 0.0064524735473840125,
+        "phase_deg": -0.0251881540973784,
+        "vref_amp": 0.48937330519445926,
+        "vdut_amp": 0.4897369802576692,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-05,
+        "n_avg": 1,
+        "snr_ref_db": 35.412213001056585,
+        "snr_dut_db": 35.253585753511835,
+        "flags": "",
+        "duration_s": 1.0369269000002532,
+        "skew_corr_deg": 0.0005616393831304592,
+        "retries": 0
+      },
+      {
+        "freq_hz": 16227.001500125354,
+        "h": [
+          1.00133196266341,
+          -0.0016580182328195501
+        ],
+        "gain_db": 0.011573489710800612,
+        "phase_deg": -0.09487099565370727,
+        "vref_amp": 0.4892280011365073,
+        "vdut_amp": 0.48988030612283984,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-05,
+        "n_avg": 1,
+        "snr_ref_db": 31.82962356460701,
+        "snr_dut_db": 32.407469160196726,
+        "flags": "",
+        "duration_s": 0.8053989000000001,
+        "skew_corr_deg": 0.0008762580810067691,
+        "retries": 0
+      },
+      {
+        "freq_hz": 25317.030147956993,
+        "h": [
+          1.0003872276007948,
+          -0.0003417759833534218
+        ],
+        "gain_db": 0.0033632720798567302,
+        "phase_deg": -0.019574740743308894,
+        "vref_amp": 0.4903316391555873,
+        "vdut_amp": 0.4905215377267463,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-05,
+        "n_avg": 1,
+        "snr_ref_db": 35.145923381229366,
+        "snr_dut_db": 35.51014979777097,
+        "flags": "",
+        "duration_s": 1.0575357999987318,
+        "skew_corr_deg": 0.0013671196279896778,
+        "retries": 0
+      },
+      {
+        "freq_hz": 39499.103731987205,
+        "h": [
+          1.0003577225652842,
+          -0.00026937908025757314
+        ],
+        "gain_db": 0.003106898029603315,
+        "phase_deg": -0.015428764797491112,
+        "vref_amp": 0.489950801542391,
+        "vdut_amp": 0.4901260857702863,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-05,
+        "n_avg": 1,
+        "snr_ref_db": 37.140026264679165,
+        "snr_dut_db": 36.97210280361914,
+        "flags": "",
+        "duration_s": 1.0319232000001648,
+        "skew_corr_deg": 0.002132951601527309,
+        "retries": 0
+      },
+      {
+        "freq_hz": 61625.67988868892,
+        "h": [
+          1.0005884940332295,
+          -0.0002509328379571613
+        ],
+        "gain_db": 0.005110363885644493,
+        "phase_deg": -0.014368936221529793,
+        "vref_amp": 0.488715704732812,
+        "vdut_amp": 0.48900332638649446,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-05,
+        "n_avg": 1,
+        "snr_ref_db": 33.90715222373736,
+        "snr_dut_db": 34.40098322762453,
+        "flags": "",
+        "duration_s": 0.8186133000017435,
+        "skew_corr_deg": 0.0033277867139892016,
+        "retries": 0
+      },
+      {
+        "freq_hz": 96147.10367890402,
+        "h": [
+          0.9988429469584571,
+          0.0003731419816131897
+        ],
+        "gain_db": -0.010055247633461474,
+        "phase_deg": 0.0214042255352922,
+        "vref_amp": 0.48927190323471725,
+        "vdut_amp": 0.4887058237922656,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-06,
+        "n_avg": 1,
+        "snr_ref_db": 35.969539478573516,
+        "snr_dut_db": 36.40025232876057,
+        "flags": "",
+        "duration_s": 1.052202999999281,
+        "skew_corr_deg": 0.005191943598660817,
+        "retries": 0
+      },
+      {
+        "freq_hz": 150006.71087993417,
+        "h": [
+          0.9992106593673413,
+          -0.0011811826976504743
+        ],
+        "gain_db": -0.006852764139112437,
+        "phase_deg": -0.06773021409551916,
+        "vref_amp": 0.49215680307079634,
+        "vdut_amp": 0.4917686673063453,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-06,
+        "n_avg": 1,
+        "snr_ref_db": 32.61995619955779,
+        "snr_dut_db": 33.11738216535971,
+        "flags": "",
+        "duration_s": 0.7500848000017868,
+        "skew_corr_deg": 0.008100362387516444,
+        "retries": 0
+      },
+      {
+        "freq_hz": 234037.34951980013,
+        "h": [
+          0.9995742613169314,
+          -0.0018786617812989812
+        ],
+        "gain_db": -0.003683365720798828,
+        "phase_deg": -0.10768511017724336,
+        "vref_amp": 0.4961188897789117,
+        "vdut_amp": 0.4959085486418336,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-06,
+        "n_avg": 1,
+        "snr_ref_db": 36.468555009993786,
+        "snr_dut_db": 36.28683840234954,
+        "flags": "",
+        "duration_s": 1.0448976999978186,
+        "skew_corr_deg": 0.012638016874069208,
+        "retries": 0
+      },
+      {
+        "freq_hz": 365140.2037212458,
+        "h": [
+          0.998656239489546,
+          -0.0004965224491691638
+        ],
+        "gain_db": -0.011678530979057963,
+        "phase_deg": -0.028486918022252894,
+        "vref_amp": 0.496558578852075,
+        "vdut_amp": 0.49589138433446506,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-06,
+        "n_avg": 1,
+        "snr_ref_db": 37.581685891583035,
+        "snr_dut_db": 36.899044557970186,
+        "flags": "",
+        "duration_s": 1.105468400000973,
+        "skew_corr_deg": 0.019717571000947273,
+        "retries": 0
+      },
+      {
+        "freq_hz": 569684.1493340911,
+        "h": [
+          0.9995701659566457,
+          -2.834521151124053e-05
+        ],
+        "gain_db": -0.0037342901916980207,
+        "phase_deg": -0.0016247593654554748,
+        "vref_amp": 0.49835283464212804,
+        "vdut_amp": 0.49813862582848384,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-06,
+        "n_avg": 1,
+        "snr_ref_db": 34.89017297335481,
+        "snr_dut_db": 34.74399025439172,
+        "flags": "",
+        "duration_s": 0.7779211000015493,
+        "skew_corr_deg": 0.03076294406404092,
+        "retries": 0
+      },
+      {
+        "freq_hz": 888809.3578713846,
+        "h": [
+          0.9984320739661194,
+          -0.0006366098341162817
+        ],
+        "gain_db": -0.01362775471896,
+        "phase_deg": -0.036532331742478164,
+        "vref_amp": 0.49942096146553183,
+        "vdut_amp": 0.49863800769778455,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-07,
+        "n_avg": 1,
+        "snr_ref_db": 36.11752881187317,
+        "snr_dut_db": 36.017438668576446,
+        "flags": "",
+        "duration_s": 1.0691154000014649,
+        "skew_corr_deg": 0.04799570532505477,
+        "retries": 0
+      },
+      {
+        "freq_hz": 1386701.8690324477,
+        "h": [
+          0.9985760539008077,
+          -0.00031452444794082793
+        ],
+        "gain_db": -0.012376622034372797,
+        "phase_deg": -0.018046620239232425,
+        "vref_amp": 0.4992418363786457,
+        "vdut_amp": 0.4985309676422993,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-07,
+        "n_avg": 1,
+        "snr_ref_db": 33.51870459700141,
+        "snr_dut_db": 33.407825330083874,
+        "flags": "",
+        "duration_s": 0.764325000000099,
+        "skew_corr_deg": 0.07488190092775218,
+        "retries": 0
+      },
+      {
+        "freq_hz": 2163503.406606055,
+        "h": [
+          0.9989075719083113,
+          -0.0018226209022791844
+        ],
+        "gain_db": -0.009479437905264594,
+        "phase_deg": -0.10454257471019446,
+        "vref_amp": 0.49717338281729545,
+        "vdut_amp": 0.49663108334168476,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-07,
+        "n_avg": 1,
+        "snr_ref_db": 36.103974665730064,
+        "snr_dut_db": 35.880472073049404,
+        "flags": "",
+        "duration_s": 1.0884427999990294,
+        "skew_corr_deg": 0.11682918395672696,
+        "retries": 0
+      },
+      {
+        "freq_hz": 3375453.004662012,
+        "h": [
+          0.9983579727074676,
+          0.0006113895986595945
+        ],
+        "gain_db": -0.014272561635655762,
+        "phase_deg": 0.03508765414804316,
+        "vref_amp": 0.4956206737461154,
+        "vdut_amp": 0.49480694385624513,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-07,
+        "n_avg": 1,
+        "snr_ref_db": 32.60536204863679,
+        "snr_dut_db": 33.17278032262356,
+        "flags": "",
+        "duration_s": 0.7251824999984819,
+        "skew_corr_deg": 0.18227446225174868,
+        "retries": 0
+      },
+      {
+        "freq_hz": 5266311.553701409,
+        "h": [
+          0.9987702099827356,
+          0.00024672793564660227
+        ],
+        "gain_db": -0.01068812892915844,
+        "phase_deg": 0.014153875407657779,
+        "vref_amp": 0.49744983905991,
+        "vdut_amp": 0.4968380953734358,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-07,
+        "n_avg": 1,
+        "snr_ref_db": 32.377314802722005,
+        "snr_dut_db": 32.221756203730635,
+        "flags": "",
+        "duration_s": 1.0447513999970397,
+        "skew_corr_deg": 0.2843808238998761,
+        "retries": 0
+      },
+      {
+        "freq_hz": 8216389.723792333,
+        "h": [
+          1.0007003153570126,
+          -0.0003927565414835422
+        ],
+        "gain_db": 0.006081401931246274,
+        "phase_deg": -0.022487542676202565,
+        "vref_amp": 0.4991324036504131,
+        "vdut_amp": 0.49948199220843753,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-08,
+        "n_avg": 1,
+        "snr_ref_db": 31.326326888023836,
+        "snr_dut_db": 31.36258439952801,
+        "flags": "",
+        "duration_s": 1.0391969999982393,
+        "skew_corr_deg": 0.44368504508478596,
+        "retries": 0
+      },
+      {
+        "freq_hz": 12819040.310251266,
+        "h": [
+          0.999455460562009,
+          0.000302659951970808
+        ],
+        "gain_db": -0.004730699452970826,
+        "phase_deg": 0.01735058542351453,
+        "vref_amp": 0.5009336593066924,
+        "vdut_amp": 0.5006609041294073,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-08,
+        "n_avg": 1,
+        "snr_ref_db": 28.16586166552742,
+        "snr_dut_db": 28.076996153052747,
+        "flags": "",
+        "duration_s": 0.739861000001838,
+        "skew_corr_deg": 0.6922281767535683,
+        "retries": 0
+      },
+      {
+        "freq_hz": 20000000.0,
+        "h": [
+          0.9982939164822504,
+          -0.0011183853459287574
+        ],
+        "gain_db": -0.014826057972356727,
+        "phase_deg": -0.0641882438882817,
+        "vref_amp": 0.5039317953726156,
+        "vdut_amp": 0.5030723613363242,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2.5e-08,
+        "n_avg": 1,
+        "snr_ref_db": 33.264789627395224,
+        "snr_dut_db": 33.51386705045072,
+        "flags": "",
+        "duration_s": 1.0706824000008055,
+        "skew_corr_deg": 1.08,
+        "retries": 0
+      }
+    ],
+    "meta": {
+      "app_version": "0.1.0",
+      "started": "2026-10-06T02:03:18+03:00",
+      "finished": "2026-10-06T02:03:53+03:00",
+      "source_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+      "digitizer_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+      "simulated": false,
+      "aborted": false,
+      "error": null,
+      "skew": {
+        "delay_s": 1.5e-10,
+        "measured_s": 1.4757247485631377e-10,
+        "snapped": true,
+        "gain_db": -0.012656340133670122,
+        "freqs_hz": [
+          10000000.0,
+          20000000.0
+        ],
+        "per_freq_delay_s": [
+          1.3905961406700518e-10,
+          1.5608533564562238e-10
+        ],
+        "per_freq_gain_db": [
+          -0.020355535711201668,
+          -0.0049571445561385746
+        ],
+        "warnings": [],
+        "checked_at": "2026-10-06T02:03:18+03:00",
+        "alignment_epoch": 1
+      },
+      "skew_applied_s": 1.5e-10,
+      "skew_text": "skew: +0.15 ns (snapped, measured +0.15 ns, gain mismatch -0.01 dB, checked 2026-10-06T02:03:18+03:00)"
+    }
+  },
+  "per_point_s": {
+    "mean": 0.96327527333342,
+    "min": 0.7251824999984819,
+    "max": 1.176487900000211
+  },
+  "scope_stats": {
+    "queries": 1506,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0,
+    "rearms": 0
+  },
+  "generator_stats": {
+    "queries": 47,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  },
+  "outputs_at_end": [
+    false,
+    false
+  ],
+  "panel_locked_at_end": "0",
+  "sweep_mode_at_end": "AUTO",
+  "_identity": {
+    "script": "m7_sweep.py",
+    "sha256": "5602c70727bf686b5b1598d05a8577bb5ff311e47aeb18bfa3b05d68340cc37c",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "8186a4f",
+    "git_dirty": []
+  }
+}
