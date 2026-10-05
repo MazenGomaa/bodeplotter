@@ -552,3 +552,19 @@ def test_engine_drops_a_dead_connection(qtbot):
     worker._emit_session()
     assert worker.session is None and not infos[-1].connected
     assert "Power-cycle the scope" in logs[-1].text and fgen.closed
+
+
+def test_autorange_does_not_flip_between_two_steps_on_the_boundary():
+    """Bench, Milestone 7: 10.5 mVpp at the input with a noisy p-p flipped between 2 and
+    5 mV/div until the retries ran out."""
+    steps = step_tables.FALLBACK.vdiv
+    d = autorange.decide(0.0135, False, 0.002, steps, 8.0)           # 84% of 8 divisions: just over
+    assert d.action == "ok" and d.vdiv == 0.002
+    d = autorange.decide(0.0105, False, 0.005, steps, 8.0)           # 26%: go down, as before
+    assert d.action == "change" and d.vdiv == 0.002
+    d = autorange.decide(0.017, False, 0.002, steps, 8.0)            # 106%: off screen, go up
+    assert d.action == "change" and d.vdiv == 0.005
+    d = autorange.decide(0.03, False, 0.005, steps, 8.0)             # 75% -> ok; and 0.035 (87%) at 5 mV:
+    assert d.action == "ok"
+    d = autorange.decide(0.035, False, 0.005, steps, 8.0)            # next step 10 mV gives 44%: stay
+    assert d.action == "ok"

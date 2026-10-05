@@ -133,10 +133,12 @@ class Session:
 
 # ---------------------------------------------------------------------- skew check
 def skew_check_frequencies(session: Session, sweep: SweepConfig | None = None) -> tuple[float, float]:
+    """10 MHz and 20 MHz whenever the instruments reach them, whatever the sweep range.
+    The check used to stop at the top of the sweep; on the bench (Milestone 7) a check at
+    0.5 and 1 MHz could not resolve the delay at all: 0.3 ns is 0.1 degree at 1 MHz, and
+    the two frequencies disagreed by 0.32 ns. `sweep` is accepted for compatibility."""
     top = min(session.source.caps.sine_max_hz, session.digitizer.caps.max_hz or
               session.digitizer.caps.bandwidth_hz)
-    if sweep is not None:
-        top = min(top, max(sweep.start_hz, sweep.stop_hz))
     return skew.check_frequencies(top)
 
 

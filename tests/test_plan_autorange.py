@@ -91,7 +91,10 @@ def test_autorange_converges_within_three_retries(vpp_tip, probe, start):
     assert retries <= 3
     assert not vpp_in > 10.2 * vdiv                       # never left clipped
     frac = vpp_in / (8.0 * vdiv)
-    assert frac <= 0.8 + 1e-9 or vdiv == max(VDIV_STEPS)
+    # at or below the upper target; or just above it but still on screen, where the next
+    # step up would fall below the lower target (hysteresis added in Milestone 7)
+    nxt = autorange.step_up(vdiv, VDIV_STEPS, 1)
+    assert frac <= 0.8 + 1e-9 or vdiv == max(VDIV_STEPS) or (frac <= 1.0 and vpp_in / (8.0 * nxt) < 0.6)
     if d.action == "floor":
         assert vdiv == min(VDIV_STEPS) and frac < 0.1
 

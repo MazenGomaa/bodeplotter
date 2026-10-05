@@ -93,6 +93,11 @@ def decide(vpp: float, clipped: bool, vdiv: float, steps, vertical_divs: float,
     if target[0] <= frac <= target[1]:
         return RangeDecision("ok", vdiv, frac)
     want = choose_vdiv(vpp, ordered, vertical_divs, target)
+    if target[1] < frac <= 1.0 and fraction_of_full_scale(vpp, want, vertical_divs) < target[0]:
+        # Just over the upper target, still on screen, and the next step would drop below
+        # the lower target: stay. Without this a noisy p-p on the boundary flips between two
+        # steps until the retries run out (seen on the bench at 8.2 MHz: 11 s, AUTORANGE_FAILED).
+        return RangeDecision("ok", vdiv, frac)
     if abs(want - vdiv) <= 1e-12 * max(want, vdiv):
         # already on the best step: a coarse table can leave the fraction below the
         # lower target (e.g. 2 -> 5 jumps); that is as good as it gets

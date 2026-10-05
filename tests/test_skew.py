@@ -123,12 +123,14 @@ def test_off_grid_delay_and_gain_mismatch_warn_and_use_measured_value(make_sessi
     assert abs(res.points[-1].phase_deg) < 0.5                     # measured value corrects it
 
 
-def test_check_frequencies_follow_the_top_of_the_sweep(make_session, no_sleep):
+def test_check_frequencies_do_not_follow_the_sweep_range(make_session, no_sleep):
+    """10 and 20 MHz whatever the sweep range: at 1 MHz a 0.3 ns delay is 0.1 degree, which
+    the bench could not resolve (Milestone 7)."""
     session = make_session(seed=42, skew_state=2, checked=False)
     sweep = SweepConfig(SweepType.LOG, 100.0, 2e6, 10)
-    assert skew_check_frequencies(session, sweep) == (1e6, 2e6)
+    assert skew_check_frequencies(session, sweep) == (10e6, 20e6)
     check = _check(session, no_sleep, sweep)
-    assert check.freqs_hz == [1e6, 2e6]
+    assert check.freqs_hz == [10e6, 20e6]
     assert check.snapped and check.delay_s == SKEW_STATES_S[2]
 
 

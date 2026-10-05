@@ -1,0 +1,442 @@
+{
+  "label": "hf_repeat",
+  "start_hz": 100000.0,
+  "stop_hz": 20000000.0,
+  "points_per_decade": 4,
+  "log": [
+    [
+      "info",
+      "Skew check at 10 MHz: phase +0.53 deg, gain -0.023 dB"
+    ],
+    [
+      "info",
+      "Skew check at 20 MHz: phase +1.01 deg, gain -0.007 dB"
+    ],
+    [
+      "info",
+      "Channel skew correction: +0.15 ns."
+    ]
+  ],
+  "connect_s": 2.007155100000091,
+  "generator_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "skew_s": 10.579494199999317,
+  "skew": {
+    "delay_s": 1.5e-10,
+    "measured_s": 1.4412135560773552e-10,
+    "snapped": true,
+    "gain_db": -0.01542409628184713,
+    "freqs_hz": [
+      10000000.0,
+      20000000.0
+    ],
+    "per_freq_delay_s": [
+      1.4837734137538526e-10,
+      1.3986536984008578e-10
+    ],
+    "per_freq_gain_db": [
+      -0.023370750808395464,
+      -0.007477441755298796
+    ],
+    "warnings": [],
+    "checked_at": "2026-10-06T01:53:07+03:00",
+    "alignment_epoch": 1
+  },
+  "sweep_s": 15.160213199997088,
+  "points": 11,
+  "error": null,
+  "result": {
+    "config": {
+      "sweep": {
+        "sweep_type": "log",
+        "start_hz": 100000.0,
+        "stop_hz": 20000000.0,
+        "points_per_decade": 4,
+        "n_points": 101,
+        "descending": false
+      },
+      "stimulus": {
+        "gen_channel": 1,
+        "amp_vpp": 1.0,
+        "offset_v": 0.0,
+        "load": "HIGHZ"
+      },
+      "scope": {
+        "ref_channel": 1,
+        "dut_channel": 2,
+        "probe_atten": {
+          "1": 10.0,
+          "2": 10.0
+        },
+        "coupling": "DC",
+        "bw_limit": false,
+        "target_cycles": 5.0,
+        "min_samples_per_cycle": 20
+      },
+      "measure": {
+        "method": "sinefit",
+        "averages": 1,
+        "settle_ms": 50.0,
+        "settle_cycles": 3.0,
+        "autorange_target": [
+          0.6,
+          0.8
+        ],
+        "autorange_max_retries": 3,
+        "floor_fraction": 0.1,
+        "acquire_timeout_s": 5.0,
+        "vdiv_settle_ms": 20.0,
+        "low_snr_db": 20.0
+      }
+    },
+    "points": [
+      {
+        "freq_hz": 100000.0,
+        "h": [
+          1.000963231264168,
+          -0.0007975295401087371
+        ],
+        "gain_db": 0.008365250625044346,
+        "phase_deg": -0.04565109445428561,
+        "vref_amp": 0.4906840314142635,
+        "vdut_amp": 0.491156829514572,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-06,
+        "n_avg": 1,
+        "snr_ref_db": 35.11815837628787,
+        "snr_dut_db": 35.71883033915617,
+        "flags": "",
+        "duration_s": 0.8984721999986505,
+        "skew_corr_deg": 0.0054,
+        "retries": 0
+      },
+      {
+        "freq_hz": 169864.64646342475,
+        "h": [
+          1.0000828198092104,
+          -0.0017144130174912425
+        ],
+        "gain_db": 0.0007320966381604056,
+        "phase_deg": -0.09822039942764604,
+        "vref_amp": 0.4917595966698752,
+        "vdut_amp": 0.491801046738322,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-06,
+        "n_avg": 1,
+        "snr_ref_db": 31.46171467711217,
+        "snr_dut_db": 31.829243254926702,
+        "flags": "",
+        "duration_s": 0.7879496999994444,
+        "skew_corr_deg": 0.009172690909024936,
+        "retries": 0
+      },
+      {
+        "freq_hz": 288539.98118144274,
+        "h": [
+          0.9995427708531484,
+          -0.0013467951014422032
+        ],
+        "gain_db": -0.003964465432736188,
+        "phase_deg": -0.07720092699705106,
+        "vref_amp": 0.49637410452575087,
+        "vdut_amp": 0.4961475981989758,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-06,
+        "n_avg": 1,
+        "snr_ref_db": 34.53973506546129,
+        "snr_dut_db": 34.94729669559511,
+        "flags": "",
+        "duration_s": 1.110695499999565,
+        "skew_corr_deg": 0.015581158983797907,
+        "retries": 0
+      },
+      {
+        "freq_hz": 490127.4189394899,
+        "h": [
+          1.0001000529933386,
+          -0.0008929058959963238
+        ],
+        "gain_db": 0.000872467638477566,
+        "phase_deg": -0.051154607577814204,
+        "vref_amp": 0.4973562008034921,
+        "vdut_amp": 0.4974061610265728,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-06,
+        "n_avg": 1,
+        "snr_ref_db": 35.63459214854542,
+        "snr_dut_db": 35.67319554917353,
+        "flags": "",
+        "duration_s": 1.0619654000001901,
+        "skew_corr_deg": 0.026466880622732454,
+        "retries": 0
+      },
+      {
+        "freq_hz": 832553.2074018732,
+        "h": [
+          0.9998437443682348,
+          0.0012868495164318067
+        ],
+        "gain_db": -0.001350131141309107,
+        "phase_deg": 0.07374252813355042,
+        "vref_amp": 0.49771779786930437,
+        "vdut_amp": 0.49764043883036774,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-07,
+        "n_avg": 1,
+        "snr_ref_db": 36.613568649770336,
+        "snr_dut_db": 37.097752844672556,
+        "flags": "",
+        "duration_s": 1.0848236999991059,
+        "skew_corr_deg": 0.044957873199701154,
+        "retries": 0
+      },
+      {
+        "freq_hz": 1414213.5623730952,
+        "h": [
+          0.9981014998507737,
+          -0.0002890494727113436
+        ],
+        "gain_db": -0.01650547166941568,
+        "phase_deg": -0.01659281585722283,
+        "vref_amp": 0.49625858022515634,
+        "vdut_amp": 0.49531645400707885,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-07,
+        "n_avg": 1,
+        "snr_ref_db": 32.588348536050475,
+        "snr_dut_db": 33.32997099277219,
+        "flags": "",
+        "duration_s": 0.7905792999990808,
+        "skew_corr_deg": 0.07636753236814714,
+        "retries": 0
+      },
+      {
+        "freq_hz": 2402248.8679628624,
+        "h": [
+          0.998074774087157,
+          -0.0008871092128669683
+        ],
+        "gain_db": -0.016734986667608483,
+        "phase_deg": -0.05092564384898424,
+        "vref_amp": 0.4867341953836287,
+        "vdut_amp": 0.4857973139882454,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-07,
+        "n_avg": 1,
+        "snr_ref_db": 34.71716553790578,
+        "snr_dut_db": 35.39117479118664,
+        "flags": "",
+        "duration_s": 1.0382927999999083,
+        "skew_corr_deg": 0.12972143886999457,
+        "retries": 0
+      },
+      {
+        "freq_hz": 4080571.5467367377,
+        "h": [
+          0.9984062377988772,
+          -0.0016770344208756928
+        ],
+        "gain_db": -0.013842032441274962,
+        "phase_deg": -0.09624028818043939,
+        "vref_amp": 0.4720450742038965,
+        "vdut_amp": 0.471293411466838,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-07,
+        "n_avg": 1,
+        "snr_ref_db": 34.86555120650119,
+        "snr_dut_db": 34.918659024683464,
+        "flags": "",
+        "duration_s": 1.0437574999996286,
+        "skew_corr_deg": 0.22035086352378383,
+        "retries": 0
+      },
+      {
+        "freq_hz": 6931448.431551466,
+        "h": [
+          0.9983749458810158,
+          0.0002882995624732213
+        ],
+        "gain_db": -0.014126159879071527,
+        "phase_deg": 0.016545234607690418,
+        "vref_amp": 0.43751411224330505,
+        "vdut_amp": 0.4368031463450363,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-07,
+        "n_avg": 1,
+        "snr_ref_db": 30.244785450221684,
+        "snr_dut_db": 29.865513936489233,
+        "flags": "",
+        "duration_s": 0.7303529999990133,
+        "skew_corr_deg": 0.37429821530377916,
+        "retries": 0
+      },
+      {
+        "freq_hz": 11774080.373049494,
+        "h": [
+          0.9974983321324347,
+          0.0002308892508481441
+        ],
+        "gain_db": -0.0217562033736257,
+        "phase_deg": 0.013262156883996568,
+        "vref_amp": 0.37376825194325414,
+        "vdut_amp": 0.3728332179052015,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-08,
+        "n_avg": 1,
+        "snr_ref_db": 28.59935104739418,
+        "snr_dut_db": 28.696977649444605,
+        "flags": "",
+        "duration_s": 1.0701034000012442,
+        "skew_corr_deg": 0.6358003401446727,
+        "retries": 0
+      },
+      {
+        "freq_hz": 20000000.0,
+        "h": [
+          0.9942021054597672,
+          -0.000973317288934572
+        ],
+        "gain_db": -0.05050226708254769,
+        "phase_deg": -0.056092171461529006,
+        "vref_amp": 0.3018607727290716,
+        "vdut_amp": 0.30011075962013795,
+        "vdiv_ref": 0.01,
+        "vdiv_dut": 0.01,
+        "timebase": 2.5e-08,
+        "n_avg": 1,
+        "snr_ref_db": 34.38963597529429,
+        "snr_dut_db": 33.557674571176356,
+        "flags": "",
+        "duration_s": 2.300445500000933,
+        "skew_corr_deg": 1.08,
+        "retries": 1
+      }
+    ],
+    "meta": {
+      "app_version": "0.1.0",
+      "started": "2026-10-06T01:53:07+03:00",
+      "finished": "2026-10-06T01:53:22+03:00",
+      "source_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+      "digitizer_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+      "simulated": false,
+      "aborted": false,
+      "error": null,
+      "skew": {
+        "delay_s": 1.5e-10,
+        "measured_s": 1.4412135560773552e-10,
+        "snapped": true,
+        "gain_db": -0.01542409628184713,
+        "freqs_hz": [
+          10000000.0,
+          20000000.0
+        ],
+        "per_freq_delay_s": [
+          1.4837734137538526e-10,
+          1.3986536984008578e-10
+        ],
+        "per_freq_gain_db": [
+          -0.023370750808395464,
+          -0.007477441755298796
+        ],
+        "warnings": [],
+        "checked_at": "2026-10-06T01:53:07+03:00",
+        "alignment_epoch": 1
+      },
+      "skew_applied_s": 1.5e-10,
+      "skew_text": "skew: +0.15 ns (snapped, measured +0.14 ns, gain mismatch -0.02 dB, checked 2026-10-06T01:53:07+03:00)"
+    }
+  },
+  "per_point_s": {
+    "mean": 1.0834034545451603,
+    "min": 0.7303529999990133,
+    "max": 2.300445500000933
+  },
+  "scope_stats": {
+    "queries": 897,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0,
+    "rearms": 0
+  },
+  "generator_stats": {
+    "queries": 28,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  },
+  "outputs_at_end": [
+    false,
+    false
+  ],
+  "panel_locked_at_end": "0",
+  "sweep_mode_at_end": "AUTO",
+  "_identity": {
+    "script": "m7_sweep.py",
+    "sha256": "5602c70727bf686b5b1598d05a8577bb5ff311e47aeb18bfa3b05d68340cc37c",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "a70c328",
+    "git_dirty": []
+  }
+}
