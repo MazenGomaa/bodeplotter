@@ -64,8 +64,8 @@ def _pick(found: list[Found], kind: str, wanted: str) -> Found:
             and not f.entry.driver.startswith("bodeplot.drivers.mock")]
     what = "generator" if kind == "source" else "scope"
     if not hits:
-        raise DriverError("No supported %s was found on the %r backend. Check the cable and power, and "
-                          "that the instrument uses the WinUSB driver (Zadig)." % (what, backend))
+        raise DriverError("No supported %s was found. Check the cable and power, and that the "
+                          "instrument uses the WinUSB driver (Zadig) for the pyvisa-py backend." % what)
     if len(hits) > 1:
         raise DriverError("More than one %s was found (%s). Choose one in Connections."
                           % (what, ", ".join(f.resource for f in hits)))
