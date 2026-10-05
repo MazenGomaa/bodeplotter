@@ -1,0 +1,25 @@
+{
+  "backend": "@py",
+  "label": "baseline",
+  "resources": [
+    "USB0::22102::2098::APX1424510001::0::INSTR",
+    "USB0::26198::2100::69746177::0::INSTR"
+  ],
+  "scope_replies": [
+    "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+    "1",
+    "0,\"No error\"",
+    "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047"
+  ],
+  "scope_in_step": true,
+  "scope_wave_points": 700,
+  "scope_ok": true,
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "gen_outputs": [
+    "0",
+    "0"
+  ],
+  "gen_freq": "5.000000e+01",
+  "gen_idn_again": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "gen_ok": true
+}

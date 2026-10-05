@@ -1,0 +1,79 @@
+"""V/div and timebase selection (SPEC.md section 8.3). Pure functions.
+
+All voltages here are at the scope INPUT (tip voltage divided by the probe ratio).
+Step tables come from the digitizer; they are not assumed to be 1-2-5
+(the UPO1054 has 25 ns/div and no 20 ns/div).
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+def choose_timebase(freq_hz: float, steps, horizontal_divs: float, target_cycles: float) -> float:
+    """Smallest step whose screen holds at least target_cycles periods."""
+    need = target_cycles / freq_hz
+    for s in sorted(steps):
+        if horizontal_divs * s >= need * (1 - 1e-9):
+            return s
+    return max(steps)
+
+
+def samples_per_cycle(freq_hz: float, dt: float) -> float:
+    return 1.0 / (freq_hz * dt)
+
+
+def fraction_of_full_scale(vpp: float, vdiv: float, vertical_divs: float) -> float:
+    return vpp / (vertical_divs * vdiv)
+
+
+def choose_vdiv(vpp: float, steps, vertical_divs: float, target=(0.6, 0.8)) -> float:
+    """Most sensitive step that keeps vpp at or below the upper target fraction."""
+    ordered = sorted(steps)
+    for s in ordered:
+        if vpp <= target[1] * vertical_divs * s:
+            return s
+    return ordered[-1]
+
+
+def step_up(vdiv: float, steps, n: int = 1) -> float:
+    ordered = sorted(steps)
+    i = min(range(len(ordered)), key=lambda k: abs(ordered[k] - vdiv))
+    return ordered[min(i + n, len(ordered) - 1)]
+
+
+CLIP_JUMP = 7
+
+
+@dataclass
+class RangeDecision:
+    action: str             # "ok" | "change" | "floor"
+    vdiv: float
+    fraction: float
+
+
+def decide(vpp: float, clipped: bool, vdiv: float, steps, vertical_divs: float,
+           target=(0.6, 0.8), floor_fraction: float = 0.1) -> RangeDecision:
+    """One auto-range decision from one capture.
+
+    - clipped: the true amplitude is unknown, so go up CLIP_JUMP steps (x200 on a
+      1-2-5 table). A small jump needs too many retries from a far-off start; a
+      jump to the top of the table would leave a small signal under one ADC code.
+    - above the upper target, or below the lower one: jump straight to the step the
+      measured amplitude predicts (not one step at a time).
+    - at the most sensitive step and still below floor_fraction: "floor".
+    """
+    ordered = sorted(steps)
+    frac = fraction_of_full_scale(vpp, vdiv, vertical_divs)
+    if clipped:
+        new = step_up(vdiv, ordered, CLIP_JUMP)
+        return RangeDecision("change" if new != vdiv else "ok", new, frac)
+    if target[0] <= frac <= target[1]:
+        return RangeDecision("ok", vdiv, frac)
+    want = choose_vdiv(vpp, ordered, vertical_divs, target)
+    if abs(want - vdiv) <= 1e-12 * max(want, vdiv):
+        # already on the best step: a coarse table can leave the fraction below the
+        # lower target (e.g. 2 -> 5 jumps); that is as good as it gets
+        if vdiv <= ordered[0] * (1 + 1e-9) and frac < floor_fraction:
+            return RangeDecision("floor", vdiv, frac)
+        return RangeDecision("ok", vdiv, frac)
+    return RangeDecision("change", want, frac)

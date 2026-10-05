@@ -1,0 +1,8 @@
+# udev rule example for the UNI-T instruments (SPEC.md section 5). NOT TESTED: Linux has not
+# been tried with these instruments yet.
+# Install:  sudo cp 99-usbtmc-unit.rules /etc/udev/rules.d/
+#           sudo udevadm control --reload-rules && sudo udevadm trigger
+# Scope UPO1054
+SUBSYSTEM=="usb", ATTR{idVendor}=="5656", ATTR{idProduct}=="0832", MODE="0666", GROUP="plugdev"
+# Generator UTG932E
+SUBSYSTEM=="usb", ATTR{idVendor}=="6656", ATTR{idProduct}=="0834", MODE="0666", GROUP="plugdev"

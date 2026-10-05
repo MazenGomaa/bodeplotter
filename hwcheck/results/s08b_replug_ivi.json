@@ -1,0 +1,25 @@
+{
+  "backend": "@ivi",
+  "label": "replug",
+  "resources": [
+    "USB0::0x5656::0x0832::APX1424510001::INSTR",
+    "USB0::0x6656::0x0834::69746177::INSTR"
+  ],
+  "scope_replies": [
+    "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+    "1",
+    "0,\"No error\"",
+    "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047"
+  ],
+  "scope_in_step": true,
+  "scope_wave_points": 700,
+  "scope_ok": true,
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "gen_outputs": [
+    "0",
+    "0"
+  ],
+  "gen_freq": "5.000000e+01",
+  "gen_idn_again": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "gen_ok": true
+}

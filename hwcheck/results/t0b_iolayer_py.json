@@ -1,0 +1,857 @@
+{
+  "backend": "@py",
+  "results": [
+    {
+      "test": "T1 formatter: plain decimals, no exponent",
+      "ok": true,
+      "detail": "12 cases"
+    },
+    {
+      "test": "T1 formatter: probe ratio has X suffix",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "test": "T1 formatter: rejects NaN",
+      "ok": true,
+      "detail": "ValueError: not a finite number: nan"
+    },
+    {
+      "test": "T1 formatter: rejects scope channel 5",
+      "ok": true,
+      "detail": "ValueError: scope channel 5"
+    },
+    {
+      "test": "T1 formatter: rejects generator channel 3",
+      "ok": true,
+      "detail": "ValueError: generator channel 3"
+    },
+    {
+      "test": "T1 validators: accept real replies",
+      "ok": true,
+      "detail": "11 replies"
+    },
+    {
+      "test": "T1 validators: reject wrong-format replies",
+      "ok": true,
+      "detail": "11 replies"
+    },
+    {
+      "test": "T2 connect: both instruments identified through the layer",
+      "ok": true,
+      "detail": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047 | UNI-T Technologies,UTG900E,69746177,1.09"
+    },
+    {
+      "test": "T4 gen: both outputs OFF at start",
+      "ok": true,
+      "detail": "[False, False]"
+    },
+    {
+      "test": "T4 gen: sine 1 kHz 1 Vpp High-Z configured, every setting read back",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "test": "T4 gen: 7 frequencies 50 Hz to 20 MHz set and read back",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "test": "T4 gen: amplitude, offset, load set and read back",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "test": "T5 gen: blocked before sending: '*OPC?'",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: '*OPC?'"
+    },
+    {
+      "test": "T5 gen: blocked before sending: '*RST'",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: '*RST'"
+    },
+    {
+      "test": "T5 gen: blocked before sending: ':SYSTem:LOCK OFF'",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: ':SYSTem:LOCK OFF'"
+    },
+    {
+      "test": "T5 gen: blocked before sending: ':CHANnel3:OUTPut ON'",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: ':CHANnel3:OUTPut ON'"
+    },
+    {
+      "test": "T5 gen: blocked before sending: ':CHANnel1:OUTPut 1 '",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: ':CHANnel1:OUTPut 1 '"
+    },
+    {
+      "test": "T5 gen: blocked before sending: ':CHAN1:OUTP ON'",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: ':CHAN1:OUTP ON'"
+    },
+    {
+      "test": "T5 gen: blocked before sending: ':CHANnel1:BASE:FREQuency 1e3'",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: ':CHANnel1:BASE:FREQuency 1e3'"
+    },
+    {
+      "test": "T5 gen: blocked before sending: ':SYSTem:ERRor?'",
+      "ok": true,
+      "detail": "BlockedCommand: not sent, not in the UTG manual command list: ':SYSTem:ERRor?'"
+    },
+    {
+      "test": "T5 gen: no I/O happened for blocked commands",
+      "ok": true,
+      "detail": "blocked count 8"
+    },
+    {
+      "test": "T5 gen: still answering after the blocked attempts",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "test": "T5 gen: 5 injected timeouts, each recovered by device clear + one retry",
+      "ok": true,
+      "detail": "[{'reply': 20000000.0, 'counters': {'timeouts': 1, 'clears': 1, 'retries': 1}, 'clean_after': True, 'ok': True}, {'reply': 20000000.0, 'counters': {'timeouts': 1, 'clears': 1, 'retries': 1}, 'clean_after': True, 'ok': True}, {'reply': 20000000.0, 'counters': {'timeouts': 1, 'clears': 1, 'retries': 1}, 'clean_after': True, 'ok': True}, {'reply': 20000000.0, 'counters': {'timeouts': 1, 'clears': 1, 'retries': 1}, 'clean_after': True, 'ok': True}, {'reply': 20000000.0, 'counters': {'timeouts': 1, 'clears': 1, 'retries': 1}, 'clean_after': True, 'ok': True}]"
+    },
+    {
+      "test": "gen: all changed settings restored and read back",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "test": "gen: both outputs OFF at end",
+      "ok": true,
+      "detail": "[False, False]"
+    },
+    {
+      "test": "T2 scope: channels 1+2 and edge trigger configured with read-back",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "test": "T2 scope: timebase step table built",
+      "ok": true,
+      "detail": "['1e-09', '2e-09', '5e-09', '1e-08', '2.5e-08', '5e-08', '1e-07', '2e-07', '5e-07', '1e-06', '2e-06', '5e-06', '1e-05', '2e-05', '5e-05', '0.0001', '0.0002', '0.0005', '0.001', '0.002', '0.005', '0.01', '0.02']"
+    },
+    {
+      "test": "T2 scope: V/div step table built",
+      "ok": true,
+      "detail": "['0.0005', '0.001', '0.002', '0.005', '0.01', '0.02', '0.05', '0.1', '0.2', '0.5', '1', '2', '5', '10', '20']"
+    },
+    {
+      "test": "T3 scope: all 23 timebase steps set and read back",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "test": "T3 scope: all 15 V/div steps set and read back on CH1",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "test": "T3 scope: all 15 V/div steps set and read back on CH2",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "test": "T3 scope: 20 ns/div refused, not a real step",
+      "ok": true,
+      "detail": "SetError: 2e-08 is not a real step; steps are ['1e-09', '2e-09', '5e-09', '1e-08', '2.5e-08', '5e-08', '1e-07', '2e-07',"
+    },
+    {
+      "test": "T3 scope: 20 ns/div request rounds up to the next real step",
+      "ok": true,
+      "detail": "2.5e-08"
+    },
+    {
+      "test": "T3 scope: read-back catches a value the scope did not take",
+      "ok": true,
+      "detail": "SetError: :TIMebase:SCALe 0.00000002: read back 1e-08, wanted 2e-08"
+    },
+    {
+      "test": "T3 scope: coupling, BW limit, offset, trigger level/slope/source set and read back",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "test": "T6 scope: 20 polled single acquisitions, both channels, 700 points each",
+      "ok": true,
+      "detail": "20/20, wait 1.17-1.46s, states seen ['ARMED', 'AUTO', 'READY', 'STOP'], forced triggers 20"
+    },
+    {
+      "test": "T5 scope: round 1 (unchecked): in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'unchecked', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'unchecked_probes_ok_before': 1230, 'unchecked_wrong_reply': None, 'was_out_of_step': False, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 2 (layer): in step afterwards (went out of step: True)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'layer', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'layer_queries': 486, 'layer_counters': {'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}, 'layer_log': [\"scope query '*IDN?' failed (ReplyError: binary data in reply to '*IDN?': b'#3700\\\\x80\\\\x80\\\\x81\\\\x80\\\\x81\\\\x80\\\\x80' (707 bytes)); resync\", \"scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}\"], 'was_out_of_step': True, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 3 (unchecked): in step afterwards (went out of step: True)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'unchecked', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'unchecked_probes_ok_before': 253, 'unchecked_wrong_reply': {'query': '*OPC?', 'reply': \"b'#3700\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x81\\\\x80\\\\x80\\\\x81\\\\x80\\\\x80\\\\x80\\\\x81\\\\x81\\\\x80\\\\x80\\\\x81\\\\x80'\", 'after_s': 0.75}, 'was_out_of_step': True, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 4 (layer): in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'layer', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'layer_queries': 600, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'layer_log': [], 'was_out_of_step': False, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 5 (unchecked): in step afterwards (went out of step: True)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'unchecked', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'unchecked_probes_ok_before': 265, 'unchecked_wrong_reply': {'query': '*OPC?', 'reply': \"b'#3700\\\\x81\\\\x80\\\\x80\\\\x81\\\\x81\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x80\\\\x80\\\\x80\\\\x81\\\\x81\\\\x80\\\\x80\\\\x80\\\\x80'\", 'after_s': 0.78}, 'was_out_of_step': True, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 6 (layer): in step afterwards (went out of step: True)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'layer', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'layer_queries': 483, 'layer_counters': {'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}, 'layer_log': [\"scope query ':SYSTem:ERRor?' failed (ReplyError: binary data in reply to ':SYSTem:ERRor?': b'#3700\\\\x80\\\\x81\\\\x80\\\\x81\\\\x80\\\\x80\\\\x80' (707 bytes)); resync\", \"scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}\"], 'was_out_of_step': True, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 7 (unchecked): in step afterwards (went out of step: True)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'unchecked', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'unchecked_probes_ok_before': 261, 'unchecked_wrong_reply': {'query': '*IDN?', 'reply': \"b'#3700\\\\x80\\\\x81\\\\x81\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x81\\\\x80\\\\x80\\\\x80\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x80\\\\x81'\", 'after_s': 0.76}, 'was_out_of_step': True, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 8 (layer): in step afterwards (went out of step: True)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'layer', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'layer_queries': 477, 'layer_counters': {'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}, 'layer_log': [\"scope query '*OPC?' failed (ReplyError: binary data in reply to '*OPC?': b'#3700\\\\x81\\\\x81\\\\x81\\\\x80\\\\x80\\\\x81\\\\x81' (707 bytes)); resync\", \"scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}\"], 'was_out_of_step': True, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 9 (unchecked): in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'unchecked', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'unchecked_probes_ok_before': 1254, 'unchecked_wrong_reply': None, 'was_out_of_step': False, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 10 (layer): in step afterwards (went out of step: True)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'layer', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'layer_queries': 474, 'layer_counters': {'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}, 'layer_log': [\"scope query '*IDN?' failed (ReplyError: binary data in reply to '*IDN?': b'#3700\\\\x80\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x81' (707 bytes)); resync\", \"scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}\"], 'was_out_of_step': True, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 11 (unchecked): in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'unchecked', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'unchecked_probes_ok_before': 1242, 'unchecked_wrong_reply': None, 'was_out_of_step': False, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: round 12 (layer): in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record', 'who_meets_it': 'layer', 'stop_attempts_needed': 1, 'empty_data_replies': 3, 'layer_queries': 594, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'layer_log': [], 'was_out_of_step': False, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: out-of-step PROVEN by an unchecked query receiving a wrong-format reply",
+      "ok": true,
+      "detail": "3 of 6 rounds: [{'query': '*OPC?', 'reply': \"b'#3700\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x81\\\\x80\\\\x80\\\\x81\\\\x80\\\\x80\\\\x80\\\\x81\\\\x81\\\\x80\\\\x80\\\\x81\\\\x80'\", 'after_s': 0.75}, {'query': '*OPC?', 'reply': \"b'#3700\\\\x81\\\\x80\\\\x80\\\\x81\\\\x81\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x80\\\\x80\\\\x80\\\\x81\\\\x81\\\\x80\\\\x80\\\\x80\\\\x80'\", 'after_s': 0.78}, {'query': '*IDN?', 'reply': \"b'#3700\\\\x80\\\\x81\\\\x81\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x81\\\\x80\\\\x80\\\\x80\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x80\\\\x81'\", 'after_s': 0.76}]"
+    },
+    {
+      "test": "T5 scope: layer met the stray reply itself, detected it, resynced, and stayed in step",
+      "ok": true,
+      "detail": "4 of 6 rounds; counters [{'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}, {'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}, {'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}, {'resyncs': 1, 'out_of_step': 0, 'reply_errors': 1, 'device_restarts': 0}]"
+    },
+    {
+      "test": "T5 scope: bare-read round 1: in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'one device read with no query pending', 'bare_read': \"b'UNI-T Technologies,UPO10'\", 'unchecked_probes_ok_before': 1212, 'unchecked_wrong_reply': None, 'was_out_of_step': False, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: bare-read round 2: in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'one device read with no query pending', 'bare_read': \"b'UNI-T Technologies,UPO10'\", 'unchecked_probes_ok_before': 1206, 'unchecked_wrong_reply': None, 'was_out_of_step': False, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: bare-read round 3: in step afterwards (went out of step: False)",
+      "ok": true,
+      "detail": "{'method': 'one device read with no query pending', 'bare_read': \"b'UNI-T Technologies,UPO10'\", 'unchecked_probes_ok_before': 1212, 'unchecked_wrong_reply': None, 'was_out_of_step': False, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "T5 scope: SCAN-mode route (the one that needed a power cycle in M0), detected and resynced",
+      "ok": true,
+      "detail": "{'method': '50 ms/div SCAN, :WAVeform:DATA? x3, :STOP, back to 5 ms/div, :RUN', 'status_at_50ms': \"b'SCAN\\\\r\\\\n'\", 'data_replies': [\"b'\\\\r\\\\n'\", \"b'\\\\r\\\\n'\", \"b'\\\\r\\\\n'\"], 'naive_status_after_stop': \"b'#3700\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x80\\\\x81\\\\x80\\\\x81\\\\x80\\\\x81\\\\x81\\\\x80\\\\x81\\\\x81\\\\x80\\\\x81'\", 'naive_idn_after_stop': \"b'UNI-T Technologies,UPO10'\", 'was_out_of_step': True, 'unchecked_probes_ok_before': 1170, 'unchecked_wrong_reply': None, 'layer_timebase_reply': 0.005, 'layer_counters': {'resyncs': 0, 'out_of_step': 0, 'reply_errors': 0, 'device_restarts': 0}, 'resync_detail': None, 'after': '100 validated queries, acquisition points [700, 700]', 'recovered': True}"
+    },
+    {
+      "test": "scope: all changed settings restored and read back",
+      "ok": true,
+      "detail": "[]"
+    }
+  ],
+  "log": [
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}",
+    "gen query ':CHANnel1:BASE:FREQuency?': VI_ERROR_TMO (-1073807339): Timeout expired before operation completed.; device clear, retry=True",
+    "gen query ':CHANnel1:BASE:FREQuency?': VI_ERROR_TMO (-1073807339): Timeout expired before operation completed.; device clear, retry=True",
+    "gen query ':CHANnel1:BASE:FREQuency?': VI_ERROR_TMO (-1073807339): Timeout expired before operation completed.; device clear, retry=True",
+    "gen query ':CHANnel1:BASE:FREQuency?': VI_ERROR_TMO (-1073807339): Timeout expired before operation completed.; device clear, retry=True",
+    "gen query ':CHANnel1:BASE:FREQuency?': VI_ERROR_TMO (-1073807339): Timeout expired before operation completed.; device clear, retry=True",
+    "scope set :TIMebase:SCALe 0.00000002: read back 1e-08, wanted 2e-08 (attempt 1)",
+    "scope set :TIMebase:SCALe 0.00000002: read back 1e-08, wanted 2e-08 (attempt 2)",
+    "scope query '*IDN?' failed (ReplyError: binary data in reply to '*IDN?': b'#3700\\x80\\x80\\x81\\x80\\x81\\x80\\x80' (707 bytes)); resync",
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}",
+    "scope query ':SYSTem:ERRor?' failed (ReplyError: binary data in reply to ':SYSTem:ERRor?': b'#3700\\x80\\x81\\x80\\x81\\x80\\x80\\x80' (707 bytes)); resync",
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}",
+    "scope query '*OPC?' failed (ReplyError: binary data in reply to '*OPC?': b'#3700\\x81\\x81\\x81\\x80\\x80\\x81\\x81' (707 bytes)); resync",
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}",
+    "scope query '*IDN?' failed (ReplyError: binary data in reply to '*IDN?': b'#3700\\x80\\x81\\x81\\x80\\x81\\x81\\x81' (707 bytes)); resync",
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+  ],
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "gen_originals": [
+    [
+      ":CHANnel1:BASE:OFFSet",
+      0.0
+    ],
+    [
+      ":CHANnel1:BASE:AMPLitude",
+      1.0
+    ],
+    [
+      ":CHANnel1:BASE:FREQuency",
+      20000000.0
+    ],
+    [
+      ":CHANnel1:AMPLitude:UNIT",
+      "VPP"
+    ],
+    [
+      ":CHANnel1:LOAD",
+      10000.0
+    ],
+    [
+      ":CHANnel1:BASE:WAVe",
+      "SINe"
+    ]
+  ],
+  "gen_timeout_rounds": [
+    {
+      "reply": 20000000.0,
+      "counters": {
+        "timeouts": 1,
+        "clears": 1,
+        "retries": 1
+      },
+      "clean_after": true,
+      "ok": true
+    },
+    {
+      "reply": 20000000.0,
+      "counters": {
+        "timeouts": 1,
+        "clears": 1,
+        "retries": 1
+      },
+      "clean_after": true,
+      "ok": true
+    },
+    {
+      "reply": 20000000.0,
+      "counters": {
+        "timeouts": 1,
+        "clears": 1,
+        "retries": 1
+      },
+      "clean_after": true,
+      "ok": true
+    },
+    {
+      "reply": 20000000.0,
+      "counters": {
+        "timeouts": 1,
+        "clears": 1,
+        "retries": 1
+      },
+      "clean_after": true,
+      "ok": true
+    },
+    {
+      "reply": 20000000.0,
+      "counters": {
+        "timeouts": 1,
+        "clears": 1,
+        "retries": 1
+      },
+      "clean_after": true,
+      "ok": true
+    }
+  ],
+  "gen_stats": {
+    "queries": 197,
+    "blocked": 8,
+    "timeouts": 5,
+    "clears": 5,
+    "retries": 5,
+    "set_retries": 0
+  },
+  "scope_originals": [
+    [
+      ":CHANnel1:SCALe",
+      0.02
+    ],
+    [
+      ":CHANnel1:OFFSet",
+      0.0
+    ],
+    [
+      ":CHANnel1:BWLimit",
+      "FULL"
+    ],
+    [
+      ":CHANnel1:COUPling",
+      "DC"
+    ],
+    [
+      ":CHANnel1:VERNier",
+      false
+    ],
+    [
+      ":CHANnel1:PROBe",
+      1.0
+    ],
+    [
+      ":CHANnel1:DISPlay",
+      true
+    ],
+    [
+      ":CHANnel2:SCALe",
+      0.02
+    ],
+    [
+      ":CHANnel2:OFFSet",
+      0.0
+    ],
+    [
+      ":CHANnel2:BWLimit",
+      "FULL"
+    ],
+    [
+      ":CHANnel2:COUPling",
+      "DC"
+    ],
+    [
+      ":CHANnel2:VERNier",
+      false
+    ],
+    [
+      ":CHANnel2:PROBe",
+      1.0
+    ],
+    [
+      ":CHANnel2:DISPlay",
+      true
+    ],
+    [
+      ":TIMebase:SCALe",
+      2.5e-08
+    ],
+    [
+      ":TRIGger:LEVel",
+      0.0
+    ],
+    [
+      ":TRIGger:EDGE:SLOPe",
+      "POSitive"
+    ],
+    [
+      ":TRIGger:SOURce",
+      "CHANnel1"
+    ],
+    [
+      ":TRIGger:MODE",
+      "EDGE"
+    ],
+    [
+      ":TRIGger:SWEep",
+      "AUTO"
+    ]
+  ],
+  "tb_steps": [
+    1e-09,
+    2e-09,
+    5e-09,
+    1e-08,
+    2.5e-08,
+    5e-08,
+    1e-07,
+    2e-07,
+    5e-07,
+    1e-06,
+    2e-06,
+    5e-06,
+    1e-05,
+    2e-05,
+    5e-05,
+    0.0001,
+    0.0002,
+    0.0005,
+    0.001,
+    0.002,
+    0.005,
+    0.01,
+    0.02
+  ],
+  "vdiv_steps": [
+    0.0005,
+    0.001,
+    0.002,
+    0.005,
+    0.01,
+    0.02,
+    0.05,
+    0.1,
+    0.2,
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    20.0
+  ],
+  "forced_rounds": [
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "unchecked",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "unchecked_probes_ok_before": 1230,
+      "unchecked_wrong_reply": null,
+      "was_out_of_step": false,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "layer",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "layer_queries": 486,
+      "layer_counters": {
+        "resyncs": 1,
+        "out_of_step": 0,
+        "reply_errors": 1,
+        "device_restarts": 0
+      },
+      "layer_log": [
+        "scope query '*IDN?' failed (ReplyError: binary data in reply to '*IDN?': b'#3700\\x80\\x80\\x81\\x80\\x81\\x80\\x80' (707 bytes)); resync",
+        "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+      ],
+      "was_out_of_step": true,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": true
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "unchecked",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "unchecked_probes_ok_before": 253,
+      "unchecked_wrong_reply": {
+        "query": "*OPC?",
+        "reply": "b'#3700\\x80\\x80\\x80\\x80\\x80\\x80\\x81\\x80\\x80\\x81\\x80\\x80\\x80\\x81\\x81\\x80\\x80\\x81\\x80'",
+        "after_s": 0.75
+      },
+      "was_out_of_step": true,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": true
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "layer",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "layer_queries": 600,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "layer_log": [],
+      "was_out_of_step": false,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "unchecked",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "unchecked_probes_ok_before": 265,
+      "unchecked_wrong_reply": {
+        "query": "*OPC?",
+        "reply": "b'#3700\\x81\\x80\\x80\\x81\\x81\\x81\\x81\\x80\\x81\\x81\\x80\\x80\\x80\\x81\\x81\\x80\\x80\\x80\\x80'",
+        "after_s": 0.78
+      },
+      "was_out_of_step": true,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": true
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "layer",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "layer_queries": 483,
+      "layer_counters": {
+        "resyncs": 1,
+        "out_of_step": 0,
+        "reply_errors": 1,
+        "device_restarts": 0
+      },
+      "layer_log": [
+        "scope query ':SYSTem:ERRor?' failed (ReplyError: binary data in reply to ':SYSTem:ERRor?': b'#3700\\x80\\x81\\x80\\x81\\x80\\x80\\x80' (707 bytes)); resync",
+        "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+      ],
+      "was_out_of_step": true,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": true
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "unchecked",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "unchecked_probes_ok_before": 261,
+      "unchecked_wrong_reply": {
+        "query": "*IDN?",
+        "reply": "b'#3700\\x80\\x81\\x81\\x81\\x81\\x80\\x81\\x81\\x81\\x80\\x80\\x80\\x81\\x81\\x80\\x81\\x81\\x80\\x81'",
+        "after_s": 0.76
+      },
+      "was_out_of_step": true,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": true
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "layer",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "layer_queries": 477,
+      "layer_counters": {
+        "resyncs": 1,
+        "out_of_step": 0,
+        "reply_errors": 1,
+        "device_restarts": 0
+      },
+      "layer_log": [
+        "scope query '*OPC?' failed (ReplyError: binary data in reply to '*OPC?': b'#3700\\x81\\x81\\x81\\x80\\x80\\x81\\x81' (707 bytes)); resync",
+        "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+      ],
+      "was_out_of_step": true,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": true
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "unchecked",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "unchecked_probes_ok_before": 1254,
+      "unchecked_wrong_reply": null,
+      "was_out_of_step": false,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "layer",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "layer_queries": 474,
+      "layer_counters": {
+        "resyncs": 1,
+        "out_of_step": 0,
+        "reply_errors": 1,
+        "device_restarts": 0
+      },
+      "layer_log": [
+        "scope query '*IDN?' failed (ReplyError: binary data in reply to '*IDN?': b'#3700\\x80\\x81\\x81\\x80\\x81\\x81\\x81' (707 bytes)); resync",
+        "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+      ],
+      "was_out_of_step": true,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": true
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "unchecked",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "unchecked_probes_ok_before": 1242,
+      "unchecked_wrong_reply": null,
+      "was_out_of_step": false,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    },
+    {
+      "method": "RUN then immediate STOP, then :WAVeform:DATA? x3 with no screen record",
+      "who_meets_it": "layer",
+      "stop_attempts_needed": 1,
+      "empty_data_replies": 3,
+      "layer_queries": 594,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "layer_log": [],
+      "was_out_of_step": false,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    }
+  ],
+  "forced_bare_read": [
+    {
+      "method": "one device read with no query pending",
+      "bare_read": "b'UNI-T Technologies,UPO10'",
+      "unchecked_probes_ok_before": 1212,
+      "unchecked_wrong_reply": null,
+      "was_out_of_step": false,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    },
+    {
+      "method": "one device read with no query pending",
+      "bare_read": "b'UNI-T Technologies,UPO10'",
+      "unchecked_probes_ok_before": 1206,
+      "unchecked_wrong_reply": null,
+      "was_out_of_step": false,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    },
+    {
+      "method": "one device read with no query pending",
+      "bare_read": "b'UNI-T Technologies,UPO10'",
+      "unchecked_probes_ok_before": 1212,
+      "unchecked_wrong_reply": null,
+      "was_out_of_step": false,
+      "layer_timebase_reply": 0.005,
+      "layer_counters": {
+        "resyncs": 0,
+        "out_of_step": 0,
+        "reply_errors": 0,
+        "device_restarts": 0
+      },
+      "resync_detail": null,
+      "after": "100 validated queries, acquisition points [700, 700]",
+      "recovered": true,
+      "pass": false
+    }
+  ],
+  "forced_scan": {
+    "method": "50 ms/div SCAN, :WAVeform:DATA? x3, :STOP, back to 5 ms/div, :RUN",
+    "status_at_50ms": "b'SCAN\\r\\n'",
+    "data_replies": [
+      "b'\\r\\n'",
+      "b'\\r\\n'",
+      "b'\\r\\n'"
+    ],
+    "naive_status_after_stop": "b'#3700\\x80\\x80\\x80\\x80\\x80\\x80\\x80\\x80\\x81\\x80\\x81\\x80\\x81\\x81\\x80\\x81\\x81\\x80\\x81'",
+    "naive_idn_after_stop": "b'UNI-T Technologies,UPO10'",
+    "was_out_of_step": true,
+    "unchecked_probes_ok_before": 1170,
+    "unchecked_wrong_reply": null,
+    "layer_timebase_reply": 0.005,
+    "layer_counters": {
+      "resyncs": 0,
+      "out_of_step": 0,
+      "reply_errors": 0,
+      "device_restarts": 0
+    },
+    "resync_detail": null,
+    "after": "100 validated queries, acquisition points [700, 700]",
+    "recovered": true,
+    "pass": true
+  },
+  "scope_stats": {
+    "queries": 8804,
+    "empty_retries": 0,
+    "reply_errors": 4,
+    "out_of_step": 0,
+    "resyncs": 5,
+    "set_retries": 2,
+    "forced_triggers": 36,
+    "empty_blocks": 0
+  },
+  "scope_error_queue": "0,\"No error\"",
+  "summary": "55/55 passed"
+}

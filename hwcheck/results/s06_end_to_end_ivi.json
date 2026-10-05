@@ -1,0 +1,440 @@
+{
+  "backend": "@ivi",
+  "points": [
+    {
+      "freq_set_hz": 1000.0,
+      "timebase_set": 0.0005,
+      "gen_freq_readback": "1.000000e+03",
+      "gen_amp_readback": "1.000000e+00",
+      "gen_output_readback": "1",
+      "timebase_readback": "5.000000e-04",
+      "scope_meas_vpp": "1.000000e+00",
+      "scope_meas_freq": "9.998334e+02",
+      "xinc_q": "1.000000e-05",
+      "yinc_q": "8.000000e-03",
+      "yor_q": "0",
+      "yref_q": "128",
+      "stop_fetch_s": 0.15594660001806915,
+      "stop": {
+        "n_points": 700,
+        "dt_s": 1e-05,
+        "t0_s": -0.0035,
+        "preamble": "0,0,1000,1,1.000000e-05 ,-3.500000e-03,0,8.000000e-03 ,0.000000e+00 ,128",
+        "code_min": 65,
+        "code_max": 189,
+        "clipped": false,
+        "mean_v": 0.000834285714285715,
+        "tail": "b'\\r\\n'",
+        "fit": {
+          "freq_hz": 999.9510459534479,
+          "amp_v": 0.4923976029099024,
+          "vpp": 0.9847952058198048,
+          "offset_v": 0.0008343147722149006,
+          "phase_deg": 91.7925397554693,
+          "resid_rms_v": 0.0058512356517931635,
+          "snr_db": 35.49106686051486,
+          "f_guess": 999.9999999999998
+        },
+        "attempts": 1
+      },
+      "single": {
+        "n_points": 700,
+        "dt_s": 1e-05,
+        "t0_s": -0.0035,
+        "preamble": "0,0,1000,1,1.000000e-05 ,-3.500000e-03,0,8.000000e-03 ,0.000000e+00 ,128",
+        "code_min": 65,
+        "code_max": 189,
+        "clipped": false,
+        "mean_v": 0.000502857142857144,
+        "tail": "b'\\r\\n'",
+        "fit": {
+          "freq_hz": 1000.0158846651146,
+          "amp_v": 0.4921350923072872,
+          "vpp": 0.9842701846145744,
+          "offset_v": 0.000502809812563643,
+          "phase_deg": 91.43316722792679,
+          "resid_rms_v": 0.0056868405026111336,
+          "snr_db": 35.733965766839674,
+          "f_guess": 999.4174823816975
+        },
+        "states": [
+          "STOP"
+        ],
+        "wait_s": 0.33203839999623597
+      }
+    },
+    {
+      "freq_set_hz": 1000000.0,
+      "timebase_set": 5e-07,
+      "gen_freq_readback": "1.000000e+06",
+      "gen_amp_readback": "1.000000e+00",
+      "gen_output_readback": "1",
+      "timebase_readback": "5.000000e-07",
+      "scope_meas_vpp": "1.000000e+00",
+      "scope_meas_freq": "9.998096e+05",
+      "xinc_q": "1.000000e-08",
+      "yinc_q": "8.000000e-03",
+      "yor_q": "0",
+      "yref_q": "128",
+      "stop_fetch_s": 0.19549740001093596,
+      "stop": {
+        "n_points": 700,
+        "dt_s": 1e-08,
+        "t0_s": -3.5e-06,
+        "preamble": "0,0,1000,1,1.000000e-08 ,-3.500000e-06,0,8.000000e-03 ,0.000000e+00 ,128",
+        "code_min": 64,
+        "code_max": 189,
+        "clipped": false,
+        "mean_v": 0.00041142857142857165,
+        "tail": "b'\\r\\n'",
+        "fit": {
+          "freq_hz": 999953.6351290273,
+          "amp_v": 0.49581686443691475,
+          "vpp": 0.9916337288738295,
+          "offset_v": 0.00041119934878115674,
+          "phase_deg": 92.42953273740613,
+          "resid_rms_v": 0.006190210640237798,
+          "snr_db": 35.062017385469176,
+          "f_guess": 997548.8798951152
+        },
+        "attempts": 1
+      },
+      "single": {
+        "n_points": 700,
+        "dt_s": 1e-08,
+        "t0_s": -3.5e-06,
+        "preamble": "0,0,1000,1,1.000000e-08 ,-3.500000e-06,0,8.000000e-03 ,0.000000e+00 ,128",
+        "code_min": 65,
+        "code_max": 189,
+        "clipped": false,
+        "mean_v": 0.0015657142857142857,
+        "tail": "b'\\r\\n'",
+        "fit": {
+          "freq_hz": 999990.4144270222,
+          "amp_v": 0.4961107604300458,
+          "vpp": 0.9922215208600916,
+          "offset_v": 0.0015657001459612957,
+          "phase_deg": 91.98239120506189,
+          "resid_rms_v": 0.006080106325746279,
+          "snr_db": 35.22304949823916,
+          "f_guess": 1000000.0
+        },
+        "states": [
+          "AUTO",
+          "STOP"
+        ],
+        "wait_s": 0.2882934000226669
+      }
+    },
+    {
+      "freq_set_hz": 20000000.0,
+      "timebase_set": 2e-08,
+      "gen_freq_readback": "2.000000e+07",
+      "gen_amp_readback": "1.000000e+00",
+      "gen_output_readback": "1",
+      "timebase_readback": "1.000000e-08",
+      "scope_meas_vpp": "1.008000e+00",
+      "scope_meas_freq": "1.998801e+07",
+      "xinc_q": "2.000000e-10",
+      "yinc_q": "8.000000e-03",
+      "yor_q": "0",
+      "yref_q": "128",
+      "stop_fetch_s": 0.13107240002136678,
+      "stop": {
+        "n_points": 700,
+        "dt_s": 2e-10,
+        "t0_s": -7e-08,
+        "preamble": "0,0,1000,1,2.000000e-10 ,-7.000000e-08,0,8.000000e-03 ,0.000000e+00 ,128",
+        "code_min": 63,
+        "code_max": 189,
+        "clipped": false,
+        "mean_v": -0.012468571428571428,
+        "tail": "b'\\r\\n'",
+        "fit": {
+          "freq_hz": 19985502.728254825,
+          "amp_v": 0.49828530079926114,
+          "vpp": 0.9965706015985223,
+          "offset_v": -0.01252584203887049,
+          "phase_deg": 127.18243263707917,
+          "resid_rms_v": 0.006346603219045627,
+          "snr_db": 34.8884346072643,
+          "f_guess": 19982358.432127066
+        },
+        "attempts": 1
+      },
+      "single": {
+        "n_points": 700,
+        "dt_s": 2e-10,
+        "t0_s": -7e-08,
+        "preamble": "0,0,1000,1,2.000000e-10 ,-7.000000e-08,0,8.000000e-03 ,0.000000e+00 ,128",
+        "code_min": 63,
+        "code_max": 189,
+        "clipped": false,
+        "mean_v": -0.011897142857142856,
+        "tail": "b'\\r\\n'",
+        "fit": {
+          "freq_hz": 19996857.481784813,
+          "amp_v": 0.49994501548939957,
+          "vpp": 0.9998900309787991,
+          "offset_v": -0.012929589468680926,
+          "phase_deg": 128.56642368813866,
+          "resid_rms_v": 0.006184626956493052,
+          "snr_db": 35.14187471800908,
+          "f_guess": 19920318.7250996
+        },
+        "states": [
+          "AUTO",
+          "STOP"
+        ],
+        "wait_s": 0.29279249999672174
+      }
+    }
+  ],
+  "log": [
+    "generator setup (output still OFF)",
+    "  gen :CHANnel1:BASE:WAVe SINe: was SINe, now SINe ok",
+    "  gen :CHANnel1:LOAD 10000: was 1.000000e+04, now 1.000000e+04 ok",
+    "  gen :CHANnel1:AMPLitude:UNIT VPP: was VRMS, now VPP ok",
+    "  gen :CHANnel1:BASE:FREQuency 1000: was 5.000000e+01, now 1.000000e+03 ok",
+    "  gen :CHANnel1:BASE:AMPLitude 1: was 1.329400e+01, now 1.000000e+00 ok",
+    "  gen :CHANnel1:BASE:OFFSet 0: was 0.000000e+00, now 0.000000e+00 ok",
+    "scope setup",
+    "  scope :CHANnel1:DISPlay 1: was 1, now 1 ok",
+    "  scope :CHANnel1:COUPling DC: was DC, now DC ok",
+    "  scope :CHANnel1:PROBe 1: was 1.000000e+00, now 1.000000e+00 ok",
+    "  scope :CHANnel1:BWLimit FULL: was FULL, now FULL ok",
+    "  scope :CHANnel1:SCALe 0.2: was 5.000000e+00, now 2.000000e-01 ok",
+    "  scope :CHANnel1:OFFSet 0: was 0.000000e+00, now 0.000000e+00 ok",
+    "  scope :ACQuire:TYPE NORMal: was NORMal, now NORMal ok",
+    "  scope :TIMebase:OFFSet 0: was 0.000000e+00, now 0.000000e+00 ok",
+    "  scope :TIMebase:SCALe 0.0005: was 5.000000e-03, now 5.000000e-04 ok",
+    "  scope :TRIGger:MODE EDGE: was EDGE, now EDGE ok",
+    "  scope :TRIGger:SOURce CHANnel1: was CHANnel1, now CHANnel1 ok",
+    "  scope :TRIGger:EDGE:SLOPe POSitive: was POSitive, now POSitive ok",
+    "  scope :TRIGger:LEVel 0: was 0.000000e+00, now 0.000000e+00 ok",
+    "  scope :TRIGger:SWEep AUTO: was AUTO, now AUTO ok",
+    "generator CH1 output ON",
+    "--- 1000 Hz, 0.0005 s/div",
+    "  STOP fetch: 700 pts dt=1e-05s fit f=999.951 Hz vpp=0.9848 V offs=0.0008 V snr=35.5 dB codes 65..189",
+    "  scope MEAS: vpp=1.000000e+00 freq=9.998334e+02",
+    "  SINGLE: states ['STOP'] in 0.332s fit f=1000.02 Hz vpp=0.9843 V",
+    "--- 1e+06 Hz, 5e-07 s/div",
+    "  STOP fetch: 700 pts dt=1e-08s fit f=999954 Hz vpp=0.9916 V offs=0.0004 V snr=35.1 dB codes 64..189",
+    "  scope MEAS: vpp=1.000000e+00 freq=9.998096e+05",
+    "  SINGLE: states ['AUTO', 'STOP'] in 0.288s fit f=999990 Hz vpp=0.9922 V",
+    "--- 2e+07 Hz, 2e-08 s/div",
+    "  STOP fetch: 700 pts dt=2e-10s fit f=1.99855e+07 Hz vpp=0.9966 V offs=-0.0125 V snr=34.9 dB codes 63..189",
+    "  scope MEAS: vpp=1.008000e+00 freq=1.998801e+07",
+    "  SINGLE: states ['AUTO', 'STOP'] in 0.293s fit f=1.99969e+07 Hz vpp=0.9999 V",
+    "--- Yor sign check at 1 kHz with CH1 offset +0.2 V",
+    "  {'offset_readback': '2.000000e-01', 'preamble': '0,0,1000,1,1.000000e-05 ,-3.500000e-03,0,8.000000e-03 ,2.500000e+01 ,128', 'mean_code': 152.8842857142857, 'mean_v_minus_yor': -0.0009257142857143208, 'mean_v_plus_yor': 0.3990742857142857, 'mean_v_no_yor': 0.19907428571428568}",
+    "generator outputs final: ['0', '0']",
+    "  restore gen :CHANnel1:BASE:OFFSet -> 0.000000e+00 ok",
+    "  restore gen :CHANnel1:BASE:AMPLitude -> 1.329400e+01 ok",
+    "  restore gen :CHANnel1:BASE:FREQuency -> 5.000000e+01 ok",
+    "  restore gen :CHANnel1:AMPLitude:UNIT -> VRMS ok",
+    "  restore gen :CHANnel1:LOAD -> 1.000000e+04 ok",
+    "  restore gen :CHANnel1:BASE:WAVe -> SINe ok",
+    "  restore scope :TRIGger:SWEep -> AUTO ok",
+    "  restore scope :TRIGger:LEVel -> 0.000000e+00 ok",
+    "  restore scope :TRIGger:EDGE:SLOPe -> POSitive ok",
+    "  restore scope :TRIGger:SOURce -> CHANnel1 ok",
+    "  restore scope :TRIGger:MODE -> EDGE ok",
+    "  restore scope :TIMebase:SCALe -> 5.000000e-03 ok",
+    "  restore scope :TIMebase:OFFSet -> 0.000000e+00 ok",
+    "  restore scope :ACQuire:TYPE -> NORMal ok",
+    "  restore scope :CHANnel1:OFFSet -> 0.000000e+00 ok",
+    "  restore scope :CHANnel1:SCALe -> 5.000000e+00 ok",
+    "  restore scope :CHANnel1:BWLimit -> FULL ok",
+    "  restore scope :CHANnel1:PROBe -> 1.000000e+00 ok",
+    "  restore scope :CHANnel1:COUPling -> DC ok",
+    "  restore scope :CHANnel1:DISPlay -> 1 ok"
+  ],
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "wav_points_q": "",
+  "wav_start_stop_q": [
+    "0",
+    "-1"
+  ],
+  "gen_output_on_readback": "1",
+  "sample_codes_1khz_first40": [
+    127,
+    123,
+    119,
+    116,
+    112,
+    108,
+    104,
+    101,
+    96,
+    94,
+    91,
+    88,
+    85,
+    82,
+    79,
+    77,
+    76,
+    73,
+    71,
+    70,
+    68,
+    67,
+    66,
+    66,
+    66,
+    65,
+    66,
+    66,
+    67,
+    68,
+    69,
+    71,
+    73,
+    75,
+    77,
+    80,
+    82,
+    84,
+    87,
+    91
+  ],
+  "yor_check": {
+    "offset_readback": "2.000000e-01",
+    "preamble": "0,0,1000,1,1.000000e-05 ,-3.500000e-03,0,8.000000e-03 ,2.500000e+01 ,128",
+    "mean_code": 152.8842857142857,
+    "mean_v_minus_yor": -0.0009257142857143208,
+    "mean_v_plus_yor": 0.3990742857142857,
+    "mean_v_no_yor": 0.19907428571428568
+  },
+  "gen_output_final": [
+    "0",
+    "0"
+  ],
+  "gen_restore": [
+    {
+      "cmd": ":CHANnel1:BASE:OFFSet",
+      "original": "0.000000e+00",
+      "after": "0.000000e+00",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:BASE:AMPLitude",
+      "original": "1.329400e+01",
+      "after": "1.329400e+01",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:BASE:FREQuency",
+      "original": "5.000000e+01",
+      "after": "5.000000e+01",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:AMPLitude:UNIT",
+      "original": "VRMS",
+      "after": "VRMS",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:LOAD",
+      "original": "1.000000e+04",
+      "after": "1.000000e+04",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:BASE:WAVe",
+      "original": "SINe",
+      "after": "SINe",
+      "ok": true
+    }
+  ],
+  "scope_restore": [
+    {
+      "cmd": ":TRIGger:SWEep",
+      "original": "AUTO",
+      "after": "AUTO",
+      "ok": true
+    },
+    {
+      "cmd": ":TRIGger:LEVel",
+      "original": "0.000000e+00",
+      "after": "0.000000e+00",
+      "ok": true
+    },
+    {
+      "cmd": ":TRIGger:EDGE:SLOPe",
+      "original": "POSitive",
+      "after": "POSitive",
+      "ok": true
+    },
+    {
+      "cmd": ":TRIGger:SOURce",
+      "original": "CHANnel1",
+      "after": "CHANnel1",
+      "ok": true
+    },
+    {
+      "cmd": ":TRIGger:MODE",
+      "original": "EDGE",
+      "after": "EDGE",
+      "ok": true
+    },
+    {
+      "cmd": ":TIMebase:SCALe",
+      "original": "5.000000e-03",
+      "after": "5.000000e-03",
+      "ok": true
+    },
+    {
+      "cmd": ":TIMebase:OFFSet",
+      "original": "0.000000e+00",
+      "after": "0.000000e+00",
+      "ok": true
+    },
+    {
+      "cmd": ":ACQuire:TYPE",
+      "original": "NORMal",
+      "after": "NORMal",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:OFFSet",
+      "original": "0.000000e+00",
+      "after": "0.000000e+00",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:SCALe",
+      "original": "5.000000e+00",
+      "after": "5.000000e+00",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:BWLimit",
+      "original": "FULL",
+      "after": "FULL",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:PROBe",
+      "original": "1.000000e+00",
+      "after": "1.000000e+00",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:COUPling",
+      "original": "DC",
+      "after": "DC",
+      "ok": true
+    },
+    {
+      "cmd": ":CHANnel1:DISPlay",
+      "original": "1",
+      "after": "1",
+      "ok": true
+    }
+  ],
+  "scope_err_final": "0,\"No error\""
+}

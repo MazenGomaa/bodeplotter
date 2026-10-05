@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bodeplot"
+version = "0.1.0"
+description = "Bode plotter: sweeps a function generator and reads an oscilloscope to measure gain and phase"
+requires-python = ">=3.11"
+dependencies = [
+    "PySide6>=6.6",
+    "pyqtgraph>=0.13",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "pyvisa>=1.14",
+    "pyvisa-py>=0.7",
+    "pyusb>=1.2",
+    "libusb-package>=1.0.26",
+    "platformdirs>=4.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-qt>=4.3"]
+
+[project.scripts]
+bodeplot = "bodeplot.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

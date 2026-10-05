@@ -1,0 +1,72 @@
+{
+  "backend": "@ivi",
+  "cycles_requested": 200,
+  "gen_outputs_start": [
+    "0",
+    "0"
+  ],
+  "timebase": "5.000000e-03",
+  "guard_s": 0.3,
+  "idn_scope": {
+    "n": 20,
+    "mean_ms": 3.0566850007744506,
+    "min_ms": 2.020500018261373,
+    "max_ms": 7.941099989693612,
+    "stdev_ms": 1.7651258761683726
+  },
+  "idn_gen": {
+    "n": 20,
+    "mean_ms": 0.41970999736804515,
+    "min_ms": 0.3885000478476286,
+    "max_ms": 0.45779999345541,
+    "stdev_ms": 0.022973920576650327
+  },
+  "wave_stop_fetch_decode_run": {
+    "n": 10,
+    "mean_ms": 218.4126899985131,
+    "min_ms": 198.5034000244923,
+    "max_ms": 239.71259995596483,
+    "stdev_ms": 14.880994397756012
+  },
+  "wave_fetch_decode_running": {
+    "n": 10,
+    "mean_ms": 234.1614299977664,
+    "min_ms": 207.09839998744428,
+    "max_ms": 276.52499999385327,
+    "stdev_ms": 16.948159069565275
+  },
+  "wave_points": [
+    700
+  ],
+  "robust": {
+    "cycles": 200,
+    "errors": 0,
+    "error_detail": [],
+    "empty_block_retries": 0,
+    "resyncs": [],
+    "guard_s_included_in_cycle": 0.3,
+    "cycle": {
+      "n": 200,
+      "mean_ms": 612.6284410018707,
+      "min_ms": 449.8754000524059,
+      "max_ms": 940.3105999808758,
+      "stdev_ms": 26.640512549553304
+    },
+    "total_s": 122.52650869998615
+  },
+  "gen_outputs_end": [
+    "0",
+    "0"
+  ],
+  "scope_readout_restored": {
+    ":WAVeform:SOURce": "",
+    ":WAVeform:MODE": "NORMal",
+    ":WAVeform:FORMat": "BYTE"
+  },
+  "scope_readout_original": {
+    ":WAVeform:SOURce": "CHANnel1",
+    ":WAVeform:MODE": "NORMal",
+    ":WAVeform:FORMat": "BYTE"
+  },
+  "scope_err_final": "0,\"No error\""
+}

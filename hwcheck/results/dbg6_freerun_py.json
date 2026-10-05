@@ -1,0 +1,1735 @@
+{
+  "backend": "@py",
+  "cycles": 8,
+  "freq_hz": 20000000.0,
+  "variants": [
+    {
+      "name": "3 SINGle then AUTO, :STOP once TRIGED",
+      "run_s": null,
+      "cycles": [
+        {
+          "i": 0,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.03096720000030473,
+          "to_triged_s": 0.9229683000012301,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.06,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.34,
+              "STOP"
+            ],
+            [
+              0.43,
+              "ARMED"
+            ],
+            [
+              0.62,
+              "AUTO"
+            ],
+            [
+              0.89,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11926089999906253,
+          "gain_db": -0.02644066610499506,
+          "phase_deg": 1.138114370083299,
+          "delay_ns": 0.15799738112595627,
+          "snr1": 32.33835815355889,
+          "snr2": 33.49548194862377,
+          "clipped": false,
+          "cycle_s": 1.4341105000021344
+        },
+        {
+          "i": 1,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.024419000001216773,
+          "to_triged_s": 0.9133815999994113,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.03,
+              "ARMED"
+            ],
+            [
+              0.22,
+              "AUTO"
+            ],
+            [
+              0.32,
+              "STOP"
+            ],
+            [
+              0.41,
+              "ARMED"
+            ],
+            [
+              0.61,
+              "AUTO"
+            ],
+            [
+              0.89,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12514700000247103,
+          "gain_db": -0.03131427539123912,
+          "phase_deg": 0.9025387044669656,
+          "delay_ns": 0.12530264201742866,
+          "snr1": 32.80138421052867,
+          "snr2": 32.30796017784625,
+          "clipped": false,
+          "cycle_s": 1.4787704999980633
+        },
+        {
+          "i": 2,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.023498900001868606,
+          "to_triged_s": 0.8986492000003636,
+          "run_timeline": [
+            [
+              0.01,
+              "ARMED"
+            ],
+            [
+              0.2,
+              "AUTO"
+            ],
+            [
+              0.32,
+              "STOP"
+            ],
+            [
+              0.41,
+              "ARMED"
+            ],
+            [
+              0.61,
+              "AUTO"
+            ],
+            [
+              0.88,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.1392319000005955,
+          "gain_db": 0.002976807167004738,
+          "phase_deg": 1.0691080301971956,
+          "delay_ns": 0.14848168477732152,
+          "snr1": 32.21996270498908,
+          "snr2": 32.72741203861105,
+          "clipped": false,
+          "cycle_s": 1.4251634000029298
+        },
+        {
+          "i": 3,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.02318849999937811,
+          "to_triged_s": 0.9142943999977433,
+          "run_timeline": [
+            [
+              0.01,
+              "STOP"
+            ],
+            [
+              0.04,
+              "ARMED"
+            ],
+            [
+              0.22,
+              "AUTO"
+            ],
+            [
+              0.32,
+              "STOP"
+            ],
+            [
+              0.41,
+              "ARMED"
+            ],
+            [
+              0.61,
+              "AUTO"
+            ],
+            [
+              0.89,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.1306034000008367,
+          "gain_db": -0.017540569696055115,
+          "phase_deg": 1.1543772796501546,
+          "delay_ns": 0.16036082057706355,
+          "snr1": 31.596340836217433,
+          "snr2": 32.17210631934478,
+          "clipped": false,
+          "cycle_s": 1.4287794999981998
+        },
+        {
+          "i": 4,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.023823499999707565,
+          "to_triged_s": 0.9296763999991526,
+          "run_timeline": [
+            [
+              0.01,
+              "STOP"
+            ],
+            [
+              0.04,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.34,
+              "STOP"
+            ],
+            [
+              0.43,
+              "ARMED"
+            ],
+            [
+              0.62,
+              "AUTO"
+            ],
+            [
+              0.91,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12098880000121426,
+          "gain_db": -0.02320183575480602,
+          "phase_deg": 1.077096092687582,
+          "delay_ns": 0.1496398790971707,
+          "snr1": 33.11087958116958,
+          "snr2": 33.34443193442463,
+          "clipped": false,
+          "cycle_s": 1.4697267999981705
+        },
+        {
+          "i": 5,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.02486729999873205,
+          "to_triged_s": 0.9280928000007407,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.02,
+              "ARMED"
+            ],
+            [
+              0.21,
+              "AUTO"
+            ],
+            [
+              0.33,
+              "STOP"
+            ],
+            [
+              0.42,
+              "ARMED"
+            ],
+            [
+              0.62,
+              "AUTO"
+            ],
+            [
+              0.9,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.1232408999967447,
+          "gain_db": -0.034107979495319726,
+          "phase_deg": 1.2201689650899332,
+          "delay_ns": 0.16952166041008826,
+          "snr1": 33.01765811168814,
+          "snr2": 32.994871222618585,
+          "clipped": false,
+          "cycle_s": 1.4414289999986067
+        },
+        {
+          "i": 6,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.024877400002878858,
+          "to_triged_s": 0.9148835000014515,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.03,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.34,
+              "STOP"
+            ],
+            [
+              0.43,
+              "ARMED"
+            ],
+            [
+              0.62,
+              "AUTO"
+            ],
+            [
+              0.89,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11972850000165636,
+          "gain_db": 0.013475478029052936,
+          "phase_deg": 0.9846753888898051,
+          "delay_ns": 0.1368162360256251,
+          "snr1": 32.49509714491587,
+          "snr2": 32.766288612314256,
+          "clipped": false,
+          "cycle_s": 1.4255198999999266
+        },
+        {
+          "i": 7,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.025076199999602977,
+          "to_triged_s": 0.8947162000004028,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.02,
+              "ARMED"
+            ],
+            [
+              0.21,
+              "AUTO"
+            ],
+            [
+              0.32,
+              "STOP"
+            ],
+            [
+              0.42,
+              "ARMED"
+            ],
+            [
+              0.6,
+              "AUTO"
+            ],
+            [
+              0.87,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11891780000223662,
+          "gain_db": -0.024032373876963845,
+          "phase_deg": 1.069324709742333,
+          "delay_ns": 0.14853697080144596,
+          "snr1": 32.99292178773407,
+          "snr2": 32.51793700829322,
+          "clipped": false,
+          "cycle_s": 1.3853233000008913
+        }
+      ],
+      "summary": {
+        "first_stop_ok": 8,
+        "second_stop": 0,
+        "third_stop": 0,
+        "never": 0,
+        "errors": 0,
+        "delay_ns": {
+          "n": 8,
+          "mean": 0.1495821593540125,
+          "stdev": 0.013832414070345255,
+          "min": 0.12530264201742866,
+          "max": 0.16952166041008826
+        },
+        "never_triged": 0,
+        "to_triged_s": {
+          "n": 8,
+          "mean": 0.914582800000062,
+          "stdev": 0.01271012730188615,
+          "min": 0.8947162000004028,
+          "max": 0.9296763999991526
+        },
+        "cycle_s_first_stop": {
+          "n": 8,
+          "mean": 1.4361028624998653,
+          "stdev": 0.0289020519599274,
+          "min": 1.3853233000008913,
+          "max": 1.4787704999980633
+        }
+      }
+    },
+    {
+      "name": "4 AUTO only, :STOP once TRIGED",
+      "run_s": null,
+      "cycles": [
+        {
+          "i": 0,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.026064099998620804,
+          "to_triged_s": 0.43795890000183135,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.06,
+              "ARMED"
+            ],
+            [
+              0.26,
+              "AUTO"
+            ],
+            [
+              0.41,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12132159999964642,
+          "gain_db": -0.006659462040741207,
+          "phase_deg": 1.0401102014452743,
+          "delay_ns": 0.14446325711195562,
+          "snr1": 32.576002670271365,
+          "snr2": 33.557841822461086,
+          "clipped": false,
+          "cycle_s": 0.9875786000011431
+        },
+        {
+          "i": 1,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.014189499997883104,
+          "to_triged_s": 0.37978339999972377,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.02,
+              "ARMED"
+            ],
+            [
+              0.22,
+              "AUTO"
+            ],
+            [
+              0.37,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11989669999820762,
+          "gain_db": -0.024152920312308424,
+          "phase_deg": 1.0509494892748736,
+          "delay_ns": 0.14594731601943214,
+          "snr1": 32.5840560749029,
+          "snr2": 32.94692892857635,
+          "clipped": false,
+          "cycle_s": 0.9188371999989613
+        },
+        {
+          "i": 2,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.017134100002294872,
+          "to_triged_s": 0.3952114000021538,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.38,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.1252939999976661,
+          "gain_db": -0.003775910299356815,
+          "phase_deg": 1.090352309546937,
+          "delay_ns": 0.15148903111448372,
+          "snr1": 33.011306095248685,
+          "snr2": 32.14865177858464,
+          "clipped": false,
+          "cycle_s": 0.9023389000030875
+        },
+        {
+          "i": 3,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.015224300001136726,
+          "to_triged_s": 0.40046000000074855,
+          "run_timeline": [
+            [
+              0.01,
+              "STOP"
+            ],
+            [
+              0.04,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.39,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12092759999723057,
+          "gain_db": -0.02254427100210291,
+          "phase_deg": 1.009359844878808,
+          "delay_ns": 0.14013674902930587,
+          "snr1": 33.194996868479855,
+          "snr2": 33.30683241784003,
+          "clipped": false,
+          "cycle_s": 0.9121536000020569
+        },
+        {
+          "i": 4,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.01776909999898635,
+          "to_triged_s": 0.40388370000073337,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.04,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.39,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.1213793999995687,
+          "gain_db": -0.030581474441396042,
+          "phase_deg": 1.1989358144237885,
+          "delay_ns": 0.16645470258057432,
+          "snr1": 32.437817463247015,
+          "snr2": 33.05801828108148,
+          "clipped": false,
+          "cycle_s": 0.9361073000000033
+        },
+        {
+          "i": 5,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.018635399999766378,
+          "to_triged_s": 0.41422569999849657,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.4,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12144050000279094,
+          "gain_db": 0.0021077276039453683,
+          "phase_deg": 1.0922764187500047,
+          "delay_ns": 0.15168417232714348,
+          "snr1": 33.03791900386973,
+          "snr2": 32.96693108702921,
+          "clipped": false,
+          "cycle_s": 0.9300289999991946
+        },
+        {
+          "i": 6,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.01802300000053947,
+          "to_triged_s": 0.39688030000252184,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.38,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.13265150000006543,
+          "gain_db": 0.0011895722453746135,
+          "phase_deg": 1.1011629358041226,
+          "delay_ns": 0.15297041036297518,
+          "snr1": 32.926916056572885,
+          "snr2": 32.89984370311696,
+          "clipped": false,
+          "cycle_s": 0.9104459000009228
+        },
+        {
+          "i": 7,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.017737800000759307,
+          "to_triged_s": 0.3958198000000266,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.38,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11743669999850681,
+          "gain_db": 0.007640038196763069,
+          "phase_deg": 1.1603197862519252,
+          "delay_ns": 0.16120049423943944,
+          "snr1": 32.90622910110842,
+          "snr2": 33.27361956800017,
+          "clipped": false,
+          "cycle_s": 0.9038374000010663
+        }
+      ],
+      "summary": {
+        "first_stop_ok": 8,
+        "second_stop": 0,
+        "third_stop": 0,
+        "never": 0,
+        "errors": 0,
+        "delay_ns": {
+          "n": 8,
+          "mean": 0.15179326659816372,
+          "stdev": 0.008690901188382552,
+          "min": 0.14013674902930587,
+          "max": 0.16645470258057432
+        },
+        "never_triged": 0,
+        "to_triged_s": {
+          "n": 8,
+          "mean": 0.4030279000007795,
+          "stdev": 0.01708820033071887,
+          "min": 0.37978339999972377,
+          "max": 0.43795890000183135
+        },
+        "cycle_s_first_stop": {
+          "n": 8,
+          "mean": 0.9251659875008045,
+          "stdev": 0.027879169727618912,
+          "min": 0.9023389000030875,
+          "max": 0.9875786000011431
+        }
+      }
+    },
+    {
+      "name": "5 NORMal then AUTO, :STOP once TRIGED",
+      "run_s": null,
+      "cycles": [
+        {
+          "i": 0,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.03555979999873671,
+          "to_triged_s": 0.676664400001755,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.06,
+              "ARMED"
+            ],
+            [
+              0.26,
+              "AUTO"
+            ],
+            [
+              0.64,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12081989999933285,
+          "gain_db": -0.040021560988295825,
+          "phase_deg": 0.9546731166149014,
+          "delay_ns": 0.13260430336332305,
+          "snr1": 32.657707597389226,
+          "snr2": 33.42188323748263,
+          "clipped": false,
+          "cycle_s": 1.203776199999993
+        },
+        {
+          "i": 1,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.029409900002065115,
+          "to_triged_s": 0.6468851999998151,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.03,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.62,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12515820000044187,
+          "gain_db": -0.031107265228418675,
+          "phase_deg": 1.0051425402564966,
+          "delay_ns": 0.13959530779419452,
+          "snr1": 33.010153930448254,
+          "snr2": 33.50067059218609,
+          "clipped": false,
+          "cycle_s": 1.1737252000020817
+        },
+        {
+          "i": 2,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.026911100001598243,
+          "to_triged_s": 0.6574422000012419,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.63,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11904260000301292,
+          "gain_db": -0.017929783529886712,
+          "phase_deg": 1.0438733389050785,
+          "delay_ns": 0.1450353096430878,
+          "snr1": 32.721833072580104,
+          "snr2": 33.1912675142993,
+          "clipped": false,
+          "cycle_s": 1.1708166000025813
+        },
+        {
+          "i": 3,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.026186400002188748,
+          "to_triged_s": 0.6495200000026671,
+          "run_timeline": [
+            [
+              0.01,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.62,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12532809999902383,
+          "gain_db": -0.0011948413773320116,
+          "phase_deg": 0.9086244470017223,
+          "delay_ns": 0.12616563947129575,
+          "snr1": 32.0043814504856,
+          "snr2": 32.83184287537385,
+          "clipped": false,
+          "cycle_s": 1.1679487000001245
+        },
+        {
+          "i": 4,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.027678399997967063,
+          "to_triged_s": 0.6432554999992135,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.03,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.62,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12361529999907361,
+          "gain_db": -0.03048391709058776,
+          "phase_deg": 1.0922946439732426,
+          "delay_ns": 0.151757661553481,
+          "snr1": 32.88494889287073,
+          "snr2": 32.67249765953535,
+          "clipped": false,
+          "cycle_s": 1.1477531999989878
+        },
+        {
+          "i": 5,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.02769070000067586,
+          "to_triged_s": 0.6372240999990026,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.03,
+              "ARMED"
+            ],
+            [
+              0.22,
+              "AUTO"
+            ],
+            [
+              0.61,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12588399999731337,
+          "gain_db": -0.03075730388895907,
+          "phase_deg": 1.0299587675045472,
+          "delay_ns": 0.14309131364778047,
+          "snr1": 33.22165400498776,
+          "snr2": 33.34899598275237,
+          "clipped": false,
+          "cycle_s": 1.1561868999997387
+        },
+        {
+          "i": 6,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.028369099996780278,
+          "to_triged_s": 0.631653099997493,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.03,
+              "ARMED"
+            ],
+            [
+              0.21,
+              "AUTO"
+            ],
+            [
+              0.6,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12701060000108555,
+          "gain_db": 0.0016012908501646776,
+          "phase_deg": 1.1285606265983195,
+          "delay_ns": 0.15681084182370814,
+          "snr1": 32.35122398368469,
+          "snr2": 33.094530111250364,
+          "clipped": false,
+          "cycle_s": 1.177273299999797
+        },
+        {
+          "i": 7,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.026939400002447655,
+          "to_triged_s": 0.64328690000184,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.62,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12679560000105994,
+          "gain_db": -0.025066628986090612,
+          "phase_deg": 1.0861072664760962,
+          "delay_ns": 0.15079012496399402,
+          "snr1": 33.60735722743749,
+          "snr2": 32.642610430100895,
+          "clipped": false,
+          "cycle_s": 1.1892788000004657
+        }
+      ],
+      "summary": {
+        "first_stop_ok": 8,
+        "second_stop": 0,
+        "third_stop": 0,
+        "never": 0,
+        "errors": 0,
+        "delay_ns": {
+          "n": 8,
+          "mean": 0.1432313127826081,
+          "stdev": 0.010246274203730745,
+          "min": 0.12616563947129575,
+          "max": 0.15681084182370814
+        },
+        "never_triged": 0,
+        "to_triged_s": {
+          "n": 8,
+          "mean": 0.6482414250003785,
+          "stdev": 0.013845858645920599,
+          "min": 0.631653099997493,
+          "max": 0.676664400001755
+        },
+        "cycle_s_first_stop": {
+          "n": 8,
+          "mean": 1.1733448625004712,
+          "stdev": 0.017648850597214254,
+          "min": 1.1477531999989878,
+          "max": 1.203776199999993
+        }
+      }
+    },
+    {
+      "name": "6 SINGle then NORMal (free-run in NORMal), :STOP once TRIGED",
+      "run_s": null,
+      "cycles": [
+        {
+          "i": 0,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.03131450000000768,
+          "to_triged_s": 0.9819199999983539,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.06,
+              "ARMED"
+            ],
+            [
+              0.25,
+              "AUTO"
+            ],
+            [
+              0.37,
+              "STOP"
+            ],
+            [
+              0.46,
+              "ARMED"
+            ],
+            [
+              0.65,
+              "AUTO"
+            ],
+            [
+              0.95,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12214260000109789,
+          "gain_db": -0.005167275683256981,
+          "phase_deg": 0.9958893866578169,
+          "delay_ns": 0.13830196042542736,
+          "snr1": 32.67204613764807,
+          "snr2": 33.51973086912441,
+          "clipped": false,
+          "cycle_s": 1.495813099998486
+        },
+        {
+          "i": 1,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.023778299997502472,
+          "to_triged_s": 0.9388624999992317,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.05,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.35,
+              "STOP"
+            ],
+            [
+              0.44,
+              "ARMED"
+            ],
+            [
+              0.62,
+              "AUTO"
+            ],
+            [
+              0.92,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12039279999953578,
+          "gain_db": 0.010252613928916009,
+          "phase_deg": 0.9525121895889568,
+          "delay_ns": 0.13231659009930272,
+          "snr1": 32.26606584919791,
+          "snr2": 33.38437252087032,
+          "clipped": false,
+          "cycle_s": 1.4568085999999312
+        },
+        {
+          "i": 2,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.024970700000267243,
+          "to_triged_s": 0.9262277999987418,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.02,
+              "ARMED"
+            ],
+            [
+              0.21,
+              "AUTO"
+            ],
+            [
+              0.32,
+              "STOP"
+            ],
+            [
+              0.42,
+              "ARMED"
+            ],
+            [
+              0.6,
+              "AUTO"
+            ],
+            [
+              0.9,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.1279735999996774,
+          "gain_db": -0.037377745534591236,
+          "phase_deg": 1.0147376453512644,
+          "delay_ns": 0.14093833045951995,
+          "snr1": 33.36853045338462,
+          "snr2": 32.84314043572825,
+          "clipped": false,
+          "cycle_s": 1.4671732999995584
+        },
+        {
+          "i": 3,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.02500750000035623,
+          "to_triged_s": 0.8966814999985218,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.02,
+              "ARMED"
+            ],
+            [
+              0.2,
+              "AUTO"
+            ],
+            [
+              0.33,
+              "STOP"
+            ],
+            [
+              0.42,
+              "ARMED"
+            ],
+            [
+              0.6,
+              "AUTO"
+            ],
+            [
+              0.87,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11933090000093216,
+          "gain_db": -0.018817708066512173,
+          "phase_deg": 1.0569567288178774,
+          "delay_ns": 0.14678442518247797,
+          "snr1": 33.31192616950465,
+          "snr2": 33.09367038803246,
+          "clipped": false,
+          "cycle_s": 1.3973050999993575
+        },
+        {
+          "i": 4,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.02420410000195261,
+          "to_triged_s": 0.9419153000017104,
+          "run_timeline": [
+            [
+              0.01,
+              "STOP"
+            ],
+            [
+              0.04,
+              "ARMED"
+            ],
+            [
+              0.23,
+              "AUTO"
+            ],
+            [
+              0.35,
+              "STOP"
+            ],
+            [
+              0.44,
+              "ARMED"
+            ],
+            [
+              0.63,
+              "AUTO"
+            ],
+            [
+              0.92,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.12779180000143242,
+          "gain_db": -0.02906278340468261,
+          "phase_deg": 0.9194676267938227,
+          "delay_ns": 0.12769533786267395,
+          "snr1": 33.07942887602839,
+          "snr2": 33.251843738172504,
+          "clipped": false,
+          "cycle_s": 1.455511200001638
+        },
+        {
+          "i": 5,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.025338600000395672,
+          "to_triged_s": 3.037397799998871,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.02,
+              "ARMED"
+            ],
+            [
+              0.22,
+              "AUTO"
+            ],
+            [
+              0.54,
+              "STOP"
+            ]
+          ],
+          "sweep_before_stop": "SINGle",
+          "never_triged": true,
+          "stops_needed": "not sent"
+        },
+        {
+          "i": 6,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.032110200001625344,
+          "to_triged_s": 0.9366198000025179,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.06,
+              "ARMED"
+            ],
+            [
+              0.26,
+              "AUTO"
+            ],
+            [
+              0.35,
+              "STOP"
+            ],
+            [
+              0.46,
+              "ARMED"
+            ],
+            [
+              0.64,
+              "AUTO"
+            ],
+            [
+              0.9,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "AUTO",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 1,
+          "stop_s": 0.11876699999993434,
+          "gain_db": 0.007664203033757095,
+          "phase_deg": 1.0924598932138012,
+          "delay_ns": 0.15179649706082077,
+          "snr1": 31.236681999764215,
+          "snr2": 32.41583316088308,
+          "clipped": false,
+          "cycle_s": 1.4353483000013512
+        },
+        {
+          "i": 7,
+          "status_before_restart": "STOP",
+          "restart_timeline": null,
+          "restart_s": 0.02391219999844907,
+          "to_triged_s": 0.33947929999703774,
+          "run_timeline": [
+            [
+              0.0,
+              "STOP"
+            ],
+            [
+              0.03,
+              "ARMED"
+            ],
+            [
+              0.21,
+              "AUTO"
+            ],
+            [
+              0.32,
+              "TRIGED"
+            ]
+          ],
+          "sweep_before_stop": "SINGle",
+          "stop_timelines": [
+            [
+              [
+                0.01,
+                "STOP"
+              ],
+              [
+                0.1,
+                "ARMED"
+              ],
+              [
+                0.29,
+                "AUTO"
+              ],
+              [
+                0.57,
+                "TRIGED"
+              ]
+            ],
+            [
+              [
+                0.0,
+                "STOP"
+              ]
+            ]
+          ],
+          "stops_needed": 2,
+          "stop_s": 2.150762000001123,
+          "gain_db": 0.0015121608200760455,
+          "phase_deg": 1.1436281489752773,
+          "delay_ns": 0.1587796700423201,
+          "snr1": 33.13238711861851,
+          "snr2": 33.44744344114718,
+          "clipped": false,
+          "cycle_s": 2.87771679999787
+        }
+      ],
+      "summary": {
+        "first_stop_ok": 6,
+        "second_stop": 1,
+        "third_stop": 0,
+        "never": 0,
+        "errors": 0,
+        "delay_ns": {
+          "n": 7,
+          "mean": 0.1423732587332204,
+          "stdev": 0.010898307026180084,
+          "min": 0.12769533786267395,
+          "max": 0.1587796700423201
+        },
+        "never_triged": 1,
+        "to_triged_s": {
+          "n": 7,
+          "mean": 0.8516723142851593,
+          "stdev": 0.22724894244468116,
+          "min": 0.33947929999703774,
+          "max": 0.9819199999983539
+        },
+        "cycle_s_first_stop": {
+          "n": 6,
+          "mean": 1.4513266000000538,
+          "stdev": 0.0330192620066848,
+          "min": 1.3973050999993575,
+          "max": 1.495813099998486
+        }
+      }
+    }
+  ],
+  "log": [
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+  ],
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "baseline": {
+    "gain_db": -0.03218283164223751,
+    "phase_deg": 0.9937603581415048,
+    "delay_ns": 0.1380721348697936,
+    "snr1": 33.30615588121419,
+    "snr2": 33.17506460256331,
+    "clipped": false
+  },
+  "final": {
+    "gain_db": -0.02636705913314362,
+    "phase_deg": 1.1563475894686999,
+    "delay_ns": 0.16065245824466348,
+    "snr1": 32.2948610421936,
+    "snr2": 33.07302041605518,
+    "clipped": false
+  },
+  "gen_outputs_final": [
+    false,
+    false
+  ],
+  "gen_restore_failures": [],
+  "scope_restore_failures": [],
+  "scope_stats": {
+    "queries": 2770,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0
+  },
+  "gen_stats": {
+    "queries": 24,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  }
+}

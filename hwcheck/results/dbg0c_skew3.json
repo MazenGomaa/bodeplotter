@@ -1,0 +1,158 @@
+{
+  "rows": [
+    {
+      "label": "1. state as found (no connect(), no clear, no :RUN)",
+      "phase_deg": -13.33361249719774,
+      "sd": 0.08319169932908646,
+      "delay_ps": -1851.8906246107972,
+      "gain_db": -0.025716301715892977,
+      "vpp1": 1.014088214186849,
+      "phases": [
+        -13.4,
+        -13.37,
+        -13.36,
+        -13.31,
+        -13.39,
+        -13.18
+      ]
+    },
+    {
+      "label": "   repair try: CH2 display off/on (1 s gap)",
+      "phase_deg": -13.322669441463722,
+      "sd": 0.06910785482035037,
+      "delay_ps": -1850.3707557588505,
+      "gain_db": -0.03334562607477701,
+      "vpp1": 1.0142327838387104,
+      "phases": [
+        -13.25,
+        -13.37,
+        -13.3,
+        -13.27,
+        -13.31,
+        -13.44
+      ],
+      "repair_context": "as found"
+    },
+    {
+      "label": "   repair try: CH1 display off/on (1 s gap)",
+      "phase_deg": -13.269994870976998,
+      "sd": 0.09564406025608084,
+      "delay_ps": -1843.0548431912496,
+      "gain_db": -0.026458970318638204,
+      "vpp1": 1.0143959601765409,
+      "phases": [
+        -13.32,
+        -13.38,
+        -13.22,
+        -13.14,
+        -13.21,
+        -13.36
+      ],
+      "repair_context": "as found"
+    },
+    {
+      "label": "   repair try: both channels off, then on",
+      "phase_deg": -13.351134004333629,
+      "sd": 0.08065576099815706,
+      "delay_ps": -1854.3241672685597,
+      "gain_db": -0.03204311749012169,
+      "vpp1": 1.0144606253181268,
+      "phases": [
+        -13.21,
+        -13.39,
+        -13.38,
+        -13.29,
+        -13.42,
+        -13.41
+      ],
+      "repair_context": "as found"
+    },
+    {
+      "label": "   repair try: :STOP then :RUN",
+      "phase_deg": -13.321477985564856,
+      "sd": 0.05764464381209465,
+      "delay_ps": -1850.2052757728968,
+      "gain_db": -0.032450549819014726,
+      "vpp1": 1.0140721350905153,
+      "phases": [
+        -13.27,
+        -13.3,
+        -13.24,
+        -13.38,
+        -13.36,
+        -13.37
+      ],
+      "repair_context": "as found"
+    },
+    {
+      "label": "   repair try: timebase 25n -> 500u -> 25n",
+      "phase_deg": -13.311821718619065,
+      "sd": 0.09245303104866669,
+      "delay_ps": -1848.8641275859811,
+      "gain_db": -0.04147063951093655,
+      "vpp1": 1.0155007453579246,
+      "phases": [
+        -13.35,
+        -13.38,
+        -13.41,
+        -13.2,
+        -13.2,
+        -13.33
+      ],
+      "repair_context": "as found"
+    },
+    {
+      "label": "   repair try: :WAVeform:SOURce CHANnel1 then :WAVeform:MODE NORMal",
+      "phase_deg": -13.244011505924686,
+      "sd": 0.12415004521954193,
+      "delay_ps": -1839.4460424895399,
+      "gain_db": -0.03295940436402871,
+      "vpp1": 1.0146472550744818,
+      "phases": [
+        -13.1,
+        -13.31,
+        -13.25,
+        -13.44,
+        -13.13,
+        -13.24
+      ],
+      "repair_context": "as found"
+    },
+    {
+      "label": "   repair try: :WAVeform:SOURce CHANnel2 then :WAVeform:MODE NORMal",
+      "phase_deg": -13.290025538975431,
+      "sd": 0.17181225114412907,
+      "delay_ps": -1845.8368804132544,
+      "gain_db": -0.02285144098735015,
+      "vpp1": 1.0136481604650822,
+      "phases": [
+        -13.4,
+        -13.17,
+        -13.4,
+        -13.03,
+        -13.49,
+        -13.24
+      ],
+      "repair_context": "as found"
+    },
+    {
+      "label": "   repair try: :WAVeform:MODE RAW then NORMal",
+      "phase_deg": -13.34103286526782,
+      "sd": 0.10540143762349995,
+      "delay_ps": -1852.9212312871973,
+      "gain_db": -0.03470691918640816,
+      "vpp1": 1.0145225767288415,
+      "phases": [
+        -13.4,
+        -13.32,
+        -13.3,
+        -13.38,
+        -13.17,
+        -13.48
+      ],
+      "repair_context": "as found"
+    }
+  ],
+  "log": [],
+  "fatal": "Traceback (most recent call last):\n  File \"C:\\Users\\mazen\\Desktop\\bodeplotter\\hwcheck\\dbg0c_skew3.py\", line 170, in main\n    raise RuntimeError(\"could not reach the aligned state by command\")\nRuntimeError: could not reach the aligned state by command\n"
+}
