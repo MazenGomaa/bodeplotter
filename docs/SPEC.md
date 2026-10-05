@@ -10,7 +10,7 @@ This document is the single source of truth for Claude Code. Read it fully befor
 
 **Goals (v1)**
 - Measure gain (dB) and phase (°) from **50 Hz to 20 MHz** using:
-  - Scope: **UNI-T UPO1054** (4-channel, 50 MHz, UPO1002 family). Confirmed by `*IDN?` and nameplate in Milestone 0; earlier drafts of this spec said UPO1052.
+  - Scope: **UNI-T UPO1054** (4-channel, 50 MHz, UPO1000 family). Confirmed by `*IDN?` and nameplate in Milestone 0; earlier drafts of this spec said UPO1052.
   - Generator: **UNI-T UTG932E** (2-channel, sine up to 30 MHz, UTG900E family). Its `*IDN?` reports only the family name `UTG900E`.
 - Python desktop GUI with a live-updating Bode plot.
 - Runs on **Windows and Linux**.
@@ -97,7 +97,7 @@ bodeplot/
 │   │   ├── base.py             # abstract interfaces + capability dataclasses
 │   │   ├── registry.py         # model → driver class mapping, IDN matching
 │   │   ├── visa_util.py        # resource open, backend select, discovery
-│   │   ├── uni_t_upo1002.py    # UPO1054 / UPO1002 family driver
+│   │   ├── uni_t_upo1000.py    # UPO1054 / UPO1000 family driver
 │   │   ├── uni_t_utg900e.py    # UTG932E / UTG900E family driver
 │   │   └── mock.py             # MockSource, MockScope, SimulatedDUT
 │   ├── io/
@@ -261,7 +261,7 @@ class ResponseMeter(ABC):
 2. Pick the matching driver. If nothing matches, show the IDN string and let the user choose a driver manually (with a warning).
 
 Initial entries:
-- `UNI-T` + `UPO1` → `UniTUPO1002`
+- `UNI-T` + `UPO1` → `UniTUPO1000`
 - `UNI-T` + `UTG9` → `UniTUTG900E`
 
 ---
@@ -380,8 +380,8 @@ class SweepResult:
    - At 20 MHz with 1 GSa/s that is 50 samples/cycle, which is fine.
 3. **Auto-range** (`sweep/autorange.py`), both channels independently:
    1. Start from the previous point's V/div.
-   2. Acquire. For each channel compute peak-to-peak as a fraction of full scale (`vertical_divs × vdiv`). Work on the voltage at the scope input (tip voltage ÷ probe ratio). With 8 divisions assumed (not yet verified on the UPO1054; its ADC spans about 10.2 divisions), 1 Vpp through a 10X probe selects 20 mV/div and 50 mVpp selects 1 mV/div.
-   3. If clipped or above the target max, step up. If below the target min, step down. Jump directly to the step predicted by the measured amplitude; don't step one at a time.
+   2. Acquire. For each channel compute peak-to-peak as a fraction of full scale (`vertical_divs × vdiv`). Work on the voltage at the scope input (tip voltage ÷ probe ratio). Full scale is the 8 divisions of the screen grid (confirmed on the UPO1054, 2026-10-06); the waveform data reach further, to 10.1 divisions, which is headroom. 1 Vpp through a 10X probe selects 20 mV/div and 50 mVpp selects 1 mV/div.
+   3. If above the target max, or below the target min: jump directly to the step predicted by the measured amplitude; don't step one at a time. If clipped (any sample on a rail code): estimate the amplitude from the share of samples on the rails (a centred sine clipped at ±R divisions spends `p = 1 − (2/π)·asin(R/A)` of its time there, so `A = R / cos(pπ/2)`), add 25%, and jump to the step that predicts, at least one step up. When no estimate is possible (95% or more of the samples on a rail, or the digitizer does not report the share) go up 7 steps.
    4. Repeat up to `autorange_max_retries`. On failure, set `AUTORANGE_FAILED` and use the last non-clipped capture if one exists.
    5. If at the most sensitive V/div the signal is still below `floor_fraction`, set `BELOW_FLOOR` and keep the measurement.
    6. Each V/div change is followed by a short settle (default 20 ms, configurable).
@@ -461,11 +461,13 @@ A sweep started without a valid check asks first; if the user declines, the swee
 - **Formatter per instrument.** Numeric arguments are plain decimals, never exponent notation (`0.000000025`, `20000000`). Scope probe ratio carries its `X` suffix.
 - **Set, then read back.** Every setting is written, then its query is polled (up to 2 s) until it validates and equals the value sent; one re-send, then an error. Float comparison is 1e-4 relative, or one quantisation step where the instrument quantises.
 - **Reply validation.** Every reply is checked against the format its query must produce (number, 0/1, enumerated word, IDN string, error-queue entry, 10-field preamble, `#` block). A reply of the wrong format is an error, never data.
-- **Resync** (scope) on any reply error: restart with `:TRIGger:SWEep AUTO`, device clear, then `*IDN?` → `*OPC?` → `*IDN?` clean three times running. On pyvisa-py the device clear is: close the session, send USBTMC INITIATE_CLEAR + CHECK_CLEAR_STATUS + clear-halt through pyusb, reopen. Under a VISA vendor driver a further level exists: restart the USB device node (`pnputil /restart-device`, elevated), proven only under NI's driver.
+- **Resync** (scope) on any reply error: restart with `:TRIGger:SWEep AUTO`, device clear, then `*IDN?` → `*OPC?` → `*IDN?` clean three times running. On pyvisa-py the device clear is: close the session, send USBTMC INITIATE_CLEAR + CHECK_CLEAR_STATUS + clear-halt through pyusb, reopen. **This is the only recovery level in the app.** If it fails, the instrument is declared unresponsive and the watchdog of §13 takes over. The app never runs anything that needs administrator rights: restarting the USB device node (`pnputil /restart-device`) is documented in `HW_REPORT.md` for manual use only, and it did not help when the scope froze on 2026-10-06.
+- **Pacing** (scope): after every timebase or V/div change nothing is sent for a minimum gap, on top of `*OPC?`. The gap is a setting (`scope_min_gap_ms`, default 100 ms).
+- **Transport.** Drivers talk to a `Transport` (`drivers/transport.py`), not to pyvisa, so the driver logic is tested against simulated SCPI instruments (`tests/fakes.py`).
 - **Never read from an instrument with no query pending.** Under NI-VISA this broke every later read; under pyvisa-py the scope just re-sends its last reply.
-- The tested reference for all of this is `hwcheck/iolayer.py`.
+- The tested reference for all of this is `hwcheck/iolayer.py`; the app drivers are a port of it.
 
-### 9.2 UNI-T UPO1054 (`uni_t_upo1002.py`)
+### 9.2 UNI-T UPO1054 (`uni_t_upo1000.py`, class `UniTUPO1000`)
 Source: UPO1000 programming manual (channels 1 to 4), corrected by `HW_REPORT.md`.
 
 **Hardware-verified rules (Milestones 0, 0b, 0c; mandatory):**
@@ -477,11 +479,11 @@ Source: UPO1000 programming manual (channels 1 to 4), corrected by `HW_REPORT.md
   4. If the status stays `READY` longer than the force time, send `:TRIGger:FORCe`. Only from `READY`: sent while the status reads `AUTO` it leaves the scope in AUTO.
   5. Read every wanted channel from that one stopped record: `:WAVeform:SOURce CHANnel<n>` (read back), `:WAVeform:PREamble?`, `:WAVeform:DATA?`.
   6. An empty block is never retried in place: resync, then a completely new acquisition, once.
-  Why single-shot and not Auto or Normal sweep: both channels must come from the same record, and the record must be known to be complete and new. Stopping a free-running scope with `:STOP` (the Milestone 0 method) returned empty blocks whenever the stop came before a full screen had been captured, and each empty block later displaced another reply. Single-shot removes that race at the cost of the arming time (about 0.67 s of the 0.77 s per capture). A free-running capture (`:TRIGger:SWEep AUTO` or `NORMal`, `:STOP`, read, restart with the sweep command) may be faster and is an open item (§17); it has not been tested through the I/O layer.
-- **Step tables are read from the scope at connect** by walking `:TIMebase:SCALe` and `:CHANnel<n>:SCALe` with `UP` / `DOWN`, checked for plausibility, and cached; only values from the tables are ever requested. Measured: timebase 1 ns, 2 ns, 5 ns, 10 ns, **25 ns**, 50 ns, then 1-2-5 up to at least 20 ms; V/div 500 µV to 20 V in 1-2-5 steps (15 steps). A request for 20 ns/div lands on 10 ns/div.
+  Why single-shot and not a free-running scope: both channels must come from the same record, and the record must be known to be complete and new. A free-running capture (sweep AUTO, `:STOP`, read, restart) was benchmarked on 2026-10-06 (`HW_REPORT.md` 12.12, 12.13): a `:STOP` is only valid once the status has read `TRIGED` since the last restart, otherwise it does not last or it stops the scope with no record; with that rule the best free-running method takes 0.93 s per capture against 0.80 s for single shot. Single shot is the method. **NORMal sweep is not used anywhere**: it never read back as set, and the driver refuses to send it.
+- **Step tables are shipped as data, keyed by model + firmware** (`drivers/step_tables.py`), and are **never walked at connect**: the scope froze during such a walk on 2026-10-06 and needed a power cycle (`HW_REPORT.md` 12.13). Only values from the tables are requested, and each one is still verified by read-back when it is set. Shipped: UPO1054 firmware `1. 01. 0047`: timebase 1 ns, 2 ns, 5 ns, 10 ns, **25 ns**, 50 ns, then 1-2-5 up to 20 ms (23 steps); V/div 500 µV to 20 V in 1-2-5 steps (15 steps). A request for 20 ns/div lands on 10 ns/div. For any other model or firmware the same tables are used, the user is warned once per connection, and the warning names the walk. Walking is an explicit probe-tool option (`--walk-tables`, §9.4); its result is saved to `step_tables.json` in the settings folder and takes precedence over the shipped data.
 - An empty reply to an ordinary query (or to the `*IDN?` sentinel) means "busy": retry after 50 ms, no resync.
 - Channel offset and trigger level are quantised to V/div / 25.
-- Do not let the user operate the front panel during a sweep: in Milestone 0b that made the scope ignore timebase commands and return empty captures. `:SYSTem:LOCK` is documented (UPO1000 p.6) but untested; until it is verified, the GUI warns.
+- Do not let the user operate the front panel during a sweep: in Milestone 0b that made the scope ignore timebase commands and return empty captures. **`:SYSTem:LOCK ON` locks the whole front panel; verified 2026-10-06** (`HW_REPORT.md` 12.14): the read-back is `1` when locked (the manual's "Return format" sentence says the opposite; its example is right), remote control keeps working, and the lock survives a closed USB session. The driver locks the panel for the length of a sweep, skew check or re-measure, releases it afterwards and on disconnect, and the probe tool has `--unlock`. After a measurement the scope is also put back to sweep AUTO so that it is left running.
 - Follow every write with `*OPC?` (returns `1`). Writes sent back to back are silently dropped.
 - V/div in exponent notation is silently ignored; plain decimals work.
 - Probe ratio needs the `X` suffix (`:CHANnel1:PROBe 1X`). A bare number is misread (`1` sets 10X). Keep the scope at 1X and apply probe attenuation in software: waveform data and YINC are input-referred, while `:CHANnel<n>:SCALe?` and `:MEASure` results are probe-scaled.
@@ -495,7 +497,8 @@ Source: UPO1000 programming manual (channels 1 to 4), corrected by `HW_REPORT.md
 - Two channels from one acquisition: verified for CH1 + CH2 (880 of 880 valid captures in the 0b and 0c dual-channel runs, 0 errors). Channel match in the aligned state with 10X probes: gain within 0.03 dB, phase within 0.1° to 1 MHz and about +1.1° at 20 MHz, of which about +0.9° and +0.09 dB belong to the scope inputs.
 - CH3/CH4: documented in the UPO1000 manual and they answer queries; set commands and waveform read-out on them are `verified=False` until probed.
 - There is no documented per-channel delay or deskew command.
-- Not yet verified: `:MEASure:PHASe?`, on-screen vertical division count, ADC rail codes.
+- **Rail codes and divisions (measured 2026-10-06, `HW_REPORT.md` 12.14):** waveform codes stop at **1 and 254**, not 0 and 255. A capture is clipped when any sample is ≤ 1 or ≥ 254. The data cover 253 codes = 10.1 divisions; the screen grid has 8. Overdriving one channel does not disturb the other.
+- Not yet verified: `:MEASure:PHASe?` (the driver declares no built-in amplitude or phase measurement).
 
 Implement from the manual:
 - Channel coupling, probe ratio, V/div, offset, bandwidth limit.
@@ -536,16 +539,16 @@ Implement:
 - Check whether changing the frequency glitches or disables the output. If it does, document it, and handle it in the driver with a post-change settle.
 
 ### 9.4 Probe tool (`tools/probe.py`)
-`python -m bodeplot.tools.probe [--scope RES] [--gen RES] [--backend py|auto|ivi]`
+`python -m bodeplot.tools.probe [--scope RES] [--gen RES] [--backend py|auto|ivi] [--no-acquire] [--unlock] [--walk-tables [--gap-ms N] [--yes]] [--json FILE]`
 
-1. List VISA resources and `*IDN?` for each.
-2. For each selected instrument, run every `COMMANDS` entry in a safe order:
-   - Queries first.
-   - Then set → read back → restore the original value.
-   - Generator output stays OFF throughout.
-3. Do a test acquisition and print `dt`, sample count, volt range and a clip check.
-4. Write `probe_report_<model>_<timestamp>.json` and print a pass/fail table.
-5. The user sends the report back. Commands that pass are flipped to `verified=True` in code.
+It follows the same rules as the app: no `:RUN`, no table walk by default, generator outputs OFF at the start and at the end and never switched on. It prints its own file hash and the drivers' hashes first.
+
+1. Find the instruments (`*IDN?` only, USB and LAN resources; serial ports are never probed).
+2. Send the query form of every `COMMANDS` entry of both drivers (scope channels 1 to 4, generator channels 1 and 2) and print a pass/fail table. Nothing is set, apart from the waveform read-out format at connect.
+3. Unless `--no-acquire`: one single-shot acquisition on scope CH1; print the point count, `dt`, volt range and clip check; put the sweep back to AUTO.
+4. `--json FILE` writes the report.
+5. `--unlock` releases the scope's front-panel lock and does nothing else.
+6. `--walk-tables` measures the scope's own timebase and V/div steps with `UP` / `DOWN`. It prints a warning (the 2026-10-06 freeze), asks for confirmation unless `--yes`, pauses `--gap-ms` (default 250, minimum 100) after every step, never goes to 50 ms/div or slower, restores both settings, and saves the tables to `step_tables.json` in the settings folder.
 
 ### 9.5 Mock instruments (`drivers/mock.py`)
 - `SimulatedDUT` supports:
@@ -590,9 +593,9 @@ Implement:
 **Dialogs:**
 - **Connections:**
   - Backend (py/auto/ivi), default `py`.
+  - Per-instrument resource string with a "Discover" button (lists resources). Empty fields mean "find the one supported generator and scope".
+  - "Test" button: `*IDN?` of the chosen resources and which driver each one gets. Only while disconnected.
 - **Skew check wizard** (§8.6): toolbar button "Skew check", status-bar indicator (Δt and age, or "skew: unchecked"), and a toolbar action "Front panel was used" that invalidates the current check.
-  - Per-instrument resource string with a "Discover" button (lists resources + IDN).
-  - "Test" button.
 - **Sim settings:** DUT preset and parameters, noise level.
 - **Export:** format options (image DPI, size, title).
 
@@ -630,10 +633,12 @@ All exports include metadata: app version, timestamp, instrument IDNs, and the f
 
 ## 13. Errors, safety, logging
 
-- Every VISA error is caught at the engine level:
+- Every instrument error is caught at the engine level:
   - Generator `safe_off()`.
   - Emit `error` with a human-readable message plus the last command sent.
   - State → `ERROR`. Partial results are kept and exportable.
+- **Watchdog.** If an instrument stops answering and the resync of §9.1 fails (`InstrumentUnresponsive`): generator `safe_off()`, the sweep stops, the points measured so far are kept, the user is told to power-cycle the scope and reconnect, and the engine closes the connection. Further calls to the dead driver fail at once without I/O. Nothing that needs elevation is tried.
+- The test suite sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open raise: no test can reach a real instrument.
 - Timeouts are configurable per instrument.
 - An acquisition timeout counts as one retry, not a crash.
 - Logging uses Python `logging`, written to `user_log_dir("bodeplot")/bodeplot.log` (rotating, 5 × 2 MB). `--debug` logs every SCPI command and response.
@@ -708,7 +713,7 @@ All tests run against mock drivers, with no hardware and no display needed. Use 
 3. **Mock drivers + engine:** a full sweep runs headless against the mock RC/RLC DUTs. Sweep tests pass.
 4. **GUI:** live plots, waveform view, status log, pause/resume/abort, re-measure, wrap/unwrap, sim mode.
 5. **Persistence & export:** presets, settings, CSV (with loader), PNG/SVG/PDF, Touchstone.
-6. **Real drivers + probe tool:** written only from the manuals in `docs/`; unverified commands flagged.
+6. **Real drivers + probe tool: DONE 2026-10-06** (user's GO of that day, with conditions). `drivers/uni_t_upo1000.py`, `drivers/uni_t_utg900e.py`, `drivers/transport.py`, `drivers/step_tables.py`, `drivers/connect.py`, `tools/probe.py`; every command cites its manual page and carries a verified flag. Tested against simulated SCPI instruments (`tests/fakes.py`), not yet run on the real instruments: that is Milestone 7, step 1. Bench checks done in this milestone with `hwcheck/` scripts: rail codes and division count, `:SYSTem:LOCK` (`HW_REPORT.md` 12.14). Stopped for the user's review before Milestone 7.
 7. **Hardware bring-up (with the user):**
    1. Run the probe tool and fix the failing commands.
    2. Then measure a known RC LPF (e.g. 1 kΩ + 100 nF → fc ≈ 1.59 kHz) and compare with the mock and with theory.
@@ -737,9 +742,12 @@ Still open:
 - **Channel alignment:** whether the front panel's Run/Stop or Single keys, a power cycle, Auto-set, a USB replug or vendor PC software also shift it; which state the scope powers up in; whether other channel pairs or other numbers of active channels behave the same; whether it happens over LAN. Until these are known the §8.6 check is the only safeguard.
 - **Capture method: settled 2026-10-06, single shot.** Benchmark in `HW_REPORT.md` section 12.12: a free-running capture (sweep AUTO, `:STOP`, read both channels, restart with sweep SINGle then AUTO) took the same 0.8 s when it worked and failed every second capture. Cause found (`HW_REPORT.md` 12.13): a `:STOP` sent before the status has read `TRIGED` after a restart either does not last or stops the scope with no record (empty waveform block). With that rule the best free-running method takes 0.93 s per capture, still slower than single shot. Normal sweep could not be confirmed as set. Still open: shortening the 0.35 s two-channel read.
 - CH3/CH4 as measurement channels on the UPO1054.
-- On-screen vertical division count and ADC rail codes for clip detection.
-- `:SYSTem:LOCK` to keep the front panel out of a running sweep.
-- The scope "froze" once while a test was killed mid-run (0b); cause unconfirmed.
+- (Resolved 2026-10-06: the screen grid has 8 vertical divisions; waveform codes stop at 1 and 254 and cover 10.1 divisions.)
+- (Resolved 2026-10-06: `:SYSTem:LOCK ON` locks the front panel, read-back 1 = locked.) Still open: whether a power cycle clears a lock left on, and whether the lock also blocks the power key.
+- At 500 µV/div with a 200-division overdrive the waveform data were wrong in a different way (codes 125 to 255, the clipped low half reading mid-scale). The rail rule still flagged it. Cause not examined.
+- The app drivers have only run against simulated instruments. First real run: Milestone 7.
+- A step-table walk froze the scope once (2026-10-06); whether the 250 ms pacing of `--walk-tables` avoids that is untested.
+- The scope froze twice (0b, and 2026-10-06 during a step-table walk); cause unconfirmed; only a power cycle helped.
 - Whether the permanently out-of-step state of Milestone 0 can recur (not reproduced in 0b), and whether the device-node restart works under WinUSB.
 - A BNC-tee (probe-free) channel-match baseline; all two-channel tests used probes on the generator output.
 - 1X probes below 1 Vpp, and any frequency between 1 MHz and 20 MHz.

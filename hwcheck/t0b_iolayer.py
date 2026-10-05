@@ -23,9 +23,15 @@ RESTART = ":TRIGger:SWEep AUTO"
 
 
 def restart(sc):
-    """Restart acquisition without ':RUN'. From a :STOP with the sweep already AUTO, writing
-    AUTO again is a no-op (first run after the :RUN removal: 7 of 12 forcing rounds could not
-    produce an empty block), so go through SINGle first: the change back to AUTO restarts it."""
+    """Restart acquisition without ':RUN', for the fault-injection rounds: SINGle, then AUTO.
+
+    Corrected 2026-10-06. This note used to say that writing sweep AUTO to a scope stopped
+    by :STOP "is a no-op". That was an inference, not an observation: with AUTO alone, 7 of
+    12 forcing rounds could not produce an empty waveform block. HW_REPORT.md 12.13 then
+    watched the status directly: sweep AUTO alone DOES restart a scope stopped by :STOP
+    (8 of 8, TRIGED 0.40 s later). So AUTO alone restarts; what it does not reliably do is
+    give the empty block these rounds need. Going through SINGle does (55 of 55 with it),
+    so this helper keeps it. Why AUTO alone left a readable record was not examined."""
     sc.inst.write(":TRIGger:SWEep SINGle")
     time.sleep(0.05)
     sc.inst.write(RESTART)

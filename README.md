@@ -14,12 +14,12 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | 3: mock drivers and engine | Done. |
 | 4: GUI | Done. |
 | 5: persistence and export | Done. |
-| 6: real drivers and probe tool | **Not started** (waiting for the go-ahead). Capture method settled: single shot, 0.8 s per capture (`HW_REPORT.md` 12.12). |
-| 7: hardware bring-up | Not started. |
+| 6: real drivers and probe tool | Done 2026-10-06, tested against simulated instruments only. |
+| 7: hardware bring-up | **Not started** (waiting for the go-ahead). |
 
-**The app currently runs in simulation mode only.** The real instrument drivers are Milestone 6; choosing a real connection reports that and does nothing else. Nothing in `src/` talks to an instrument yet.
+**The real drivers have not yet run on the real instruments.** They are a port of the bench-tested I/O layer (`hwcheck/iolayer.py`) and pass their tests against simulated SCPI instruments (`tests/fakes.py`), but their first run on the scope and generator is Milestone 7. Simulation mode (`--sim`) needs no hardware.
 
-`pytest` is green: 174 tests, all against the mock drivers, no hardware and no display needed.
+`pytest` is green: 217 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
 
 ## Run it
 
@@ -33,6 +33,27 @@ The launcher finds Python 3.11 or newer, creates `.venv`, installs `requirements
 | `--debug` | verbose logging |
 
 Tests: `.venv\Scripts\python -m pytest`.
+
+## Real instruments
+
+Supported: UNI-T UPO1000 family scopes (developed on a UPO1054) and UTG900E family generators (developed on a UTG932E), over USB.
+
+- **Connect:** leave both resource fields in Connections empty and the app finds the one supported generator and scope by `*IDN?`. Or use Discover and pick them.
+- **Front panel:** the scope's keys are locked while a sweep, skew check or re-measure runs, and released afterwards. If they are ever left locked: `python -m bodeplot.tools.probe --unlock`.
+- **If the scope stops answering:** the app switches the generator off, stops the sweep, keeps the points measured so far and disconnects. Switch the scope off and on, then connect again. The app never asks for administrator rights.
+- **Step tables:** the scope's timebase and V/div steps are shipped as data for the UPO1054 with firmware `1. 01. 0047`. Another model or firmware gets the same tables and one warning.
+- **Setting:** `scope_min_gap_ms` in `settings.json` (default 100) is the pause after every timebase or V/div change.
+
+### Probe tool
+
+`python -m bodeplot.tools.probe` identifies both instruments, sends the query form of every command the drivers use, takes one test acquisition on scope CH1 and prints a pass/fail table. Generator outputs stay off; `:RUN` is never sent; nothing is walked.
+
+| Option | Effect |
+|---|---|
+| `--no-acquire` | queries only |
+| `--json FILE` | write the report to a file |
+| `--unlock` | release the scope's front-panel lock and exit |
+| `--walk-tables` | measure this scope's own step tables. Prints a warning first: the UPO1054 froze once during such a walk and needed a power cycle. Paced (`--gap-ms`, default 250). |
 
 ## What works (simulation)
 
@@ -64,10 +85,11 @@ The simulated scope picks one of the four skew states at random each time it is 
 
 ## Instrument rules that matter
 
-These come from the hardware gate and are binding for Milestone 6 (`docs/SPEC.md` section 9):
+These come from the hardware gate and are built into the drivers (`docs/SPEC.md` section 9):
 
 - The app never sends `:RUN` to the scope. It arms with `:TRIGger:SWEep SINGle` and returns to free-run with `:TRIGger:SWEep AUTO`.
 - The generator only ever receives commands that are in its manual; an unknown query can hang it.
+- A capture is clipped when any sample is on code 1 or 254 (the scope's real rail codes). The screen has 8 vertical divisions; the data reach 10.1.
 - Default VISA backend is pyvisa-py (free). On Windows the instruments need the WinUSB driver, bound once per instrument with Zadig (Options → List All Devices, pick the device by its USB ID, target driver WinUSB). A vendor VISA library is optional; NI-VISA is not free for use with third-party instruments.
 - Use 10X probes by default, and always above about 1 MHz. Both channels must use the same probe type and setting.
 
@@ -76,11 +98,11 @@ These come from the hardware gate and are binding for Milestone 6 (`docs/SPEC.md
 | Path | What |
 |---|---|
 | `src/bodeplot/` | the application |
-| `tests/` | pytest suite (mock drivers only) |
+| `tests/` | pytest suite: mock drivers, plus the real drivers against simulated SCPI instruments (`fakes.py`) |
 | `docs/SPEC.md` | design and milestones |
 | `docs/*.pdf` | instrument programming manuals |
 | `HW_REPORT.md` | hardware gate results |
-| `hwcheck/` | bench scripts from the hardware gate, including `iolayer.py` (the tested I/O reference) and `s0c_realign.py` (optional bench tool; not used by the app) |
+| `hwcheck/` | bench scripts, including `iolayer.py` (the tested I/O reference) and `s0c_realign.py` (optional bench tool; not used by the app). Each script prints its file hash and git commit at start; commit before every bench run. |
 | `run.bat`, `run.sh` | launchers |
 | `scripts/99-usbtmc-unit.rules` | Linux udev rule example (untested) |
 

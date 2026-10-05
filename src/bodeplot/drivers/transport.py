@@ -6,14 +6,17 @@ instruments (tests/fakes.py) with no hardware.
 
 VisaTransport is the real one: pyvisa, default backend pyvisa-py. It never runs anything
 that needs administrator rights: a device clear is the USBTMC class request, sent through
-pyusb when the backend has no clear of its own. Restarting the Windows device node
-(pnputil) is deliberately not available here; it is documented in HW_REPORT.md only.
+pyusb when the backend has no clear of its own. Restarting the Windows device node is
+deliberately not available here; it is documented in HW_REPORT.md for manual use only.
 """
 from __future__ import annotations
 
+import logging
 import time
 
 from . import visa_util
+
+log = logging.getLogger("bodeplot.scpi")       # --debug shows every command and reply
 
 
 class TransportError(Exception):
@@ -100,16 +103,21 @@ class VisaTransport(Transport):
         self.inst.read_termination = None
 
     def write(self, cmd: str) -> None:
+        log.debug("%s > %s", self.resource, cmd)
         try:
             self.inst.write(cmd)
         except Exception as e:                  # VisaIOError, or ValueError from pyvisa-py's USB layer
+            log.debug("%s write failed: %s", self.resource, e)
             raise TransportError(f"write {cmd!r}: {e}") from e
 
     def read(self) -> bytes:
         try:
-            return bytes(self.inst.read_raw())
+            data = bytes(self.inst.read_raw())
         except Exception as e:
+            log.debug("%s read failed: %s", self.resource, e)
             raise TransportError(f"read: {e}") from e
+        log.debug("%s < %r", self.resource, data if len(data) <= 80 else data[:16] + b"... (%d bytes)" % len(data))
+        return data
 
     def set_timeout(self, seconds: float) -> None:
         self._timeout_s = seconds

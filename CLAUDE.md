@@ -6,15 +6,18 @@ PC software that sweeps a UNI-T generator and reads a UNI-T scope to draw a Bode
 
 - **Milestones 0, 0b, 0c (hardware gate): done. Verdict GO WITH WORKAROUNDS** (`HW_REPORT.md`, top block and section 12).
 - **Milestones 1 to 5: done, against the mock drivers only.** `pytest`: 174 passed (2026-10-06). The user reviewed the GUI and asked for changes, all done (see below).
-- **Milestone 6 (real drivers + probe tool): the user said GO on 2026-10-06, with conditions. IN PROGRESS. Stop after Milestone 6 with a report; do NOT start Milestone 7 (bench bring-up).** The user's conditions:
-  1. Step tables: ship the measured timebase and V/div tables as data keyed by model + firmware. Never walk them at connect. Each set is still verified by read-back. Table walking is an explicit probe-tool option (`--walk-tables`) with pacing and a warning. Unknown firmware: use the stored tables, warn once, suggest the walk.
-  2. Pacing: a configurable minimum gap after timebase and V/div changes (start at 100 ms) on top of `*OPC?`.
-  3. Watchdog: if the scope stops answering and the first-level resync fails: generator safe_off, stop the sweep, keep the partial data, tell the user to power-cycle the scope. The app never runs anything that needs elevation (no `pnputil` in the app path; it stays documented in HW_REPORT.md).
-  4. SPEC.md fixes: section 1 "UPO1002 family"; 9.2 "tables are walked at connect"; the section 10 skew bullet misplaced inside the Connections dialog; reconcile the "sweep AUTO is a no-op" note in the test suite with HW_REPORT 12.13; remove NORMal sweep from use; rename the driver/registry to upo1000 if cheap.
-  5. Process: the project is in git; **commit before every bench run**. Every hwcheck/probe script prints its own file hash at start.
-  6. Probe tool: no `:RUN`, no table walk by default, generator outputs OFF.
-  7. Also verify on hardware in Milestone 6: deliberately overdrive one channel, record ADC rail codes and the vertical division count, then fix clip detection and auto-range; `:SYSTem:LOCK` on the scope (watch for the manual's 0/1 contradiction).
-- The app runs in simulation only; choosing a real connection reports "Milestone 6" and does nothing. Nothing in `src/` talks to an instrument. No `:RUN` anywhere in `src/`.
+- **Milestone 6 (real drivers + probe tool): DONE 2026-10-06. `pytest`: 217 passed. STOPPED for the user's review. Do NOT start Milestone 7 (bench bring-up) until the user says so.**
+  - The app's real drivers and the probe tool have run ONLY against simulated SCPI instruments (`tests/fakes.py`). Their first run on the real instruments is Milestone 7 step 1 (probe tool first).
+  - The user's standing conditions from the Milestone 6 GO (keep them):
+    1. Step tables are shipped data keyed by model + firmware (`drivers/step_tables.py`). Never walked at connect. Every set is verified by read-back. Walking is only the probe tool's `--walk-tables` (paced, with a warning). Unknown firmware: stored tables, one warning, suggest the walk.
+    2. Pacing: minimum gap after timebase and V/div changes (`scope_min_gap_ms`, default 100) on top of `*OPC?`.
+    3. Watchdog: scope stops answering and the first-level resync fails -> generator safe_off, sweep stops, partial data kept, user told to power-cycle. The app never runs anything that needs elevation (no `pnputil`, no `subprocess` in `src/`; a test enforces it).
+    4. NORMal sweep is not used (the driver refuses it). Driver and registry are named upo1000.
+    5. Process: the project is in git; **commit before every bench run**. Every hwcheck script prints its file hash and git commit at start (`hwcheck/common.py`); the probe tool prints its own and the drivers' hashes.
+    6. Probe tool: no `:RUN`, no table walk by default, generator outputs OFF.
+  - Bench results of Milestone 6 (HW_REPORT 12.14): **rail codes are 1 and 254** (clip = code <= 1 or >= 254); data cover 10.1 divisions, the screen grid has 8 (user counted); overdriving CH2 does not disturb CH1; **`:SYSTem:LOCK ON` locks the panel, read-back 1 = locked**, it survives a closed session, so the driver unlocks after every measurement and on close (`probe --unlock` as the fallback).
+  - **The test suite sets `BODEPLOT_NO_HARDWARE`** (every VISA open raises). Reason: on 2026-10-06 a GUI test opened a real connection to both instruments by accident. Never remove that guard.
+- Real connections are implemented (Connections with empty fields finds both instruments by `*IDN?`). No `:RUN` anywhere in `src/`.
 
 ### What exists
 
@@ -23,7 +26,9 @@ PC software that sweeps a UNI-T generator and reads a UNI-T scope to draw a Bode
 - v1 skew feature, built to the user's spec (SPEC 8.6): `measure/skew.py` (states -1.85/+0.15/+2.15/+4.15 ns, snap within 0.3 ns, gain warn > 0.3 dB, `phase_corr = phase - 360 f dt`), wizard in `gui/dialogs.py`, session validity in `sweep/core.py` (`Session`, `alignment_epoch`), mock skew in `drivers/mock.py`, tests in `tests/test_skew.py`.
 - GUI changes after the user's review (2026-10-06): Fit view / follow mode (`gui/bode_plot.py`), k/M number entry and axes (`gui/si_widgets.py`, `units.py`), File/View/Help menus, all panels shown at every start-up, dark theme. `gui/theme.py` holds every colour; nothing else hard-codes one except the white-background image export. The palette is the dataviz skill's reference dark palette; its validator passes (2026-10-06). The user tested the dark theme on their display and approved it.
 - Screenshots of the sim GUI: `docs/screenshots/` (offscreen renders; regenerate with a script that sets `QT_QPA_PLATFORM=offscreen` and `QT_QPA_FONTDIR=C:\Windows\Fonts`).
-- I/O layer for the bench: `hwcheck/iolayer.py`, test suite `hwcheck/t0b_iolayer.py` (last hardware run 55/55 on `@py`). Milestone 6 is to be built from it.
+- I/O layer for the bench: `hwcheck/iolayer.py`, test suite `hwcheck/t0b_iolayer.py` (last hardware run 55/55 on `@py`). The app drivers are a port of it.
+- Real drivers: `drivers/uni_t_upo1000.py` (`UniTUPO1000`), `drivers/uni_t_utg900e.py`, on `drivers/transport.py` (`VisaTransport`; tests inject `tests/fakes.py`), with `drivers/scpi.py`, `drivers/step_tables.py`, `drivers/connect.py`. Probe tool: `python -m bodeplot.tools.probe`. Watchdog and panel lock live in `sweep/core.py` (`Session.mark_dead`, `end_measurement`), the engine drops a dead session (`_drop_if_dead`).
+- Auto-range: clipped captures estimate the amplitude from the share of samples on the rails (`autorange.clipped_vpp_estimate`); `Waveform.rail_fraction`, `DigitizerCaps.data_vertical_divs`.
 
 ### Decisions and findings to keep in mind
 
@@ -50,7 +55,7 @@ PC software that sweeps a UNI-T generator and reads a UNI-T scope to draw a Bode
 
 ## Layout
 
-Project root: `C:\Users\mazen\Desktop\bodeplotter`. Not a git repository. Paths are relative to the root.
+Project root: `C:\Users\mazen\Desktop\bodeplotter`. A git repository (since 2026-10-06, branch `main`, no remote). Paths are relative to the root.
 
 | Path | What |
 |---|---|
@@ -61,7 +66,7 @@ Project root: `C:\Users\mazen\Desktop\bodeplotter`. Not a git repository. Paths 
 | `src/bodeplot/` | the app (`gui/`, `sweep/`, `measure/`, `drivers/`, `io/`) |
 | `tests/` | pytest suite (mock drivers, offscreen GUI) |
 | `.venv/` | app venv |
-| `hwcheck/` | bench scripts and the I/O layer; `scpi.py` has every command with its manual page |
+| `hwcheck/` | bench scripts and the I/O layer; `scpi.py` has every command with its manual page. Milestone 6 scripts: `s6_capbench`, `dbg6_freerun`, `s6_overdrive`, `s6_lock`, `s6_state` (read-only check) |
 | `hwcheck/results/` | raw JSON of every bench run, including failed ones |
 | `.venv-hwcheck/` | venv for hwcheck only: pyvisa, pyvisa-py, pyusb, libusb-package |
 
@@ -114,4 +119,4 @@ Full detail and evidence are in `HW_REPORT.md` sections 8 and 12 and SPEC.md sec
 
 ## Not yet verified
 
-Real drivers in the app (Milestone 6), CH3/CH4, `:MEASure:PHASe?`, ADC rail codes, on-screen vertical divisions (8 assumed), other triggers of the alignment shift, scope power-on state, `:SYSTem:LOCK`, a faster two-channel read, LAN, Linux, the GUI's modal dialogs on a real display. See SPEC.md section 17.
+The app's real drivers and probe tool on the real instruments (Milestone 7), CH3/CH4, `:MEASure:PHASe?`, the wrong data at 500 uV/div under a 200-division overdrive, whether a power cycle clears a panel lock, whether paced table walking avoids the freeze, other triggers of the alignment shift, scope power-on state, a faster two-channel read, LAN, Linux, the GUI's modal dialogs on a real display. See SPEC.md section 17.

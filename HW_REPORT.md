@@ -753,10 +753,55 @@ Script `hwcheck/dbg6_freerun.py`; raw data `hwcheck/results/dbg6_freerun_py_run1
 **Rule.** `:STOP` followed by a waveform read is only valid once `:TRIGger:STATus?` has read `TRIGED` since the last restart. The Milestone 0 rule "let it run max(0.3 s, 30 x timebase)" is not enough after a restart.
 
 **Other observations.**
-- `:TRIGger:SWEep AUTO` alone did restart a scope stopped by `:STOP` with the sweep already AUTO (8/8, TRIGED after 0.40 s). This contradicts the note in `t0b_iolayer.py` that it is a no-op; that test wrote the commands back to back without `*OPC?`, which may be the difference. Not examined further.
+- `:TRIGger:SWEep AUTO` alone did restart a scope stopped by `:STOP` with the sweep already AUTO (8/8, TRIGED after 0.40 s). This contradicted a note in `t0b_iolayer.py` that it is a no-op; that note was an inference and has been corrected (see 12.14 C).
 - After `:TRIGger:SWEep NORMal` the read-back was `AUTO` in 6 of 8 cycles and `SINGle` in 2: NORMal sweep was never confirmed as set. Not examined further.
 - The CH2 - CH1 delay stayed at +0.12 to +0.17 ns in every cycle of all three runs.
 
 **Speed.** The best free-running method costs 0.93 s per capture against 0.80 s for single shot. Each restart costs one arm cycle (about 0.4 s) whichever way it is done, and a single shot needs exactly one. **Single shot stays.**
 
 **Scope freeze.** The first attempt to run this script failed during set-up, before any of the above: while `build_tables()` was stepping the timebase, `*OPC?` timed out, the resync reported success, and then every write failed with `[Errno 10060] Operation timed out`. The user confirmed the scope's screen was frozen. A USBTMC INITIATE_CLEAR was accepted with no effect, and `pnputil /restart-device` reported success with no effect; only a power cycle by the user brought it back. No installer was running at the time (user's statement). Cause unknown. This is the second freeze during a step-table walk or setting sequence (the first was in 0b, 12.7). The script now uses the step tables measured in 0b instead of walking them.
+### 12.14 Milestone 6 bench checks: rail codes, division count, front-panel lock (2026-10-06)
+
+All scripts now print their own file hash and git commit at start, and a commit was made before each run.
+
+**A. Overdrive** (`hwcheck/s6_overdrive.py`, `results/s6_overdrive_py.json`). Both 10X probes on generator CH1, 1 kHz sine, 1 Vpp, i.e. 0.1 Vpp at each scope input. CH1 stayed at 20 mV/div; CH2 was overdriven by V/div and, separately, pushed off the top and bottom with its offset. 3 single shots per case, 66 captures, no errors.
+
+| CH2 case | Signal on CH2 | Lowest code | Highest code | Samples on the lowest / highest code |
+|---|---|---|---|---|
+| 20 mV/div (reference) | 5 div p-p | 67 | 192 | not clipped |
+| 10 mV/div | 10 div p-p | 6 | 252 to 253 | not clipped |
+| 5 mV/div | 20 div p-p | **1** | **254** | 222 / 238 of 700 |
+| 2 mV/div | 50 div p-p | 1 | 254 | 294 / 308 |
+| 1 mV/div | 100 div p-p | 1 | 254 | 322 / 336 |
+| 500 uV/div | 200 div p-p | 125 | 255 | 336 / 6 to 8 (see finding 4) |
+| 20 mV/div, offset +3 to +6 div | pushed off the top | - | 254 | 139 to 440 |
+| 20 mV/div, offset +8 div | entirely above | 254 | 254 | 700 |
+| 20 mV/div, offset -3 to -6 div | pushed off the bottom | 1 | - | 105 to 420 |
+| 20 mV/div, offset -8 div | entirely below | 1 | 1 | 700 |
+
+Findings:
+
+1. **The rail codes are 1 and 254**, not 0 and 255. The rule used until now ("code <= 0 or >= 255") flagged none of the clipped captures above except the 500 uV/div one. Clip detection is now "any code <= 1 or >= 254".
+2. **The waveform data cover 253 codes = 10.1 divisions**, 5.06 above and below the centre code 128. The screen grid has **8 vertical divisions** (the user counted them). So a signal can be up to about 1 division off screen at each edge and still be read correctly: at 10 mV/div the 10-division signal read codes 6 to 253, unclipped. Auto-range keeps aiming at the 8 screen divisions; the rest is headroom.
+3. **Overdriving CH2 does not disturb CH1.** CH1 read codes 68 to 192 or 193 (span 124 or 125) in every case.
+4. **At 500 uV/div with a 200-division overdrive the data are wrong in a different way**: the clipped low half reads code 125 (mid-scale) instead of 1, and a few samples read 255. The rail rule still flags the capture (255 >= 254). Cause not examined.
+5. The share of samples on the rails gives the true amplitude of a clipped sine: 20, 50 and 100 divisions p-p were estimated as 19.7, 46 and 108. Auto-range now uses this to reach the right V/div in one jump.
+6. The vertical offset moves the trace by exactly offset / (V/div / 25) codes, and the preamble's YOR field reports it.
+
+**B. `:SYSTem:LOCK`** (`hwcheck/s6_lock.py`, `results/s6_lock_*_py.json`; U1K p.6).
+
+| Step | `:SYSTem:LOCK?` | Front panel (user's observation) | Remote control |
+|---|---|---|---|
+| before | `0` | normal | works |
+| after `:SYSTem:LOCK ON`, USB session closed | `1` | **no reaction to keys or knobs** | queries and a set-and-restore work |
+| after `:SYSTem:LOCK OFF` | `0` | **keys work again** | works |
+
+- **`1` means locked.** The manual's "Return format" sentence ("0 represents locked, 1 represents unlock") is wrong; its example ("Query returns 1, it represents locked") is right.
+- The lock **survives a closed USB session**, so software that sets it must release it. The app does so after every measurement and on disconnect, and the probe tool has `--unlock`.
+- Not tested: whether a power cycle clears a lock that was left on, and whether the power key is locked too.
+
+**C. Reconciliation with the layer's test suite.** `t0b_iolayer.py` said that sweep AUTO written to a scope stopped by `:STOP` "is a no-op". That was an inference from a forcing test, not an observation. 12.13 watched the status: sweep AUTO alone restarts such a scope (8 of 8). The note in the test suite is corrected; the SINGle-then-AUTO restart is kept there because the forcing rounds are reliable with it (55 of 55).
+
+**D. Incident.** While the app's real drivers were being written, one automated test opened a real connection: it found both instruments over USB, identified them and (as far as can be told) began the driver's connect sequence before the test ended and disconnected. No output was switched on (the generator driver forces both outputs off when it opens). A read-only check afterwards (`hwcheck/s6_state.py`) showed both generator outputs OFF, the scope unlocked, sweep AUTO, error queue empty. The test suite now sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open raise, so no test can reach an instrument.
+
+**What Milestone 6 did not do:** the app's own drivers and the probe tool have run only against simulated instruments. Their first run on the real scope and generator is Milestone 7, step 1.
