@@ -1,0 +1,2337 @@
+{
+  "backend": "@py",
+  "freq_hz": 1000.0,
+  "gen_amp_vpp": 1.0,
+  "probe_ratio": 10.0,
+  "cases": [
+    {
+      "label": "A reference",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.0,
+      "offset2_readback_v": 0.0,
+      "signal_pp_div": 5.0,
+      "offset_div": 0.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 14,
+            "n_at_max": 23,
+            "run_at_min": 3,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.00285714285715,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 67,
+            "code_max": 192,
+            "n_at_min": 8,
+            "n_at_max": 6,
+            "run_at_min": 2,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.40857142857143,
+            "clipped_by_current_rule": false
+          },
+          "states": "TRIGED->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 24,
+            "n_at_max": 18,
+            "run_at_min": 4,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.92,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 67,
+            "code_max": 192,
+            "n_at_min": 16,
+            "n_at_max": 2,
+            "run_at_min": 3,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.38,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 24,
+            "n_at_max": 18,
+            "run_at_min": 4,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.87714285714284,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 67,
+            "code_max": 192,
+            "n_at_min": 19,
+            "n_at_max": 3,
+            "run_at_min": 4,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.34714285714287,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 67,
+      "ch2_max": 192,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "B overdrive by V/div",
+      "vdiv2": 0.01,
+      "offset2_set_v": 0.0,
+      "offset2_readback_v": 0.0,
+      "signal_pp_div": 10.0,
+      "offset_div": 0.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 25,
+            "n_at_max": 23,
+            "run_at_min": 4,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.9442857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 6,
+            "code_max": 252,
+            "n_at_min": 5,
+            "n_at_max": 41,
+            "run_at_min": 2,
+            "run_at_max": 7,
+            "yinc": 0.0004,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 132.17714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 26,
+            "n_at_max": 1,
+            "run_at_min": 5,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.86142857142858,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 6,
+            "code_max": 253,
+            "n_at_min": 7,
+            "n_at_max": 14,
+            "run_at_min": 2,
+            "run_at_max": 3,
+            "yinc": 0.0004,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 132.05857142857144,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 25,
+            "n_at_max": 24,
+            "run_at_min": 4,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.83428571428573,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 6,
+            "code_max": 252,
+            "n_at_min": 8,
+            "n_at_max": 42,
+            "run_at_min": 2,
+            "run_at_max": 6,
+            "yinc": 0.0004,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 132.0742857142857,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 6,
+      "ch2_max": 253,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "B overdrive by V/div",
+      "vdiv2": 0.005,
+      "offset2_set_v": 0.0,
+      "offset2_readback_v": 0.0,
+      "signal_pp_div": 20.0,
+      "offset_div": 0.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 23,
+            "n_at_max": 2,
+            "run_at_min": 4,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.07714285714286,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 222,
+            "n_at_max": 238,
+            "run_at_min": 32,
+            "run_at_max": 34,
+            "yinc": 0.0002,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.46571428571428,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 24,
+            "n_at_max": 20,
+            "run_at_min": 4,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.85714285714286,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 224,
+            "n_at_max": 238,
+            "run_at_min": 32,
+            "run_at_max": 34,
+            "yinc": 0.0002,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.3057142857143,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 32,
+            "n_at_max": 14,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.7942857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 220,
+            "n_at_max": 238,
+            "run_at_min": 32,
+            "run_at_max": 34,
+            "yinc": 0.0002,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.30714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "B overdrive by V/div",
+      "vdiv2": 0.002,
+      "offset2_set_v": 0.0,
+      "offset2_readback_v": 0.0,
+      "signal_pp_div": 50.0,
+      "offset_div": 0.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 29,
+            "n_at_max": 1,
+            "run_at_min": 5,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.88857142857142,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 294,
+            "n_at_max": 308,
+            "run_at_min": 42,
+            "run_at_max": 44,
+            "yinc": 8.000001e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.28142857142856,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 28,
+            "n_at_max": 29,
+            "run_at_min": 5,
+            "run_at_max": 6,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.93428571428572,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 294,
+            "n_at_max": 308,
+            "run_at_min": 42,
+            "run_at_max": 44,
+            "yinc": 8.000001e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.16142857142856,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 22,
+            "run_at_min": 5,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.84571428571428,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 294,
+            "n_at_max": 308,
+            "run_at_min": 42,
+            "run_at_max": 44,
+            "yinc": 8.000001e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.21,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "B overdrive by V/div",
+      "vdiv2": 0.001,
+      "offset2_set_v": 0.0,
+      "offset2_readback_v": 0.0,
+      "signal_pp_div": 100.0,
+      "offset_div": 0.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 25,
+            "run_at_min": 4,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.93857142857144,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 322,
+            "n_at_max": 336,
+            "run_at_min": 46,
+            "run_at_max": 48,
+            "yinc": 4e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.06285714285715,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 35,
+            "n_at_max": 16,
+            "run_at_min": 6,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.7057142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 315,
+            "n_at_max": 336,
+            "run_at_min": 45,
+            "run_at_max": 48,
+            "yinc": 4e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.01,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 35,
+            "n_at_max": 17,
+            "run_at_min": 6,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.73142857142858,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 254,
+            "n_at_min": 320,
+            "n_at_max": 336,
+            "run_at_min": 46,
+            "run_at_max": 48,
+            "yinc": 4e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.92714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "B overdrive by V/div",
+      "vdiv2": 0.0005,
+      "offset2_set_v": 0.0,
+      "offset2_readback_v": 0.0,
+      "signal_pp_div": 200.0,
+      "offset_div": 0.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 29,
+            "n_at_max": 22,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.85285714285715,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 125,
+            "code_max": 255,
+            "n_at_min": 336,
+            "n_at_max": 8,
+            "run_at_min": 48,
+            "run_at_max": 1,
+            "yinc": 2e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 134.63142857142856,
+            "clipped_by_current_rule": true
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 33,
+            "n_at_max": 17,
+            "run_at_min": 6,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.76285714285714,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 125,
+            "code_max": 255,
+            "n_at_min": 335,
+            "n_at_max": 6,
+            "run_at_min": 48,
+            "run_at_max": 1,
+            "yinc": 2e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 134.6742857142857,
+            "clipped_by_current_rule": true
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 32,
+            "n_at_max": 1,
+            "run_at_min": 5,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.75142857142856,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 125,
+            "code_max": 255,
+            "n_at_min": 336,
+            "n_at_max": 6,
+            "run_at_min": 48,
+            "run_at_max": 1,
+            "yinc": 2e-05,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 134.43714285714285,
+            "clipped_by_current_rule": true
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 125,
+      "ch2_max": 255,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset up",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.02,
+      "offset2_readback_v": 0.02,
+      "signal_pp_div": 5.0,
+      "offset_div": 1.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 30,
+            "n_at_max": 8,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.66285714285715,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 92,
+            "code_max": 216,
+            "n_at_min": 15,
+            "n_at_max": 24,
+            "run_at_min": 3,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 25.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 154.94285714285715,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 26,
+            "n_at_max": 1,
+            "run_at_min": 4,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.94,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 92,
+            "code_max": 216,
+            "n_at_min": 6,
+            "n_at_max": 35,
+            "run_at_min": 2,
+            "run_at_max": 6,
+            "yinc": 0.0008,
+            "yor": 25.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 155.23714285714286,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 16,
+            "n_at_max": 1,
+            "run_at_min": 3,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.06714285714287,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 92,
+            "code_max": 216,
+            "n_at_min": 2,
+            "n_at_max": 34,
+            "run_at_min": 1,
+            "run_at_max": 6,
+            "yinc": 0.0008,
+            "yor": 25.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 155.34857142857143,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 92,
+      "ch2_max": 216,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset up",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.04,
+      "offset2_readback_v": 0.04,
+      "signal_pp_div": 5.0,
+      "offset_div": 2.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 26,
+            "n_at_max": 17,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.81428571428572,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 117,
+            "code_max": 241,
+            "n_at_min": 5,
+            "n_at_max": 28,
+            "run_at_min": 2,
+            "run_at_max": 6,
+            "yinc": 0.0008,
+            "yor": 50.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 180.1057142857143,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 24,
+            "n_at_max": 1,
+            "run_at_min": 4,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.84857142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 117,
+            "code_max": 241,
+            "n_at_min": 7,
+            "n_at_max": 30,
+            "run_at_min": 2,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 50.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 180.13285714285715,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 16,
+            "n_at_max": 2,
+            "run_at_min": 4,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.1042857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 117,
+            "code_max": 242,
+            "n_at_min": 2,
+            "n_at_max": 2,
+            "run_at_min": 1,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 50.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 180.28571428571428,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 117,
+      "ch2_max": 242,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset up",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.06,
+      "offset2_readback_v": 0.06,
+      "signal_pp_div": 5.0,
+      "offset_div": 3.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 25,
+            "n_at_max": 12,
+            "run_at_min": 4,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.8057142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 142,
+            "code_max": 254,
+            "n_at_min": 21,
+            "n_at_max": 139,
+            "run_at_min": 4,
+            "run_at_max": 20,
+            "yinc": 0.0008,
+            "yor": 75.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 203.33714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 26,
+            "n_at_max": 11,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.74714285714285,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 142,
+            "code_max": 254,
+            "n_at_min": 24,
+            "n_at_max": 137,
+            "run_at_min": 4,
+            "run_at_max": 20,
+            "yinc": 0.0008,
+            "yor": 75.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 203.26714285714286,
+            "clipped_by_current_rule": false
+          },
+          "states": "ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 25,
+            "n_at_max": 29,
+            "run_at_min": 4,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.9857142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 142,
+            "code_max": 254,
+            "n_at_min": 23,
+            "n_at_max": 140,
+            "run_at_min": 5,
+            "run_at_max": 20,
+            "yinc": 0.0008,
+            "yor": 75.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 203.41285714285715,
+            "clipped_by_current_rule": false
+          },
+          "states": "ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 142,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "C offset up",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.08,
+      "offset2_readback_v": 0.08,
+      "signal_pp_div": 5.0,
+      "offset_div": 4.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 13,
+            "run_at_min": 5,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.82285714285715,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 167,
+            "code_max": 254,
+            "n_at_min": 29,
+            "n_at_max": 254,
+            "run_at_min": 5,
+            "run_at_max": 37,
+            "yinc": 0.0008,
+            "yor": 100.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 220.74,
+            "clipped_by_current_rule": false
+          },
+          "states": "ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 32,
+            "n_at_max": 12,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.78,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 167,
+            "code_max": 254,
+            "n_at_min": 38,
+            "n_at_max": 256,
+            "run_at_min": 6,
+            "run_at_max": 37,
+            "yinc": 0.0008,
+            "yor": 100.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 220.7357142857143,
+            "clipped_by_current_rule": false
+          },
+          "states": "ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 21,
+            "n_at_max": 24,
+            "run_at_min": 4,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.03714285714287,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 167,
+            "code_max": 254,
+            "n_at_min": 28,
+            "n_at_max": 253,
+            "run_at_min": 5,
+            "run_at_max": 37,
+            "yinc": 0.0008,
+            "yor": 100.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 220.81142857142856,
+            "clipped_by_current_rule": false
+          },
+          "states": "ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 167,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "C offset up",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.1,
+      "offset2_readback_v": 0.09999999,
+      "signal_pp_div": 5.0,
+      "offset_div": 4.9999994999999995,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 23,
+            "n_at_max": 14,
+            "run_at_min": 4,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.81,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 192,
+            "code_max": 254,
+            "n_at_min": 35,
+            "n_at_max": 350,
+            "run_at_min": 6,
+            "run_at_max": 50,
+            "yinc": 0.0008,
+            "yor": 125.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 234.55714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 25,
+            "n_at_max": 12,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.76142857142858,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 191,
+            "code_max": 254,
+            "n_at_min": 2,
+            "n_at_max": 350,
+            "run_at_min": 1,
+            "run_at_max": 50,
+            "yinc": 0.0008,
+            "yor": 125.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 234.52714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 26,
+            "n_at_max": 1,
+            "run_at_min": 4,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.9242857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 192,
+            "code_max": 254,
+            "n_at_min": 34,
+            "n_at_max": 350,
+            "run_at_min": 6,
+            "run_at_max": 50,
+            "yinc": 0.0008,
+            "yor": 125.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 234.60142857142858,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 191,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset up",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.12,
+      "offset2_readback_v": 0.12,
+      "signal_pp_div": 5.0,
+      "offset_div": 6.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 28,
+            "n_at_max": 10,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.74285714285713,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 216,
+            "code_max": 254,
+            "n_at_min": 19,
+            "n_at_max": 436,
+            "run_at_min": 4,
+            "run_at_max": 63,
+            "yinc": 0.0008,
+            "yor": 150.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 245.12,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 35,
+            "n_at_max": 6,
+            "run_at_min": 6,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.60714285714286,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 216,
+            "code_max": 254,
+            "n_at_min": 22,
+            "n_at_max": 440,
+            "run_at_min": 4,
+            "run_at_max": 63,
+            "yinc": 0.0008,
+            "yor": 150.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 245.09,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 31,
+            "n_at_max": 11,
+            "run_at_min": 6,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.71857142857144,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 216,
+            "code_max": 254,
+            "n_at_min": 18,
+            "n_at_max": 439,
+            "run_at_min": 4,
+            "run_at_max": 63,
+            "yinc": 0.0008,
+            "yor": 150.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 245.10142857142858,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 216,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "C offset up",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.16,
+      "offset2_readback_v": 0.16,
+      "signal_pp_div": 5.0,
+      "offset_div": 8.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 19,
+            "n_at_max": 24,
+            "run_at_min": 4,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.99142857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 254,
+            "code_max": 254,
+            "n_at_min": 700,
+            "n_at_max": 700,
+            "run_at_min": 700,
+            "run_at_max": 700,
+            "yinc": 0.0008,
+            "yor": 200.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 254.0,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 30,
+            "n_at_max": 12,
+            "run_at_min": 5,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.82285714285715,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 254,
+            "code_max": 254,
+            "n_at_min": 700,
+            "n_at_max": 700,
+            "run_at_min": 700,
+            "run_at_max": 700,
+            "yinc": 0.0008,
+            "yor": 200.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 254.0,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 14,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.81285714285715,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 254,
+            "code_max": 254,
+            "n_at_min": 700,
+            "n_at_max": 700,
+            "run_at_min": 700,
+            "run_at_max": 700,
+            "yinc": 0.0008,
+            "yor": 200.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 254.0,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 254,
+      "ch2_max": 254,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "C offset down",
+      "vdiv2": 0.02,
+      "offset2_set_v": -0.02,
+      "offset2_readback_v": -0.02,
+      "signal_pp_div": 5.0,
+      "offset_div": -1.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 25,
+            "n_at_max": 28,
+            "run_at_min": 4,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.97285714285715,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 42,
+            "code_max": 167,
+            "n_at_min": 2,
+            "n_at_max": 23,
+            "run_at_min": 1,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": -25.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 105.52,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 30,
+            "n_at_max": 1,
+            "run_at_min": 5,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.83142857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 42,
+            "code_max": 167,
+            "n_at_min": 4,
+            "n_at_max": 12,
+            "run_at_min": 1,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": -25.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 105.37285714285714,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 14,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.86,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 42,
+            "code_max": 167,
+            "n_at_min": 1,
+            "n_at_max": 8,
+            "run_at_min": 1,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": -25.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 105.39714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 42,
+      "ch2_max": 167,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset down",
+      "vdiv2": 0.02,
+      "offset2_set_v": -0.04,
+      "offset2_readback_v": -0.04,
+      "signal_pp_div": 5.0,
+      "offset_div": -2.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 18,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.84142857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 17,
+            "code_max": 142,
+            "n_at_min": 1,
+            "n_at_max": 2,
+            "run_at_min": 1,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": -50.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 80.41714285714286,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 30,
+            "n_at_max": 13,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.80428571428573,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 17,
+            "code_max": 141,
+            "n_at_min": 5,
+            "n_at_max": 34,
+            "run_at_min": 2,
+            "run_at_max": 6,
+            "yinc": 0.0008,
+            "yor": -50.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 80.34285714285714,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 22,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.83,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 17,
+            "code_max": 142,
+            "n_at_min": 4,
+            "n_at_max": 1,
+            "run_at_min": 2,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": -50.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 80.34142857142857,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 17,
+      "ch2_max": 142,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "C offset down",
+      "vdiv2": 0.02,
+      "offset2_set_v": -0.06,
+      "offset2_readback_v": -0.06,
+      "signal_pp_div": 5.0,
+      "offset_div": -3.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 24,
+            "n_at_max": 25,
+            "run_at_min": 5,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 131.0257142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 117,
+            "n_at_min": 105,
+            "n_at_max": 17,
+            "run_at_min": 16,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": -75.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 56.43714285714286,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 14,
+            "run_at_min": 4,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.81714285714287,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 117,
+            "n_at_min": 107,
+            "n_at_max": 9,
+            "run_at_min": 16,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": -75.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 56.26857142857143,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 27,
+            "n_at_max": 1,
+            "run_at_min": 5,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.9142857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 117,
+            "n_at_min": 110,
+            "n_at_max": 14,
+            "run_at_min": 16,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": -75.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 56.36,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 117,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset down",
+      "vdiv2": 0.02,
+      "offset2_set_v": -0.08,
+      "offset2_readback_v": -0.08,
+      "signal_pp_div": 5.0,
+      "offset_div": -4.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 18,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.90571428571428,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 92,
+            "n_at_min": 238,
+            "n_at_max": 14,
+            "run_at_min": 34,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": -100.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 37.89714285714286,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 26,
+            "n_at_max": 22,
+            "run_at_min": 4,
+            "run_at_max": 5,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.84142857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 92,
+            "n_at_min": 238,
+            "n_at_max": 12,
+            "run_at_min": 34,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": -100.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 37.81285714285714,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 26,
+            "n_at_max": 1,
+            "run_at_min": 4,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.81857142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 92,
+            "n_at_min": 238,
+            "n_at_max": 4,
+            "run_at_min": 34,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": -100.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 37.76571428571429,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 92,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset down",
+      "vdiv2": 0.02,
+      "offset2_set_v": -0.1,
+      "offset2_readback_v": -0.09999999,
+      "signal_pp_div": 5.0,
+      "offset_div": -4.9999994999999995,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 28,
+            "n_at_max": 10,
+            "run_at_min": 4,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.76285714285714,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 67,
+            "n_at_min": 324,
+            "n_at_max": 2,
+            "run_at_min": 47,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": -125.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 23.1,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 30,
+            "n_at_max": 14,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.75857142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 67,
+            "n_at_min": 327,
+            "n_at_max": 5,
+            "run_at_min": 47,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": -125.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 23.135714285714286,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 193,
+            "n_at_min": 26,
+            "n_at_max": 1,
+            "run_at_min": 5,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.77428571428572,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 67,
+            "n_at_min": 327,
+            "n_at_max": 2,
+            "run_at_min": 47,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": -125.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 23.10142857142857,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 67,
+      "ch1_min": 68,
+      "ch1_max": 193
+    },
+    {
+      "label": "C offset down",
+      "vdiv2": 0.02,
+      "offset2_set_v": -0.12,
+      "offset2_readback_v": -0.12,
+      "signal_pp_div": 5.0,
+      "offset_div": -6.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 33,
+            "n_at_max": 11,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.7942857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 42,
+            "n_at_min": 420,
+            "n_at_max": 17,
+            "run_at_min": 60,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": -150.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 11.618571428571428,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 26,
+            "n_at_max": 17,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.77142857142857,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 42,
+            "n_at_min": 420,
+            "n_at_max": 18,
+            "run_at_min": 60,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": -150.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 11.618571428571428,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 27,
+            "n_at_max": 20,
+            "run_at_min": 4,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.83857142857144,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 42,
+            "n_at_min": 420,
+            "n_at_max": 16,
+            "run_at_min": 60,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": -150.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 11.62,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 42,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "C offset down",
+      "vdiv2": 0.02,
+      "offset2_set_v": -0.16,
+      "offset2_readback_v": -0.16,
+      "signal_pp_div": 5.0,
+      "offset_div": -8.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 26,
+            "n_at_max": 18,
+            "run_at_min": 4,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.8057142857143,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 1,
+            "n_at_min": 700,
+            "n_at_max": 700,
+            "run_at_min": 700,
+            "run_at_max": 700,
+            "yinc": 0.0008,
+            "yor": -200.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 1.0,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 31,
+            "n_at_max": 21,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.84,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 1,
+            "n_at_min": 700,
+            "n_at_max": 700,
+            "run_at_min": 700,
+            "run_at_max": 700,
+            "yinc": 0.0008,
+            "yor": -200.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 1.0,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 30,
+            "n_at_max": 18,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.77285714285713,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 1,
+            "code_max": 1,
+            "n_at_min": 700,
+            "n_at_max": 700,
+            "run_at_min": 700,
+            "run_at_max": 700,
+            "yinc": 0.0008,
+            "yor": -200.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 1.0,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 1,
+      "ch2_max": 1,
+      "ch1_min": 68,
+      "ch1_max": 192
+    },
+    {
+      "label": "A reference again",
+      "vdiv2": 0.02,
+      "offset2_set_v": 0.0,
+      "offset2_readback_v": 0.0,
+      "signal_pp_div": 5.0,
+      "offset_div": 0.0,
+      "shots": [
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 28,
+            "n_at_max": 15,
+            "run_at_min": 5,
+            "run_at_max": 4,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.84714285714287,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 67,
+            "code_max": 192,
+            "n_at_min": 20,
+            "n_at_max": 1,
+            "run_at_min": 4,
+            "run_at_max": 1,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.22,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 29,
+            "n_at_max": 14,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.74285714285713,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 67,
+            "code_max": 191,
+            "n_at_min": 20,
+            "n_at_max": 40,
+            "run_at_min": 3,
+            "run_at_max": 6,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.14714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        },
+        {
+          "ch1": {
+            "code_min": 68,
+            "code_max": 192,
+            "n_at_min": 31,
+            "n_at_max": 12,
+            "run_at_min": 5,
+            "run_at_max": 3,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.74714285714285,
+            "clipped_by_current_rule": false
+          },
+          "ch2": {
+            "code_min": 67,
+            "code_max": 192,
+            "n_at_min": 25,
+            "n_at_max": 2,
+            "run_at_min": 4,
+            "run_at_max": 2,
+            "yinc": 0.0008,
+            "yor": 0.0,
+            "yref": 128.0,
+            "n": 700,
+            "mean_code": 130.17714285714285,
+            "clipped_by_current_rule": false
+          },
+          "states": "STOP->ARMED->AUTO->STOP"
+        }
+      ],
+      "ch2_min": 67,
+      "ch2_max": 192,
+      "ch1_min": 68,
+      "ch1_max": 192
+    }
+  ],
+  "log": [
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+  ],
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "lowest_code_seen": 1,
+  "highest_code_seen": 255,
+  "data_divisions": 10.16,
+  "gen_outputs_final": [
+    false,
+    false
+  ],
+  "gen_restore_failures": [],
+  "scope_restore_failures": [],
+  "scope_stats": {
+    "queries": 2551,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0
+  },
+  "gen_stats": {
+    "queries": 24,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  },
+  "_identity": {
+    "script": "s6_overdrive.py",
+    "sha256": "cfe7c4e166ca563177b1ccf5f4b6f28db22c88e7517dcfe7b3c120798b62627b",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "848f1f9c9fd2",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "518cf38",
+    "git_dirty": []
+  }
+}
