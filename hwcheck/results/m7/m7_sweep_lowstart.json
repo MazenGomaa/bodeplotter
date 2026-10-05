@@ -1,0 +1,427 @@
+{
+  "label": "lowstart",
+  "start_hz": 50.0,
+  "stop_hz": 1000000.0,
+  "points_per_decade": 2,
+  "log": [
+    [
+      "info",
+      "Skew check at 0.5 MHz: phase -0.06 deg, gain -0.020 dB"
+    ],
+    [
+      "info",
+      "Skew check at 1 MHz: phase -0.00 deg, gain -0.010 dB"
+    ],
+    [
+      "info",
+      "Channel skew correction: -0.16 ns."
+    ]
+  ],
+  "connect_s": 1.9896230999984255,
+  "generator_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "skew_s": 7.080020800000057,
+  "skew": {
+    "delay_s": -1.6434505435328825e-10,
+    "measured_s": -1.6434505435328825e-10,
+    "snapped": false,
+    "gain_db": -0.014923683557300418,
+    "freqs_hz": [
+      500000.0,
+      1000000.0
+    ],
+    "per_freq_delay_s": [
+      -3.267478840068004e-10,
+      -1.9422246997760967e-12
+    ],
+    "per_freq_gain_db": [
+      -0.020283409606072826,
+      -0.009563957508528008
+    ],
+    "warnings": [
+      "The two check frequencies disagree by 0.32 ns (-0.33 ns at 0.5 MHz, -0.00 ns at 1 MHz); the offset is not a pure delay.",
+      "Measured delay -0.16 ns is more than 0.3 ns from every known state (-1.85, +0.15, +2.15, +4.15 ns); using the measured value."
+    ],
+    "checked_at": "2026-10-06T01:52:12+03:00",
+    "alignment_epoch": 1
+  },
+  "sweep_s": 14.055110699999204,
+  "points": 10,
+  "error": null,
+  "result": {
+    "config": {
+      "sweep": {
+        "sweep_type": "log",
+        "start_hz": 50.0,
+        "stop_hz": 1000000.0,
+        "points_per_decade": 2,
+        "n_points": 101,
+        "descending": false
+      },
+      "stimulus": {
+        "gen_channel": 1,
+        "amp_vpp": 1.0,
+        "offset_v": 0.0,
+        "load": "HIGHZ"
+      },
+      "scope": {
+        "ref_channel": 1,
+        "dut_channel": 2,
+        "probe_atten": {
+          "1": 10.0,
+          "2": 10.0
+        },
+        "coupling": "DC",
+        "bw_limit": false,
+        "target_cycles": 5.0,
+        "min_samples_per_cycle": 20
+      },
+      "measure": {
+        "method": "sinefit",
+        "averages": 1,
+        "settle_ms": 50.0,
+        "settle_cycles": 3.0,
+        "autorange_target": [
+          0.6,
+          0.8
+        ],
+        "autorange_max_retries": 3,
+        "floor_fraction": 0.1,
+        "acquire_timeout_s": 5.0,
+        "vdiv_settle_ms": 20.0,
+        "low_snr_db": 20.0
+      }
+    },
+    "points": [
+      {
+        "freq_hz": 50.0,
+        "h": [
+          1.00285858552098,
+          0.002438399471999007
+        ],
+        "gain_db": 0.02481961259153351,
+        "phase_deg": 0.13931148938775095,
+        "vref_amp": 0.4979605931796304,
+        "vdut_amp": 0.49938553228443766,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.01,
+        "n_avg": 1,
+        "snr_ref_db": 35.63776016539387,
+        "snr_dut_db": 35.967624200701145,
+        "flags": "",
+        "duration_s": 1.0092690000019502,
+        "skew_corr_deg": -2.9582109783591887e-06,
+        "retries": 0
+      },
+      {
+        "freq_hz": 150.26651907000792,
+        "h": [
+          1.0037408547122146,
+          -1.1328159135559069e-06
+        ],
+        "gain_db": 0.032432027187566714,
+        "phase_deg": -6.466367341317891e-05,
+        "vref_amp": 0.49703468222340746,
+        "vdut_amp": 0.49889401675685474,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.005,
+        "n_avg": 1,
+        "snr_ref_db": 32.69845870349107,
+        "snr_dut_db": 32.93042927670473,
+        "flags": "",
+        "duration_s": 1.1926600000006147,
+        "skew_corr_deg": -8.890401327854356e-06,
+        "retries": 0
+      },
+      {
+        "freq_hz": 451.6005350683411,
+        "h": [
+          1.0041587569526957,
+          -0.0009968891263963423
+        ],
+        "gain_db": 0.03605187945607707,
+        "phase_deg": -0.05688096670473897,
+        "vref_amp": 0.4959455095036663,
+        "vdut_amp": 0.4980082717511355,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.001,
+        "n_avg": 1,
+        "snr_ref_db": 36.45209833065759,
+        "snr_dut_db": 36.81984761785923,
+        "flags": "",
+        "duration_s": 1.0823592000015196,
+        "skew_corr_deg": -2.671859321344101e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 1357.208808297453,
+        "h": [
+          1.0022781833260472,
+          -0.0016916707179378786
+        ],
+        "gain_db": 0.019777914687874834,
+        "phase_deg": -0.0967051882772978,
+        "vref_amp": 0.4920573615836674,
+        "vdut_amp": 0.49317906093195796,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0005,
+        "n_avg": 1,
+        "snr_ref_db": 33.517687058379344,
+        "snr_dut_db": 33.70450100914037,
+        "flags": "",
+        "duration_s": 1.12224839999908,
+        "skew_corr_deg": -8.029819993262635e-05,
+        "retries": 0
+      },
+      {
+        "freq_hz": 4078.8608654802388,
+        "h": [
+          1.0014239913588583,
+          -0.001120752383714829
+        ],
+        "gain_db": 0.012365273332886409,
+        "phase_deg": -0.0641230439956928,
+        "vref_amp": 0.4890581312517707,
+        "vdut_amp": 0.48975485251731304,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 0.0001,
+        "n_avg": 1,
+        "snr_ref_db": 36.39418410912294,
+        "snr_dut_db": 36.82615222193968,
+        "flags": "",
+        "duration_s": 1.124062300001242,
+        "skew_corr_deg": -0.00024132261982926607,
+        "retries": 0
+      },
+      {
+        "freq_hz": 12258.324480531912,
+        "h": [
+          1.0003389128062188,
+          -0.0014292731236870899
+        ],
+        "gain_db": 0.0029521263477570803,
+        "phase_deg": -0.08186351743904652,
+        "vref_amp": 0.48954802619656956,
+        "vdut_amp": 0.4897144401518988,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-05,
+        "n_avg": 1,
+        "snr_ref_db": 34.05648121093737,
+        "snr_dut_db": 34.8602617952041,
+        "flags": "",
+        "duration_s": 1.1032254000019748,
+        "skew_corr_deg": -0.0007252542010919741,
+        "retries": 0
+      },
+      {
+        "freq_hz": 36840.31498640386,
+        "h": [
+          1.0002981708944119,
+          -0.0005298647044359452
+        ],
+        "gain_db": 0.002590712029010382,
+        "phase_deg": -0.03034995896325654,
+        "vref_amp": 0.4893704257873907,
+        "vdut_amp": 0.48951641048145406,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 1e-05,
+        "n_avg": 1,
+        "snr_ref_db": 37.29011713212806,
+        "snr_dut_db": 37.23594084317763,
+        "flags": "",
+        "duration_s": 1.1063632000004873,
+        "skew_corr_deg": -0.0021796284847798086,
+        "retries": 0
+      },
+      {
+        "freq_hz": 110717.31788899112,
+        "h": [
+          0.9996235967422398,
+          -6.647338429263489e-05
+        ],
+        "gain_db": -0.0032699934119572206,
+        "phase_deg": -0.0038100784902610485,
+        "vref_amp": 0.49159796662943794,
+        "vdut_amp": 0.49141292863981395,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-06,
+        "n_avg": 1,
+        "snr_ref_db": 34.36905716282992,
+        "snr_dut_db": 35.44728680152845,
+        "flags": "",
+        "duration_s": 1.0840513999974064,
+        "skew_corr_deg": -0.0065505037054739545,
+        "retries": 0
+      },
+      {
+        "freq_hz": 332742.1191989241,
+        "h": [
+          0.9987686332689444,
+          -0.000803993183333444
+        ],
+        "gain_db": -0.010699291764742026,
+        "phase_deg": -0.04612219955427577,
+        "vref_amp": 0.4948841888665666,
+        "vdut_amp": 0.4942749650856589,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 2e-06,
+        "n_avg": 1,
+        "snr_ref_db": 33.6038143924441,
+        "snr_dut_db": 33.849696957551785,
+        "flags": "",
+        "duration_s": 1.046650199998112,
+        "skew_corr_deg": -0.01968642779953518,
+        "retries": 0
+      },
+      {
+        "freq_hz": 1000000.0,
+        "h": [
+          0.9989402141166186,
+          0.0009100979311273281
+        ],
+        "gain_db": -0.009206459631839917,
+        "phase_deg": 0.052200076874413526,
+        "vref_amp": 0.48423354574180555,
+        "vdut_amp": 0.48372056261853746,
+        "vdiv_ref": 0.02,
+        "vdiv_dut": 0.02,
+        "timebase": 5e-07,
+        "n_avg": 1,
+        "snr_ref_db": 35.07837320006033,
+        "snr_dut_db": 35.1818727088712,
+        "flags": "",
+        "duration_s": 1.0769962999984273,
+        "skew_corr_deg": -0.05916421956718377,
+        "retries": 0
+      }
+    ],
+    "meta": {
+      "app_version": "0.1.0",
+      "started": "2026-10-06T01:52:12+03:00",
+      "finished": "2026-10-06T01:52:26+03:00",
+      "source_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+      "digitizer_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+      "simulated": false,
+      "aborted": false,
+      "error": null,
+      "skew": {
+        "delay_s": -1.6434505435328825e-10,
+        "measured_s": -1.6434505435328825e-10,
+        "snapped": false,
+        "gain_db": -0.014923683557300418,
+        "freqs_hz": [
+          500000.0,
+          1000000.0
+        ],
+        "per_freq_delay_s": [
+          -3.267478840068004e-10,
+          -1.9422246997760967e-12
+        ],
+        "per_freq_gain_db": [
+          -0.020283409606072826,
+          -0.009563957508528008
+        ],
+        "warnings": [
+          "The two check frequencies disagree by 0.32 ns (-0.33 ns at 0.5 MHz, -0.00 ns at 1 MHz); the offset is not a pure delay.",
+          "Measured delay -0.16 ns is more than 0.3 ns from every known state (-1.85, +0.15, +2.15, +4.15 ns); using the measured value."
+        ],
+        "checked_at": "2026-10-06T01:52:12+03:00",
+        "alignment_epoch": 1
+      },
+      "skew_applied_s": -1.6434505435328825e-10,
+      "skew_text": "skew: -0.16 ns (not snapped, measured -0.16 ns, gain mismatch -0.01 dB, checked 2026-10-06T01:52:12+03:00)"
+    }
+  },
+  "per_point_s": {
+    "mean": 1.0947885400000814,
+    "min": 1.0092690000019502,
+    "max": 1.1926600000006147
+  },
+  "scope_stats": {
+    "queries": 720,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0,
+    "rearms": 0
+  },
+  "generator_stats": {
+    "queries": 27,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  },
+  "outputs_at_end": [
+    false,
+    false
+  ],
+  "panel_locked_at_end": "0",
+  "sweep_mode_at_end": "AUTO",
+  "_identity": {
+    "script": "m7_sweep.py",
+    "sha256": "5602c70727bf686b5b1598d05a8577bb5ff311e47aeb18bfa3b05d68340cc37c",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "d292e24",
+    "git_dirty": []
+  }
+}
