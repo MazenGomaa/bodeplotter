@@ -14,8 +14,45 @@ SCOPE_VID, SCOPE_PID = 0x5656, 0x0832   # bus-reported name "UPO-1000X"
 GEN_VID, GEN_PID = 0x6656, 0x0834       # bus-reported name "UTG900E"
 
 
+def _sha(path):
+    import hashlib
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def script_identity():
+    """What exactly is running: the hash of the started script and of every hwcheck module
+    it can import, plus the git commit. Printed at start-up (below) and stored with every
+    result, so a stale or half-edited script cannot run unnoticed (2026-10-06: an edit that
+    silently failed to apply let the old version of a script run on the bench again)."""
+    import subprocess
+    import sys
+    main = os.path.abspath(sys.argv[0]) if sys.argv and sys.argv[0] else ""
+    ident = {"script": os.path.basename(main), "sha256": _sha(main) if os.path.isfile(main) else None,
+             "modules": {n: _sha(os.path.join(HERE, n))[:12] for n in sorted(os.listdir(HERE))
+                         if n.endswith(".py") and os.path.join(HERE, n) != main}}
+    try:
+        run = lambda *a: subprocess.run(("git",) + a, cwd=HERE, capture_output=True, text=True, timeout=10)
+        ident["git_commit"] = run("rev-parse", "--short", "HEAD").stdout.strip() or None
+        ident["git_dirty"] = [l for l in run("status", "--porcelain", "--", ".").stdout.splitlines() if l.strip()]
+    except Exception as e:
+        ident["git_error"] = str(e)
+    return ident
+
+
+IDENTITY = script_identity()
+if IDENTITY["sha256"]:
+    _d = IDENTITY.get("git_dirty")
+    print("[hwcheck] %s  sha256 %s  iolayer %s  git %s%s" % (
+        IDENTITY["script"], IDENTITY["sha256"][:16], IDENTITY["modules"].get("iolayer.py"),
+        IDENTITY.get("git_commit"), "" if not _d else "  UNCOMMITTED: " + ", ".join(x.strip() for x in _d)),
+        flush=True)
+
+
 def save(name, data):
     path = os.path.join(RESULTS, name)
+    if isinstance(data, dict):
+        data.setdefault("_identity", IDENTITY)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, default=str)
     return path
