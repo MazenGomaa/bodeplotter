@@ -805,3 +805,37 @@ Findings:
 **D. Incident.** While the app's real drivers were being written, one automated test opened a real connection: it found both instruments over USB, identified them and (as far as can be told) began the driver's connect sequence before the test ended and disconnected. No output was switched on (the generator driver forces both outputs off when it opens). A read-only check afterwards (`hwcheck/s6_state.py`) showed both generator outputs OFF, the scope unlocked, sweep AUTO, error queue empty. The test suite now sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open raise, so no test can reach an instrument.
 
 **What Milestone 6 did not do:** the app's own drivers and the probe tool have run only against simulated instruments. Their first run on the real scope and generator is Milestone 7, step 1.
+## 13. Milestone 7: bench bring-up of the app's own drivers (started 2026-10-06)
+
+Raw data: `hwcheck/results/m7/`. Setup so far: both 10X probes on generator CH1 (a "through" measurement: expected 0 dB, 0 degrees). A commit was made before every run.
+
+### 13.1 Probe tool, first run on the real instruments
+
+`python -m bodeplot.tools.probe --json hwcheck/results/m7/probe_run1.json`: **63 checks, 0 failed.** Every query form of every command in both drivers answered in the expected format (generator channels 1 and 2, scope channels 1 to 4), the single-shot test acquisition on CH1 returned 700 points (with a forced trigger, there being no signal), generator outputs read back OFF at the end, and the stored step tables matched this model and firmware.
+
+### 13.2 Sweeps through the app's engine (`hwcheck/m7_sweep.py`)
+
+The script uses the same code as the GUI (`drivers/connect.py`, `sweep/core.py`): find the instruments, skew check, sweep, generator off, panel unlocked, scope back to sweep AUTO.
+
+| Run | Range | Points | Errors | Gain (through) | Phase (through) | Time per point |
+|---|---|---|---|---|---|---|
+| through_short | 1 kHz to 1 MHz | 10 | 0 | -0.014 to +0.028 dB | -0.14 to +0.03 deg | 1.35 s |
+| through_full | 50 Hz to 20 MHz | 30 | 0 (1 point AUTORANGE_FAILED) | -0.027 to +0.044 dB | -0.28 to +0.06 deg | 1.74 s |
+| through_short2 | 1 kHz to 1 MHz | 10 | 0 | -0.015 to +0.035 dB | -0.18 to +0.02 deg | 1.4 s |
+| lowstart | 50 Hz to 1 MHz | 9 | 0 | within 0.04 dB | within 0.14 deg | 1.4 s |
+| hf_repeat | 100 kHz to 20 MHz | 11 | 0 | -0.051 to +0.008 dB | -0.10 to +0.07 deg | 1.3 s |
+
+- Scope counters over all runs: 0 reply errors, 0 out-of-step, 0 empty blocks, 0 resyncs after the one at connect. Generator: 0 timeouts.
+- After every run: generator outputs OFF, panel lock 0, scope sweep AUTO.
+- Connect takes 2.0 s. The skew check takes 10 to 23 s. One capture point costs 0.75 s when the timebase stays and about 1.05 s when it changes; settling and generator commands add about 0.3 s.
+- The skew check at 10 and 20 MHz measured +0.15 and +0.14 ns and snapped to the +0.15 ns state.
+
+### 13.3 Problems found, and what was done
+
+1. **OPEN: the signal level at high frequency changed from run to run.** With nothing touched on the bench (user's statement), the reference amplitude at 20 MHz was 0.034 V peak in `through_full` and 0.30 V in `hf_repeat` (0.5 V expected; Milestone 0c read 1 Vpp within 1.5% up to 20 MHz). In `through_full` the level already fell from about 200 kHz (0.44 V at 365 kHz, 0.32 V at 889 kHz), while the three runs that stopped at 1 MHz were flat (0.49 V at 1 MHz). Both probes saw the same level each time, so the gain stayed within 0.05 dB. Cause not known: a loose ground clip or contact, or the generator. The user is checking the wiring. It matters for a real DUT because a low reference level costs signal-to-noise (SNR fell from 36 to 27 dB) and can hide a wiring fault.
+2. **Fixed: auto-range flipped between two V/div steps.** At 8.2 MHz in `through_full` (10.5 mVpp at the input) the measured p-p sat on the upper target, so the step alternated between 2 and 5 mV/div until the retries ran out: 11 s and an AUTORANGE_FAILED flag. Auto-range now stays on a step that is just over the upper target while the signal is still on screen and the next step would fall below the lower target.
+3. **Fixed: the skew check could not resolve the delay when the sweep stopped at 1 MHz.** The check used the top of the sweep, so it ran at 0.5 and 1 MHz, where 0.3 ns is 0.1 degree. Three such checks measured +0.04, 0.00 and -0.16 ns; the last one disagreed between its two frequencies by 0.32 ns and was not snapped. The check now always runs at 10 and 20 MHz when the instruments reach them, whatever the sweep range.
+
+### 13.4 Not done yet
+
+The known RC low-pass, compared with theory and with the simulation; the timed full-range sweep on a real DUT; a sweep from the GUI on the real instruments (only the headless path has run).
