@@ -20,7 +20,14 @@ def _candidates(backend: str) -> list[str]:
     raise ValueError(f"unknown backend {backend!r}")
 
 
+NO_HARDWARE_ENV = "BODEPLOT_NO_HARDWARE"
+
+
 def open_resource_manager(backend: str = DEFAULT_BACKEND):
+    import os
+    if os.environ.get(NO_HARDWARE_ENV):
+        # set by the test suite: a test must never reach a real instrument, whatever it does
+        raise RuntimeError("instrument access is disabled (%s is set)" % NO_HARDWARE_ENV)
     import pyvisa
     last = None
     for name in _candidates(backend):

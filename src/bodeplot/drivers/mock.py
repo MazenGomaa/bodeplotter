@@ -16,13 +16,14 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from . import step_tables
 from .base import (AcquireTimeout, Digitizer, DigitizerCaps, DriverError, SignalSource,
                    SourceCaps, Waveform)
 
 # Real step tables of the UPO1054 (HW_REPORT.md 12.2). Note 25 ns, and no 20 ns.
-TB_STEPS = (1e-9, 2e-9, 5e-9, 1e-8, 2.5e-8, 5e-8, 1e-7, 2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5,
-            5e-5, 1e-4, 1e-4, 5e-4, 1e-3, 2e-3, 5e-3, 1e-2, 2e-2)
-VDIV_STEPS = (5e-4, 1e-3, 2e-3, 5e-3, 1e-2, 2e-2, 5e-2, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0)
+TB_STEPS = step_tables.FALLBACK.timebase
+VDIV_STEPS = step_tables.FALLBACK.vdiv
+RAIL_LOW, RAIL_HIGH = 1, 254        # the real scope's waveform codes stop here (HW_REPORT.md 12.14)
 SKEW_STATES_S = (-1.85e-9, 0.15e-9, 2.15e-9, 4.15e-9)
 POINTS = 700
 HDIVS = 14.0
@@ -168,7 +169,8 @@ class MockScope(Digitizer):
         self.caps = DigitizerCaps(
             model="MOCK-SCOPE", channels=4, bandwidth_hz=50e6, max_sample_rate=1e9,
             vdiv_steps=VDIV_STEPS, timebase_steps=TB_STEPS, vertical_divs=8.0, horizontal_divs=HDIVS,
-            has_builtin_amplitude=True, has_builtin_phase=True, min_hz=20.0, max_hz=50e6)
+            has_builtin_amplitude=True, has_builtin_phase=True, min_hz=20.0, max_hz=50e6,
+            data_vertical_divs=(RAIL_HIGH - RAIL_LOW) / CODES_PER_DIV)
         self.is_open = False
         self.alignment_epoch = 0
         self.skew_enabled = skew_enabled
@@ -308,10 +310,11 @@ class MockScope(Digitizer):
             v_in = tip / c["probe"] + self.rng.normal(0.0, self.noise_vrms, POINTS)
             yinc = c["vdiv"] / CODES_PER_DIV
             codes = np.rint(v_in / yinc + c["offset"] / c["probe"] / yinc) + 128
-            clipped = bool(np.any(codes <= 0) or np.any(codes >= 255))
-            codes = np.clip(codes, 0, 255)
+            codes = np.clip(codes, RAIL_LOW, RAIL_HIGH)
+            at_rail = (codes <= RAIL_LOW) | (codes >= RAIL_HIGH)
             volts = ((codes - 128) * yinc - c["offset"] / c["probe"]) * c["probe"]
-            out[ch] = Waveform(dt=dt, t0=float(t[0]), volts=volts, clipped=clipped)
+            out[ch] = Waveform(dt=dt, t0=float(t[0]), volts=volts, clipped=bool(at_rail.any()),
+                               rail_fraction=float(at_rail.mean()))
         return out
 
     def builtin_amplitude(self, ch) -> float:

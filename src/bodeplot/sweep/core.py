@@ -15,6 +15,7 @@ from typing import Callable
 from .. import __version__
 from ..drivers.base import Digitizer, DriverError, SignalSource
 from ..drivers.mock import SimulatedDUT, make_sim
+from ..drivers.scpi import InstrumentUnresponsive
 from ..measure import sinefit, skew
 from ..measure.meters import DualChannelScopeMeter, MeasureCancelled, MeterState, ResponseMeter
 from ..models import (EngineState, Flag, LogEntry, MeasureSettings, PointResult, ScopeConfig,
@@ -42,6 +43,9 @@ class Session:
     digitizer_idn: str = ""
     skew: SkewCheck | None = None
     recheck_reason: str | None = "No skew check has been done in this session."
+    # Set by the watchdog when an instrument stops answering: the connection is finished
+    # and the engine closes it (SPEC.md section 13).
+    dead_reason: str | None = None
 
     @classmethod
     def simulated_session(cls, dut: SimulatedDUT | None = None, **kw) -> "Session":
@@ -52,10 +56,46 @@ class Session:
 
     def open(self, source_resource: str = "SIM::GEN", digitizer_resource: str = "SIM::SCOPE",
              backend: str = "sim") -> None:
+        # the generator first: its outputs are forced off before anything else happens
         self.source.open(source_resource, backend)
-        self.digitizer.open(digitizer_resource, backend)
-        self.source_idn, self.digitizer_idn = self.source.idn(), self.digitizer.idn()
+        try:
+            self.digitizer.open(digitizer_resource, backend)
+            self.source_idn, self.digitizer_idn = self.source.idn(), self.digitizer.idn()
+        except Exception:
+            self.close()
+            raise
         self.invalidate_skew("Connected: the channel skew must be checked once per session.")
+
+    def take_warnings(self) -> list[str]:
+        """Driver warnings meant for the user (e.g. unknown scope firmware), each once."""
+        out: list[str] = []
+        for dev in (self.source, self.digitizer):
+            pending = getattr(dev, "warnings", None)
+            if pending:
+                out.extend(pending)
+                pending.clear()
+        return out
+
+    def mark_dead(self, reason: str) -> None:
+        self.dead_reason = reason
+        self.invalidate_skew("The connection was lost.")
+
+    def lock_panel(self, on: bool) -> None:
+        """Keep the scope's front panel out of a running measurement. Never raises:
+        a lock that cannot be set is logged, and the measurement goes on."""
+        try:
+            self.digitizer.lock_panel(on)
+        except Exception as e:
+            log.warning("front-panel %s failed: %s", "lock" if on else "unlock", e)
+
+    def end_measurement(self) -> None:
+        """After a sweep, skew check or re-measure: leave the scope running (it stops
+        after every single shot) and give the front panel back. Never raises."""
+        try:
+            self.digitizer.free_run()
+        except Exception as e:
+            log.warning("could not leave the scope running: %s", e)
+        self.lock_panel(False)
 
     def close(self) -> None:
         try:
@@ -120,6 +160,7 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
     try:
         if same_node:
             same_node(True)
+        session.lock_panel(True)
         src.configure_sine(stim.gen_channel, freqs[0], stim.amp_vpp, stim.offset_v, stim.load)
         meter.prepare(stim.amp_vpp, stim.offset_v)
         src.set_output(stim.gen_channel, True)
@@ -134,11 +175,23 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
             if on_log:
                 on_log(LogEntry("info", "Skew check at %g MHz: phase %+.2f deg, gain %+.3f dB"
                                 % (f / 1e6, point.phase_deg, point.gain_db), _now_iso()))
+    except InstrumentUnresponsive as e:
+        src.safe_off()
+        session.mark_dead(watchdog_message(e))
+        raise DriverError(session.dead_reason, e.last_command)
     finally:
         src.safe_off()
         if same_node:
             same_node(False)
+        if session.dead_reason is None:
+            session.end_measurement()
     return skew.evaluate(freqs, hs, alignment_epoch=epoch)
+
+
+def watchdog_message(e: InstrumentUnresponsive) -> str:
+    return "%s %s" % (str(e).rstrip(".").capitalize() + ".", e.advice or
+                      "The generator outputs have been switched off. Power-cycle the instrument and "
+                      "connect again.")
 
 
 # ---------------------------------------------------------------------- runner
@@ -271,6 +324,7 @@ class SweepRunner:
         error: str | None = None
         delay_s = self.session.skew_delay()
         config = config_snapshot(self.sweep, self.stim, self.scope_cfg, self.meas)
+        p = None
         try:
             self._set_state(EngineState.CONNECTING)
             p = self.make_plan()
@@ -281,6 +335,7 @@ class SweepRunner:
                                   "point is flagged SKEW_UNCHECKED. " + (self.session.recheck_reason or ""))
             else:
                 self._log("info", "Channel skew correction: %+.2f ns." % (delay_s * 1e9))
+            self.session.lock_panel(True)
             meter, state = self._start(p.freqs_hz[0])
             self._set_state(EngineState.RUNNING)
             n = len(p.freqs_hz)
@@ -298,6 +353,14 @@ class SweepRunner:
                 self._log("warn", "Sweep aborted after %d of %d points." % (len(points), n))
         except plan_mod.PlanError as e:
             error = str(e)
+        except InstrumentUnresponsive as e:
+            # Watchdog: the instrument is gone. Generator off first (also in the finally
+            # below), stop here, keep the points measured so far, tell the user what to do.
+            self.session.source.safe_off()
+            self.session.mark_dead(watchdog_message(e))
+            error = "%s %d of %d points were measured and are kept. (last command: %s)" % (
+                self.session.dead_reason, len(points), len(p.freqs_hz) if p else 0,
+                e.last_command or self.last_command)
         except DriverError as e:
             error = "%s (last command: %s)" % (e, e.last_command or self.last_command)
         except Exception as e:                      # keep partial results whatever happens
@@ -305,6 +368,8 @@ class SweepRunner:
             error = "%s: %s (last command: %s)" % (type(e).__name__, e, self.last_command)
         finally:
             self.session.source.safe_off()
+            if self.session.dead_reason is None:
+                self.session.end_measurement()
         # an epoch change during the sweep means the correction may be stale
         if delay_s is not None and not self.session.skew_valid():
             self._log("warn", "The scope was resynchronised during the sweep; the skew correction "
@@ -324,6 +389,7 @@ class SweepRunner:
         delay_s = self.session.skew_delay()
         try:
             self._set_state(EngineState.RUNNING)
+            self.session.lock_panel(True)
             meter, state = self._start(freq_hz)
             point = self._measure_one(meter, state, freq_hz, delay_s)
             point.flags |= Flag.REMEASURED
@@ -331,13 +397,20 @@ class SweepRunner:
             self._set_state(EngineState.DONE)
             raise
         except DriverError as e:
-            msg = "%s (last command: %s)" % (e, e.last_command or self.last_command)
+            if isinstance(e, InstrumentUnresponsive):
+                self.session.source.safe_off()
+                self.session.mark_dead(watchdog_message(e))
+                msg = "%s (last command: %s)" % (self.session.dead_reason, e.last_command or self.last_command)
+            else:
+                msg = "%s (last command: %s)" % (e, e.last_command or self.last_command)
             self._log("error", msg)
             self._set_state(EngineState.ERROR)
             self.cb.error(msg)
             raise
         finally:
             self.session.source.safe_off()
+            if self.session.dead_reason is None:
+                self.session.end_measurement()
         for i, q in enumerate(result.points):
             if abs(q.freq_hz - freq_hz) <= 1e-9 * freq_hz:
                 result.points[i] = point

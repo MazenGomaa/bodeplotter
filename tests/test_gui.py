@@ -311,13 +311,15 @@ def test_presets_and_settings_persist(win, qtbot, tmp_path):
     assert s.last_config["sweep"]["start_hz"] == 123.0 and s.window_geometry
 
 
-def test_non_sim_connect_reports_missing_drivers(qtbot, tmp_path, monkeypatch):
+def test_non_sim_connect_failure_is_reported(qtbot, tmp_path, monkeypatch):
+    """A real connection that cannot be made (here: instrument access is disabled for the
+    whole test suite) is reported and leaves the app disconnected."""
     monkeypatch.setenv("BODEPLOT_CONFIG_DIR", str(tmp_path / "cfg"))
     w = MainWindow(simulate=False, settings=AppSettings(simulate=False))
     w.interactive = False
     qtbot.addWidget(w)
     with qtbot.waitSignal(w.engine.error, timeout=5000) as blocker:
         w.toggle_connection()
-    assert "Milestone 6" in blocker.args[0]
+    assert "instrument access is disabled" in blocker.args[0]
     assert not w.info.connected
     w.close()

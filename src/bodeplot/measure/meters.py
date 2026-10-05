@@ -135,7 +135,8 @@ class DualChannelScopeMeter(ResponseMeter):
                 vpp_in = float(np.ptp(w.volts)) / self._probe(ch)
                 dec = autorange.decide(vpp_in, w.clipped, state.vdiv[ch], caps.vdiv_steps,
                                        caps.vertical_divs, settings.autorange_target,
-                                       settings.floor_fraction)
+                                       settings.floor_fraction, w.rail_fraction,
+                                       caps.data_vertical_divs)
                 if dec.action == "change":
                     changes[ch] = dec.vdiv
                 elif dec.action == "floor":

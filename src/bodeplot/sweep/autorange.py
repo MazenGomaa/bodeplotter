@@ -42,6 +42,22 @@ def step_up(vdiv: float, steps, n: int = 1) -> float:
 
 
 CLIP_JUMP = 7
+CLIP_ESTIMATE_MAX_FRACTION = 0.95   # above this share of samples on the rails the estimate is useless
+CLIP_ESTIMATE_MARGIN = 1.25         # the estimate assumes a centred sine; an offset makes it too small
+
+
+def clipped_vpp_estimate(rail_fraction: float, vdiv: float, data_divs: float) -> float | None:
+    """Peak-to-peak of a clipped sine, from the share of samples that sit on the rails.
+
+    A centred sine of amplitude A (in divisions) clipped at +/-R spends the fraction
+    p = 1 - (2/pi) asin(R/A) of its time on the rails, so A = R / cos(p pi/2).
+    Checked against the real scope (HW_REPORT.md 12.14): 20, 50 and 100 divisions p-p
+    were estimated as 19.7, 46 and 108. Returns None when no estimate is possible."""
+    import math
+    if data_divs <= 0 or not (0.0 < rail_fraction < CLIP_ESTIMATE_MAX_FRACTION):
+        return None
+    amp_div = (data_divs / 2.0) / math.cos(rail_fraction * math.pi / 2.0)
+    return 2.0 * amp_div * vdiv * CLIP_ESTIMATE_MARGIN
 
 
 @dataclass
@@ -52,12 +68,15 @@ class RangeDecision:
 
 
 def decide(vpp: float, clipped: bool, vdiv: float, steps, vertical_divs: float,
-           target=(0.6, 0.8), floor_fraction: float = 0.1) -> RangeDecision:
+           target=(0.6, 0.8), floor_fraction: float = 0.1, rail_fraction: float = 0.0,
+           data_divs: float = 0.0) -> RangeDecision:
     """One auto-range decision from one capture.
 
-    - clipped: the true amplitude is unknown, so go up CLIP_JUMP steps (x200 on a
-      1-2-5 table). A small jump needs too many retries from a far-off start; a
-      jump to the top of the table would leave a small signal under one ADC code.
+    - clipped: estimate the amplitude from the share of samples on the rails and go to
+      the step that predicts (always at least one step up). When no estimate is possible
+      (the digitizer does not report it, or nearly every sample is on a rail) go up
+      CLIP_JUMP steps (x200 on a 1-2-5 table): a small jump needs too many retries from
+      a far-off start; a jump to the top would leave a small signal under one ADC code.
     - above the upper target, or below the lower one: jump straight to the step the
       measured amplitude predicts (not one step at a time).
     - at the most sensitive step and still below floor_fraction: "floor".
@@ -65,7 +84,11 @@ def decide(vpp: float, clipped: bool, vdiv: float, steps, vertical_divs: float,
     ordered = sorted(steps)
     frac = fraction_of_full_scale(vpp, vdiv, vertical_divs)
     if clipped:
-        new = step_up(vdiv, ordered, CLIP_JUMP)
+        est = clipped_vpp_estimate(rail_fraction, vdiv, data_divs)
+        if est is None:
+            new = step_up(vdiv, ordered, CLIP_JUMP)
+        else:
+            new = max(choose_vdiv(est, ordered, vertical_divs, target), step_up(vdiv, ordered, 1))
         return RangeDecision("change" if new != vdiv else "ok", new, frac)
     if target[0] <= frac <= target[1]:
         return RangeDecision("ok", vdiv, frac)

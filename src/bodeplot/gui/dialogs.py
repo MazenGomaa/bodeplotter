@@ -31,8 +31,9 @@ SIM_LABELS = {"through": "Through (wire)", "rc_lpf": "RC low-pass", "rc_hpf": "R
 
 # ---------------------------------------------------------------------- connections
 class ConnectionsDialog(QDialog):
-    def __init__(self, settings: AppSettings, parent=None):
+    def __init__(self, settings: AppSettings, parent=None, connected: bool = False):
         super().__init__(parent)
+        self.connected = connected
         self.setWindowTitle("Connections")
         self.resize(560, 420)
         lay = QVBoxLayout(self)
@@ -60,7 +61,8 @@ class ConnectionsDialog(QDialog):
         lay.addLayout(row)
         self.found = QListWidget()
         lay.addWidget(self.found, 1)
-        self.note = QLabel("Double-click a resource to use it. Hold Shift to set it as the scope.")
+        self.note = QLabel("Double-click a resource to use it. Hold Shift to set it as the scope. Leave "
+                           "both fields empty to find the instruments automatically.")
         self.note.setWordWrap(True)
         lay.addWidget(self.note)
         box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -105,13 +107,23 @@ class ConnectionsDialog(QDialog):
         if self.simulate.isChecked():
             QMessageBox.information(self, "Test", "Simulation mode: nothing to test.")
             return
-        missing = [e.label for e in registry.ENTRIES if "SIM" not in "".join(e.patterns)
-                   and not registry.is_available(e)]
-        QMessageBox.information(
-            self, "Test",
-            "The real instrument drivers (%s) are part of Milestone 6 and are not in this build, so a "
-            "connection test is not possible yet. Discover still lists what the backend can see."
-            % ", ".join(missing))
+        if self.connected:
+            QMessageBox.information(self, "Test", "Disconnect first: the instruments are in use.")
+            return
+        # Identification only: *IDN? is the one query both instruments are known to accept.
+        from ..drivers import connect
+        only = tuple(x for x in (self.source.text().strip(), self.digitizer.text().strip()) if x)
+        self.found.clear()
+        try:
+            results = connect.scan(self.backend.currentData(), only)
+        except Exception as e:
+            self.found.addItem("Test failed: %s" % e)
+            return
+        for r in results:
+            what = r.entry.label if r.entry else ("no reply" if not r.idn else "not a supported instrument")
+            self.found.addItem("%s   %s   [%s]" % (r.resource, r.idn or "-", what))
+        if not results:
+            self.found.addItem("Nothing to test: no USB or LAN instrument was found.")
 
     def apply_to(self, settings: AppSettings) -> None:
         settings.simulate = self.simulate.isChecked()

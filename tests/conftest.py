@@ -4,6 +4,8 @@ from pathlib import Path
 
 # Run the GUI tests without a display, and find the package without installing it.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# No test may reach a real instrument: every VISA open raises while this is set.
+os.environ["BODEPLOT_NO_HARDWARE"] = "1"
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import pytest

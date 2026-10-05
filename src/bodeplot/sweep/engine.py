@@ -38,6 +38,7 @@ class SessionInfo:
     source_idn: str = ""
     digitizer_idn: str = ""
     has_phase: bool = True
+    has_builtin: bool = True
     skew: SkewCheck | None = None
     skew_valid: bool = False
     recheck_reason: str | None = None
@@ -55,6 +56,7 @@ class ConnectRequest:
     sim_noise_vrms: float = 1e-4
     sim_latency_s: float = 0.005
     sim_seed: int | None = None
+    scope_min_gap_ms: float = 100.0
 
 
 class EngineWorker(QObject):
@@ -81,11 +83,23 @@ class EngineWorker(QObject):
         if s is None:
             return SessionInfo()
         valid = s.skew_valid()
-        return SessionInfo(True, s.simulated, s.source_idn, s.digitizer_idn, True, s.skew, valid,
+        caps = s.digitizer.caps
+        return SessionInfo(True, s.simulated, s.source_idn, s.digitizer_idn, True,
+                           caps.has_builtin_amplitude and caps.has_builtin_phase, s.skew, valid,
                            s.recheck_reason, skew.describe(s.skew if valid else None))
 
     def _emit_session(self):
+        self._drop_if_dead()
         self.session_changed.emit(self._info())
+
+    def _drop_if_dead(self):
+        """Watchdog follow-up: an instrument stopped answering. The generator is already
+        off and the partial data are with the GUI; close what is left of the connection."""
+        s = self.session
+        if s is not None and s.dead_reason:
+            s.close()
+            self.session = None
+            self._say("error", "Disconnected. " + s.dead_reason)
 
     def _say(self, level: str, text: str):
         self.log.emit(LogEntry(level, text, _now_iso()))
@@ -101,15 +115,20 @@ class EngineWorker(QObject):
         self.disconnect_instruments()
         self.state_changed.emit(EngineState.CONNECTING)
         try:
-            if not req.simulate:
-                raise DriverError(
-                    "Real instrument drivers are part of Milestone 6 and are not in this build. "
-                    "Use simulation mode (start with --sim, or tick Simulate in Connections).")
-            dut = SimulatedDUT.from_preset(req.sim_preset, **(req.sim_params or {}))
-            self.session = Session.simulated_session(dut, latency_s=req.sim_latency_s, seed=req.sim_seed,
-                                                     noise_vrms=req.sim_noise_vrms)
-            self._say("info", "Connected (simulation): %s | %s | DUT %s" % (
-                self.session.source_idn, self.session.digitizer_idn, dut.name))
+            if req.simulate:
+                dut = SimulatedDUT.from_preset(req.sim_preset, **(req.sim_params or {}))
+                self.session = Session.simulated_session(dut, latency_s=req.sim_latency_s, seed=req.sim_seed,
+                                                         noise_vrms=req.sim_noise_vrms)
+                self._say("info", "Connected (simulation): %s | %s | DUT %s" % (
+                    self.session.source_idn, self.session.digitizer_idn, dut.name))
+            else:
+                from ..drivers import connect as real
+                self.session = real.open_session(req.backend, req.source_resource, req.digitizer_resource,
+                                                 scope_min_gap_s=req.scope_min_gap_ms / 1000.0)
+                self._say("info", "Connected: %s | %s" % (self.session.source_idn,
+                                                          self.session.digitizer_idn))
+                for w in self.session.take_warnings():
+                    self._say("warn", w)
             self.state_changed.emit(EngineState.IDLE)
         except Exception as e:
             self.session = None

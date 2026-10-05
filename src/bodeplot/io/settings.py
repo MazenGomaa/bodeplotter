@@ -51,6 +51,8 @@ class AppSettings:
     source_resource: str = ""
     digitizer_resource: str = ""
     simulate: bool = False
+    # Minimum pause after a timebase or V/div change on the real scope, on top of *OPC?
+    scope_min_gap_ms: float = 100.0
     last_preset: str = ""
     unwrap_phase: bool = False
     window_geometry: str = ""           # base64 of QByteArray

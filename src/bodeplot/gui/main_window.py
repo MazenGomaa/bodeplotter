@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
             "",
             conn,
             "Channel " + self.skew_status[1],
-            "This build runs in simulation only; the real instrument drivers are Milestone 6.",
+            "Real instruments: UNI-T UPO1000 scopes and UTG900E generators over USB (pyvisa-py).",
             "",
             "Python %s, PySide6 %s (Qt %s), pyqtgraph %s, numpy %s" % (
                 platform.python_version(), pyside_version, qVersion(), pyqtgraph.__version__, numpy.__version__),
@@ -357,7 +357,8 @@ class MainWindow(QMainWindow):
                               digitizer_resource=s.digitizer_resource,
                               sim_preset=sim.get("preset", "rc_lpf"), sim_params=dict(sim.get("params") or {}),
                               sim_noise_vrms=float(sim.get("noise_vrms", 1e-4)),
-                              sim_latency_s=float(sim.get("latency_ms", 5.0)) / 1000.0, sim_seed=self.sim_seed)
+                              sim_latency_s=float(sim.get("latency_ms", 5.0)) / 1000.0, sim_seed=self.sim_seed,
+                              scope_min_gap_ms=float(s.scope_min_gap_ms))
 
     def toggle_connection(self) -> None:
         if self.info.connected:
@@ -366,7 +367,7 @@ class MainWindow(QMainWindow):
             self.engine.connect_instruments(self.connect_request())
 
     def edit_connections(self) -> None:
-        d = ConnectionsDialog(self.settings, self)
+        d = ConnectionsDialog(self.settings, self, connected=self.info.connected)
         if d.exec():
             d.apply_to(self.settings)
             save_settings(self.settings)
@@ -504,7 +505,7 @@ class MainWindow(QMainWindow):
             self._last_reason = None
         else:
             self._show_skew("critical", "skew: UNCHECKED — " + (info.recheck_reason or ""))
-        self.config.set_has_builtin(True)
+        self.config.set_has_builtin(info.has_builtin if info.connected else True)
         self.plot.set_has_phase(info.has_phase)
         self._update_actions()
         if info.connected and info.skew_valid and self._pending_sweep:

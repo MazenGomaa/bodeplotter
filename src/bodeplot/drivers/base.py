@@ -74,6 +74,9 @@ class DigitizerCaps:
     has_builtin_phase: bool
     min_hz: float = 0.0                 # lowest frequency the timebase table can show
     max_hz: float = 0.0
+    # Divisions the waveform data cover before they stop at a rail (more than the screen
+    # shows on the UPO1054: 10.1 against 8). 0 = unknown.
+    data_vertical_divs: float = 0.0
 
 
 @dataclass
@@ -82,6 +85,7 @@ class Waveform:
     t0: float
     volts: np.ndarray         # volts at the probe tip (probe ratio applied)
     clipped: bool             # any sample at an ADC rail
+    rail_fraction: float = 0.0    # share of the samples sitting on a rail (0 when not clipped)
 
     @property
     def t(self) -> np.ndarray:
@@ -121,6 +125,12 @@ class Digitizer(ABC):
     @abstractmethod
     def acquire(self, chans: list[int], timeout_s: float) -> dict[int, Waveform]:
         """One acquisition; every channel in chans is read from that same record."""
+
+    def lock_panel(self, on: bool) -> None:
+        """Lock or release the front-panel keys, where the instrument can. Optional."""
+
+    def free_run(self) -> None:
+        """Leave the instrument running for the user after a sweep. Optional."""
 
     def builtin_amplitude(self, ch: int) -> float:          # optional, volts peak
         raise NotImplementedError
