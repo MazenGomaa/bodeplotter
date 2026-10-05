@@ -126,6 +126,12 @@ class Digitizer(ABC):
     def acquire(self, chans: list[int], timeout_s: float) -> dict[int, Waveform]:
         """One acquisition; every channel in chans is read from that same record."""
 
+    def set_offset(self, ch: int, offset_v: float) -> float:
+        """Vertical offset of a channel in volts at the scope input; positive moves the
+        trace up. Returns the value actually set. Optional: auto-range works without it,
+        but then cannot use the sensitive steps on a signal that carries DC."""
+        raise NotImplementedError
+
     def lock_panel(self, on: bool) -> None:
         """Lock or release the front-panel keys, where the instrument can. Optional."""
 

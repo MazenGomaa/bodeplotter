@@ -427,6 +427,10 @@ class FakeScope(Transport):
         codes = np.rint(v_in / yinc + c["offset"] / yinc) + 128
         if self.noise_codes:
             codes = codes + np.rint(self.rng.normal(0.0, self.noise_codes, 700))
+        # A trace whose middle is far off scale (DC) reads about 125 on the real scope, with
+        # no rail code (HW_REPORT 13.6). An AC overdrive around the centre clips cleanly.
+        if abs(float(np.mean(codes)) - 128.0) > 127 + 100:
+            return np.full(700, 125, dtype=np.uint8)
         return np.clip(codes, 1, 254).astype(np.uint8)       # the real rails (HW_REPORT 12.14)
 
     def _data(self) -> bytes:

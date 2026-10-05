@@ -24,6 +24,7 @@ from .base import (AcquireTimeout, Digitizer, DigitizerCaps, DriverError, Signal
 TB_STEPS = step_tables.FALLBACK.timebase
 VDIV_STEPS = step_tables.FALLBACK.vdiv
 RAIL_LOW, RAIL_HIGH = 1, 254        # the real scope's waveform codes stop here (HW_REPORT.md 12.14)
+FAR_OFF_CODES = 100                 # trace middle further beyond a rail than this: wrong data (about 125)
 SKEW_STATES_S = (-1.85e-9, 0.15e-9, 2.15e-9, 4.15e-9)
 POINTS = 700
 HDIVS = 14.0
@@ -245,6 +246,14 @@ class MockScope(Digitizer):
         self.chan[ch]["vdiv"] = step
         return step
 
+    def set_offset(self, ch, offset_v) -> float:
+        self._cmd("set_offset")
+        c = self.chan[ch]
+        step = c["vdiv"] / CODES_PER_DIV
+        at_input = round(float(offset_v) / step) * step
+        c["offset"] = at_input * c["probe"]         # stored tip-referred, like configure_channel
+        return at_input
+
     def set_timebase(self, s_per_div) -> float:
         self._cmd("set_timebase")
         # like the real scope: a value between steps lands on the step below it
@@ -310,6 +319,11 @@ class MockScope(Digitizer):
             v_in = tip / c["probe"] + self.rng.normal(0.0, self.noise_vrms, POINTS)
             yinc = c["vdiv"] / CODES_PER_DIV
             codes = np.rint(v_in / yinc + c["offset"] / c["probe"] / yinc) + 128
+            # A trace whose middle is far off scale (DC) does not read a rail code on the
+            # real scope: it reads about 125 with no clip indication (HW_REPORT.md 13.6).
+            # An AC overdrive around the centre clips cleanly at the rails (12.14).
+            if abs(float(np.mean(codes)) - 128.0) > 127 + FAR_OFF_CODES:
+                codes = np.full(POINTS, 125.0)
             codes = np.clip(codes, RAIL_LOW, RAIL_HIGH)
             at_rail = (codes <= RAIL_LOW) | (codes >= RAIL_HIGH)
             volts = ((codes - 128) * yinc - c["offset"] / c["probe"]) * c["probe"]

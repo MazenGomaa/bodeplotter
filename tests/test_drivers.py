@@ -568,3 +568,55 @@ def test_autorange_does_not_flip_between_two_steps_on_the_boundary():
     assert d.action == "ok"
     d = autorange.decide(0.035, False, 0.005, steps, 8.0)            # next step 10 mV gives 44%: stay
     assert d.action == "ok"
+
+
+# ---------------------------------------------------------------------- DC on the signal (bench, Milestone 7)
+def test_min_vdiv_for_dc():
+    steps = step_tables.FALLBACK.vdiv
+    # 6.2 mV of DC with a 0.6 mVpp signal: needs 2 mV/div (9.1 mV of half range x 0.9), not 500 uV
+    assert autorange.min_vdiv_for_dc(0.0062, 0.0006, steps, 10.12, 8.0) == 0.002
+    assert autorange.min_vdiv_for_dc(0.0, 0.0006, steps, 10.12, 8.0) == 0.0005
+
+
+def _rc(f, rc=1e3 * 100e-9):
+    return 1.0 / (1.0 + 2j * math.pi * f * rc)
+
+
+def test_sweep_survives_dc_on_the_signal_with_the_real_driver():
+    """The bench case: about 65 mV of DC at the probe tips. Without re-centring, the DUT
+    channel went off scale at 1 mV/div and the scope returned wrong data at 500 uV/div."""
+    session, fgen, fscope, clock = fake_bench(h=_rc)
+    fscope.noise_codes = 0.4
+    runner = SweepRunner(session, SweepConfig(start_hz=1e3, stop_hz=2e5, points_per_decade=4),
+                         StimulusConfig(offset_v=0.065), ScopeConfig(), MeasureSettings(), sleep=clock.sleep)
+    result = runner.run()
+    assert result.meta["error"] is None
+    from bodeplot.models import Flag
+    for p in result.points:
+        want = 20 * math.log10(abs(_rc(p.freq_hz)))
+        assert p.gain_db == pytest.approx(want, abs=0.5), (p.freq_hz, p.gain_db, want, p.flags)
+        assert not p.flags & (Flag.AUTORANGE_FAILED | Flag.CLIPPED | Flag.BELOW_FLOOR)
+    assert any(c.startswith(":CHANnel2:OFFSet -0.00") for c in fscope.sent())     # trace was re-centred
+    assert result.points[-1].vdiv_dut <= 0.001                                    # and the sensitive steps used
+    session.close()
+
+
+def test_without_an_offset_command_the_dc_limits_the_step(make_session, no_sleep):
+    """A digitizer that cannot set an offset: auto-range must stay on a step the DC fits
+    in, and must never read the wrong data that lie beyond the rails."""
+    from bodeplot.drivers.mock import MockScope, SimulatedDUT
+    from bodeplot.models import Flag
+
+    def refuse(self, ch, offset_v):
+        raise NotImplementedError
+
+    session = make_session(SimulatedDUT.rc_lpf(), checked=False, skew_enabled=False)
+    session.digitizer.set_offset = refuse.__get__(session.digitizer, MockScope)
+    runner = SweepRunner(session, SweepConfig(start_hz=2e4, stop_hz=1e5, points_per_decade=3),
+                         StimulusConfig(offset_v=0.065), ScopeConfig(), MeasureSettings(), sleep=no_sleep)
+    result = runner.run()
+    assert result.meta["error"] is None
+    for p in result.points:
+        want = 20 * math.log10(abs(_rc(p.freq_hz)))
+        assert p.gain_db == pytest.approx(want, abs=1.5), (p.freq_hz, p.gain_db, want)
+        assert p.vdiv_dut >= 0.002 and not p.flags & Flag.CLIPPED     # 6.5 mV of DC does not fit below 2 mV/div

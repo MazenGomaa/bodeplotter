@@ -13,6 +13,7 @@ from typing import Callable
 import numpy as np
 
 from ..drivers.base import AcquireTimeout, Digitizer, DriverError, Waveform
+from ..drivers.scpi import SetError
 from ..models import (Flag, MeasureSettings, Method, PointResult, ScopeConfig, WaveformPair)
 from ..sweep import autorange
 from . import sinefit
@@ -31,6 +32,8 @@ class MeterState:
     """Carried from point to point: the previous point's ranges are the next one's start."""
     vdiv: dict[int, float] = field(default_factory=dict)    # volts/div at the scope input
     timebase: float | None = None
+    offset: dict[int, float] = field(default_factory=dict)  # channel offset at the input, + = trace up
+    no_offset: set = field(default_factory=set)             # channels whose offset could not be set
 
 
 class MeasureCancelled(Exception):
@@ -129,7 +132,7 @@ class DualChannelScopeMeter(ResponseMeter):
                 if retries > settings.autorange_max_retries:
                     raise
                 continue
-            changes, floor = {}, False
+            changes, offsets, floor = {}, {}, False
             for ch in self.chans:
                 w = waves[ch]
                 vpp_in = float(np.ptp(w.volts)) / self._probe(ch)
@@ -137,13 +140,27 @@ class DualChannelScopeMeter(ResponseMeter):
                                        caps.vertical_divs, settings.autorange_target,
                                        settings.floor_fraction, w.rail_fraction,
                                        caps.data_vertical_divs)
-                if dec.action == "change":
-                    changes[ch] = dec.vdiv
-                elif dec.action == "floor":
+                want = dec.vdiv if dec.action == "change" else state.vdiv[ch]
+                if not w.clipped:
+                    # DC on the signal (bench, Milestone 7: 6 mV at the input pushed the trace
+                    # off scale at 1 mV/div and 500 uV/div). Re-centre with the channel offset
+                    # where the scope has one, and never choose a step the DC does not fit in.
+                    dc_in = float(np.mean(w.volts)) / self._probe(ch)
+                    cur = state.offset.get(ch, 0.0)
+                    centre = dc_in + cur
+                    if ch not in state.no_offset and abs(centre) > autorange.RECENTRE_DIVS * want:
+                        offsets[ch] = -dc_in
+                        centre = 0.0
+                    fit = autorange.min_vdiv_for_dc(centre, vpp_in, caps.vdiv_steps,
+                                                    caps.data_vertical_divs, caps.vertical_divs)
+                    want = max(want, fit)
+                if abs(want - state.vdiv[ch]) > 1e-12 * want:
+                    changes[ch] = want
+                elif dec.action == "floor" and ch not in offsets:
                     floor = True
             if not any(waves[ch].clipped for ch in self.chans):
                 last_good = waves
-            if not changes:
+            if not changes and not offsets:
                 if floor:
                     flags |= Flag.BELOW_FLOOR
                 break
@@ -154,6 +171,11 @@ class DualChannelScopeMeter(ResponseMeter):
                 break
             for ch, v in changes.items():
                 state.vdiv[ch] = self.dig.set_vdiv(ch, v)
+            for ch, off in offsets.items():         # after V/div: the offset step depends on it
+                try:
+                    state.offset[ch] = self.dig.set_offset(ch, off)
+                except (NotImplementedError, SetError):
+                    state.no_offset.add(ch)         # this scope cannot: keep the step the DC fits in
             retries += 1
             self.sleep(settings.vdiv_settle_ms / 1000.0)
         if waves is not None and any(waves[ch].clipped for ch in self.chans):

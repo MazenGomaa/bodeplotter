@@ -41,6 +41,22 @@ def step_up(vdiv: float, steps, n: int = 1) -> float:
     return ordered[min(i + n, len(ordered) - 1)]
 
 
+DC_FIT_MARGIN = 0.9                 # share of the half data range that DC plus signal peak may use
+RECENTRE_DIVS = 1.0                 # re-centre a trace whose middle is further than this from the screen centre
+
+
+def min_vdiv_for_dc(centre_v: float, vpp: float, steps, data_divs: float, vertical_divs: float) -> float:
+    """Most sensitive step at which a trace centred centre_v away from the screen centre
+    still fits in the data range with its peaks. Below that step the UPO1054 clips, and
+    further below it returns wrong data with no clip indication (HW_REPORT.md 13.6)."""
+    half = (data_divs or vertical_divs) / 2.0
+    ordered = sorted(steps)
+    for s in ordered:
+        if abs(centre_v) + vpp / 2.0 <= DC_FIT_MARGIN * half * s:
+            return s
+    return ordered[-1]
+
+
 CLIP_JUMP = 7
 CLIP_ESTIMATE_MAX_FRACTION = 0.95   # above this share of samples on the rails the estimate is useless
 CLIP_ESTIMATE_MARGIN = 1.25         # the estimate assumes a centred sine; an offset makes it too small

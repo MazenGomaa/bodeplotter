@@ -405,6 +405,13 @@ class UniTUPO1000(Digitizer):
                                           scpi.v_float, step)                         # U1K p.14
         return self.vdiv[ch]
 
+    def set_offset(self, ch: int, offset_v: float) -> float:
+        """Offset at the scope input, positive = trace up (HW_REPORT.md 12.14: +1 division
+        of offset raised the trace by 25 codes). Quantised to V/div / 25."""
+        vd = self.vdiv.get(ch) or self.query(f":{self._chan(ch)}:SCALe?", scpi.v_float)
+        return self.set_verified(f":{self._chan(ch)}:OFFSet", scpi.plain_decimal(offset_v), scpi.v_float,
+                                 float(offset_v), tol_abs=vd / self.CODES_PER_DIV)       # U1K p.14
+
     def set_timebase(self, s_per_div: float) -> float:
         step = self._pick(self.tables.timebase, s_per_div, "timebase")
         self.tb = self.set_verified(":TIMebase:SCALe", scpi.plain_decimal(step), scpi.v_float, step)  # U1K p.16
