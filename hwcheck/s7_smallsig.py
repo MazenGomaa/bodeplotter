@@ -121,11 +121,41 @@ def main():
         print("generator CH1 output ON")
         g.output(1, True)
         time.sleep(0.8)
-        for f in (35000.0, 60000.0):
-            g.set_frequency(1, f)                                    # UTG p.12
+        if "offset" in sys.argv:
+            # Second question (after the first run of this script found about 6 mV of DC on
+            # CH2): can the channel offset re-centre the trace, and what happens to the
+            # offset when V/div changes afterwards?
+            f = 35000.0
             sc.set_timebase(5.0 / f / sc.HDIV, "ceil")               # U1K p.16
-            for vd in (0.005, 0.002, 0.001, 0.0005):
+            sc.set_vdiv(2, 0.002, "exact")
+            time.sleep(0.5)
+            a = sc.acquire([1, 2])
+            w = a["waves"][2]
+            dc = sum(w["volts"]) / len(w["volts"])
+            out["dc_ch2_input_v"] = dc
+            print(f"CH2 at 2 mV/div, offset 0: mean {dc * 1e3:+.3f} mV at the input")
+            for label, vd, off in (("offset set at 2 mV/div", 0.002, -dc), ("then V/div -> 1 mV", 0.001, None),
+                                   ("then V/div -> 500 uV", 0.0005, None),
+                                   ("offset set again at 500 uV/div", 0.0005, -dc),
+                                   ("back to 2 mV/div", 0.002, None), ("offset 0 at 2 mV/div", 0.002, 0.0)):
+                sc.set_vdiv(2, vd, "exact")
+                if off is not None:
+                    try:
+                        rb = sc.set_verified(":CHANnel2:OFFSet", io.ScopeFmt.num(off), io.v_float, float(off),
+                                             tol_abs=vd / sc.CODES_PER_DIV)                 # U1K p.14
+                    except Exception as e:
+                        print(f"  {label}: SET FAILED {type(e).__name__}: {e}")
+                time.sleep(0.5)
+                rb = sc.query(":CHANnel2:OFFSet?", io.v_float)
+                print(f"--- {label}: V/div {vd:g}, offset read-back {rb * 1e3:+.4f} mV ({rb / vd:+.2f} div)")
+                out.setdefault("offset_steps", []).append(dict(label=label, vdiv=vd, offset_set=off, offset_readback=rb))
                 case(sc, f, vd)
+        else:
+            for f in (35000.0, 60000.0):
+                g.set_frequency(1, f)                                    # UTG p.12
+                sc.set_timebase(5.0 / f / sc.HDIV, "ceil")               # U1K p.16
+                for vd in (0.005, 0.002, 0.001, 0.0005):
+                    case(sc, f, vd)
     except Exception:
         out["fatal"] = traceback.format_exc()
         print(out["fatal"])
@@ -153,7 +183,7 @@ def main():
         g.close()
         sc.close()
         rm.close()
-        print("saved", save("s7_smallsig_py.json", out))
+        print("saved", save("s7_smallsig_offset_py.json" if "offset" in sys.argv else "s7_smallsig_py.json", out))
 
 
 if __name__ == "__main__":
