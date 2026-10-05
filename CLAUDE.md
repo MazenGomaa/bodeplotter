@@ -6,7 +6,8 @@ PC software that sweeps a UNI-T generator and reads a UNI-T scope to draw a Bode
 
 - **Milestones 0, 0b, 0c (hardware gate): done. Verdict GO WITH WORKAROUNDS** (`HW_REPORT.md`, top block and section 12).
 - **Milestones 1 to 5: done, against the mock drivers only.** `pytest`: 174 passed (2026-10-06). The user reviewed the GUI and asked for changes, all done (see below).
-- **Milestone 6 (real drivers + probe tool): DONE 2026-10-06. `pytest`: 217 passed. STOPPED for the user's review. Do NOT start Milestone 7 (bench bring-up) until the user says so.**
+- **Milestone 6 (real drivers + probe tool): DONE 2026-10-06. `pytest`: 217 passed. **
+- **Milestone 7 (bench bring-up): the user said "Lets start testing with on real devices" on 2026-10-06. IN PROGRESS.** Order (SPEC 16): probe tool first, then a known RC low-pass, then the full 50 Hz to 20 MHz sweep with timing. Commit before every bench run; ask before the user has to touch cables.
   - The app's real drivers and the probe tool have run ONLY against simulated SCPI instruments (`tests/fakes.py`). Their first run on the real instruments is Milestone 7 step 1 (probe tool first).
   - The user's standing conditions from the Milestone 6 GO (keep them):
     1. Step tables are shipped data keyed by model + firmware (`drivers/step_tables.py`). Never walked at connect. Every set is verified by read-back. Walking is only the probe tool's `--walk-tables` (paced, with a warning). Unknown firmware: stored tables, one warning, suggest the walk.
