@@ -15,11 +15,11 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | 4: GUI | Done. |
 | 5: persistence and export | Done. |
 | 6: real drivers and probe tool | Done 2026-10-06, tested against simulated instruments only. |
-| 7: hardware bring-up | **Not started** (waiting for the go-ahead). |
+| 7: hardware bring-up | **In progress.** Probe tool and through sweeps pass on the real instruments; the RC low-pass is correct down to -23 dB and exposed a DC and small-signal problem whose fix is not yet bench-tested (`HW_REPORT.md` section 13). |
 
-**The real drivers have not yet run on the real instruments.** They are a port of the bench-tested I/O layer (`hwcheck/iolayer.py`) and pass their tests against simulated SCPI instruments (`tests/fakes.py`), but their first run on the scope and generator is Milestone 7. Simulation mode (`--sim`) needs no hardware.
+**The real drivers run on the real instruments** (probe tool 63 of 63; sweeps from 50 Hz to 20 MHz), but only through a headless script so far, not yet from the GUI, and small signals on a DC offset are still being worked on. Simulation mode (`--sim`) needs no hardware.
 
-`pytest` is green: 217 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
+`pytest` is green: 223 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
 
 ## Run it
 

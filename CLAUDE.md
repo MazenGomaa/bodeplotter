@@ -6,12 +6,29 @@ PC software that sweeps a UNI-T generator and reads a UNI-T scope to draw a Bode
 
 - **Milestones 0, 0b, 0c (hardware gate): done. Verdict GO WITH WORKAROUNDS** (`HW_REPORT.md`, top block and section 12).
 - **Milestones 1 to 5: done, against the mock drivers only.** `pytest`: 174 passed (2026-10-06). The user reviewed the GUI and asked for changes, all done (see below).
-- **Milestone 6 (real drivers + probe tool): DONE 2026-10-06. `pytest`: 217 passed. **
-- **Milestone 7 (bench bring-up): the user said "Lets start testing with on real devices" on 2026-10-06. IN PROGRESS.** Order (SPEC 16): probe tool first, then a known RC low-pass, then the full 50 Hz to 20 MHz sweep with timing. Commit before every bench run; ask before the user has to touch cables.
-  - Done so far (HW_REPORT section 13): probe tool on the real instruments 63/63; five headless sweeps through the app's engine with hwcheck/m7_sweep.py (run it with the APP venv .venv), 0 errors, through-gain within 0.05 dB and 0.3 deg from 50 Hz to 20 MHz; pytest 218 passed.
-  - Fixed from the bench: auto-range hysteresis (it flipped between two steps), skew check always at 10 and 20 MHz (it could not resolve the delay at 1 MHz).
-  - The run-to-run change of the signal level at high frequency was a wiring fault; the user fixed it and two repeat runs are flat within 1.3% to 20 MHz (HW_REPORT 13.5). Full 30-point sweep: 34.9 s. Next: the user rewires to an RC low-pass (ask for R and C), then a sweep from the GUI on the real instruments. Idea not implemented: warn when the reference level is far below what the stimulus setting predicts.
-  - The app's real drivers and the probe tool have run ONLY against simulated SCPI instruments (`tests/fakes.py`). Their first run on the real instruments is Milestone 7 step 1 (probe tool first).
+- **Milestone 6 (real drivers + probe tool): DONE 2026-10-06.**
+- **Milestone 7 (bench bring-up): IN PROGRESS, paused 2026-10-06 at the user's request to continue in a fresh chat.** The user's go-ahead was "Lets start testing with on real devices". Full record: HW_REPORT section 13. `pytest`: 223 passed. Everything is committed (`git log`).
+  - **START HERE in the next session (in this order):**
+    1. Ask the user whether the RC low-pass is still wired (generator CH1 -> 1 k -> 100 nF to ground; CH1 probe = reference on the generator side, CH2 probe = DUT on the capacitor; both 10X) before any bench run. Commit before every run.
+    2. Re-run the RC sweep with the four changes that are NOT yet bench-tested (see below): `.venv\Scripts\python.exe -W ignore hwcheck\m7_sweep.py rc_retest 50 20000000 10 --no-skew` (APP venv). Compare with a first-order low-pass, corner 1515 Hz (fitted earlier). Pass = no AUTORANGE_FAILED and correct gain down to where the DUT signal reaches the noise (about -45 dB or lower).
+    3. Try the user's suggestion: **AC coupling on the scope** (`ScopeConfig.coupling = "AC"`; `m7_sweep.py` has no switch for it yet, add `--ac`). Compare with the DC-coupled run, look hard at the 50 to 200 Hz points on both channels, then decide the default with the user. The user's words: "i think you might need to keep the scope in ac coupling mode for this to work".
+    4. Then: restore the scope's V/div, timebase and offset after a sweep (see open items), the timed full-range sweep on the RC, and a sweep from the GUI on the real instruments (only the headless path has run on hardware).
+  - Done and bench-proven: probe tool on the real instruments 63/63; through sweeps (both probes on generator CH1) 50 Hz to 20 MHz: gain within 0.05 dB, phase within 0.3 deg, level flat within 1.3%, 30 points in 34.9 s; RC low-pass correct from 50 Hz to 22 kHz (within 0.06 dB of a 1515 Hz corner).
+  - Bench fixes already proven: auto-range hysteresis (no more flipping between two steps on the through sweep); skew check always at 10 and 20 MHz (at 1 MHz it could not resolve the delay). An earlier level problem at high frequency was a wiring fault the user fixed.
+  - **Changes made after the last bench sweep, tested only against the simulators** (HW_REPORT 13.6):
+    a. auto-range re-centres a trace that carries DC with the channel offset (`Digitizer.set_offset`, `measure/meters.py`);
+    b. auto-range never picks a V/div the DC does not fit in (`autorange.min_vdiv_for_dc`);
+    c. the driver puts the offset back in volts after every V/div change (the scope keeps it in divisions);
+    d. the driver never uses 500 uV/div (`UniTUPO1000.UNUSABLE_VDIV`); 1 mV/div is the most sensitive step.
+  - Bench facts behind them: about +6 mV of DC at both scope inputs (source unknown); at 1 mV/div that clips; at 500 uV/div an off-scale or clipped trace reads mid-scale codes (around 125) with NO rail code, so it cannot be detected (the "x2 digital zoom that wraps" explanation is my inference, not tested); offset is kept in divisions across V/div changes; an offset set at 500 uV/div did not behave normally.
+  - **Open items:**
+    - The user saw CH2 "jumping around" during the sweep and the scope left on 500 uV/div afterwards. The app does not restore V/div, timebase or offset after a sweep (only sweep AUTO and panel unlock). To do: save them at sweep start and restore them at the end, or at least leave a sane range.
+    - AC versus DC coupling as the default (item 3 above).
+    - Where the 6 to 8 mV of input DC comes from.
+    - Phase drifts about +1 deg between 3 and 40 kHz against the ideal RC; not examined.
+    - Idea, not implemented: warn when the reference level is far below what the stimulus setting predicts (a loose ground gave 0 dB "through" readings with a collapsed level).
+    - Not yet done on hardware: a sweep started from the GUI; skew wizard in the GUI; `--walk-tables`; the watchdog on a really dead scope.
+    - Still unverified: whether a power cycle clears a panel lock; CH3/CH4; Linux.
   - The user's standing conditions from the Milestone 6 GO (keep them):
     1. Step tables are shipped data keyed by model + firmware (`drivers/step_tables.py`). Never walked at connect. Every set is verified by read-back. Walking is only the probe tool's `--walk-tables` (paced, with a warning). Unknown firmware: stored tables, one warning, suggest the walk.
     2. Pacing: minimum gap after timebase and V/div changes (`scope_min_gap_ms`, default 100) on top of `*OPC?`.

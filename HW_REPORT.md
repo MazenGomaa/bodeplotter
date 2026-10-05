@@ -851,3 +851,31 @@ The user checked and fixed the wiring (what exactly was wrong was not reported).
 **Problem 1 of 13.3 is closed as a wiring fault**: the level is now flat within 1.3% from 50 Hz to 20 MHz, as in Milestone 0c, and the two runs agree. No auto-range retries and no flags in either run (the hysteresis fix was in). Skew check: +0.148 and +0.151 ns, snapped to +0.15 ns. Scope counters: 0 errors, 0 resyncs after connect; generator outputs OFF at the end.
 
 Lesson for the app: a through measurement shows 0 dB even when the reference level has collapsed, so the reference amplitude itself is worth watching. Not implemented: a warning when the reference level is far below the level the stimulus setting predicts.
+### 13.6 RC low-pass (1 kOhm, 100 nF) and what it exposed (2026-10-06)
+
+Wiring: generator CH1 -> 1 kOhm -> 100 nF to ground; CH1 probe (reference) on the generator side, CH2 probe (DUT) on the capacitor; both 10X. Sweeps 50 Hz to 20 MHz, 10 points per decade, no skew check (the probes are not on one node), DC coupling. Data: `results/m7/m7_sweep_rc_1k_100n.*`, `..._dcfix.*`, `results/s7_smallsig_py.json`, `results/s7_smallsig_offset_py.json`.
+
+**What worked.** From 50 Hz to 22 kHz (0 to -23 dB) the measurement follows a first-order low-pass with a corner of 1515 Hz (nominal 1592 Hz; that is 105 nF if the resistor is exactly 1 kOhm, inside a normal capacitor tolerance): gain within +/-0.06 dB of that curve, phase within +0.1 / -0.2 degrees up to 3 kHz and drifting to +0.9 degrees at 22 kHz. No instrument errors in either sweep; generator OFF, panel unlocked and sweep AUTO at the end.
+
+**What failed.** Above about 28 kHz (below -25 dB) the DUT channel went wrong: AUTORANGE_FAILED at several points, then from 44 to 55 kHz readings 14 to 18 dB too low with SNR near 0, then amplitudes of exactly zero (-350 dB). The signal there is still 2.5 to 4 mVpp at the scope input, which the scope can measure.
+
+**Cause 1: DC on the signal.** CH2 carries +6.2 mV of DC at the scope input (about 62 mV at the probe tip), CH1 about +7.6 mV. Where it comes from is not established (generator offset error, or the scope's inputs). At 5 and 2 mV/div the trace simply sits high (codes centred on 161 and 205) and reads correctly: 4.1 and 4.04 mVpp, SNR 25 and 30 dB. At 1 mV/div the DC is 6.2 divisions, beyond the 5.06-division data range: 485 of 700 samples on code 254, fitted amplitude 0.63 mVpp instead of 4.0.
+
+**Cause 2: the 500 uV/div step returns wrong data without any clip indication.** With the trace off scale at 500 uV/div the codes were 75 to 125, none on a rail; in 12.14 an overdriven signal there read 125 on its clipped half. In every such case the reading is bounded by code 125 on one side. One explanation that fits all three observations: 500 uV/div is a x2 digital zoom of the 1 mV/div range whose arithmetic wraps around instead of clipping (a clipped 254 becomes 2 x (254 - 128) + 128 = 380, which wraps to 124). **This explanation is an inference; it was not tested.** The practical fact is measured: at 500 uV/div an off-scale or clipped trace cannot be told from a good one.
+
+**Cause 3: the scope keeps the channel offset in divisions, not volts, when V/div changes.** An offset of -6.24 mV set at 2 mV/div (which centred the trace: codes 102 to 153) read back -3.12 mV after changing to 1 mV/div and -1.56 mV at 500 uV/div. Setting -6.24 mV again at 500 uV/div put every sample on code 1, so the offset does not behave normally on that step either.
+
+**Changes made in the app (all tested against the simulators, 223 tests; NOT yet re-run on the bench):**
+1. Auto-range measures the DC of each channel and re-centres the trace with the channel offset when its middle is more than one division from the screen centre (`Digitizer.set_offset`).
+2. Auto-range never selects a V/div at which DC plus signal peak would not fit in the data range (`autorange.min_vdiv_for_dc`); this also covers scopes with no offset command.
+3. The driver puts the offset back in volts after every V/div change.
+4. The driver no longer uses 500 uV/div; 1 mV/div is the most sensitive step. Cost: 6 dB of range at the bottom.
+
+A bench sweep with only change 1 and 2 in place (`rc_1k_100n_dcfix`) still failed in the same region, which is what led to findings 2 and 3.
+
+**Open after this section:**
+- Re-run the RC sweep on the bench with all four changes.
+- The user's suggestion: use AC coupling on the scope for this measurement. Not tried yet. It would remove the DC problem at its root; its cost is a high-pass corner at low frequency that must be checked on both channels (the 50 Hz points). It can be tried from the app today (`ScopeConfig.coupling = "AC"`), and should be compared with the DC-coupled, offset-corrected sweep before choosing the default.
+- The user saw CH2 "jumping around" on the scope during the sweep and the scope left on 500 uV/div afterwards. The jumping is auto-range and the offset changes at work. The app does not restore the scope's V/div, timebase and offset after a sweep; it only goes back to sweep AUTO and unlocks the panel.
+- Where the 6 to 8 mV of DC at the inputs comes from.
+- Phase drift of about +1 degree between 3 and 40 kHz against the ideal RC (component, probe or scope: not examined).

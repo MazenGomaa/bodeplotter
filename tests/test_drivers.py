@@ -95,9 +95,9 @@ def test_scope_caps_come_from_the_idn():
 
 
 def test_numbers_are_plain_decimals_and_every_write_is_followed_by_opc():
-    drv, fake, _ = ready_scope(vdiv=0.0005, tb=2.5e-8)
+    drv, fake, _ = ready_scope(vdiv=0.001, tb=2.5e-8)
     sent = fake.sent()
-    assert ":TIMebase:SCALe 0.000000025" in sent and ":CHANnel1:SCALe 0.0005" in sent
+    assert ":TIMebase:SCALe 0.000000025" in sent and ":CHANnel1:SCALe 0.001" in sent
     assert ":CHANnel1:PROBe 1X" in sent                              # X suffix; scope stays at 1X
     assert fake.ch[1]["probe"] == 1.0 and drv.probe[1] == 10.0       # ratio applied in software
     assert not any(re.search(r"\d[eE][+-]?\d", c) for c in sent)
@@ -105,7 +105,7 @@ def test_numbers_are_plain_decimals_and_every_write_is_followed_by_opc():
     for i, c in enumerate(sent[:-1]):
         if i > start and "?" not in c:
             assert sent[i + 1] == "*OPC?", (c, sent[i + 1])
-    assert fake.timebase == 2.5e-8 and fake.ch[1]["scale"] == 0.0005
+    assert fake.timebase == 2.5e-8 and fake.ch[1]["scale"] == 0.001
 
 
 def test_plain_decimal():
@@ -620,3 +620,24 @@ def test_without_an_offset_command_the_dc_limits_the_step(make_session, no_sleep
         want = 20 * math.log10(abs(_rc(p.freq_hz)))
         assert p.gain_db == pytest.approx(want, abs=1.5), (p.freq_hz, p.gain_db, want)
         assert p.vdiv_dut >= 0.002 and not p.flags & Flag.CLIPPED     # 6.5 mV of DC does not fit below 2 mV/div
+
+
+def test_500_microvolt_step_is_never_used_on_the_real_scope():
+    """Its data wrap instead of clipping (HW_REPORT.md 13.6), so the driver leaves it out."""
+    drv, fake, _ = opened_scope()
+    assert 5e-4 in drv.tables.vdiv and 5e-4 not in drv.caps.vdiv_steps
+    assert min(drv.caps.vdiv_steps) == 1e-3
+    assert drv.set_vdiv(1, 0.0005) == 0.001                         # even when asked for it
+    assert not any(c == ":CHANnel1:SCALe 0.0005" for c in fake.sent())
+
+
+def test_offset_volts_are_put_back_after_a_vdiv_change():
+    """The real scope keeps the offset in divisions; the driver keeps it in volts."""
+    drv, fake, _ = opened_scope()
+    drv.configure_channel(2, "DC", 10.0, False, 0.0)
+    drv.set_vdiv(2, 0.002)
+    assert drv.set_offset(2, -0.00624) == pytest.approx(-0.00624)
+    drv.set_vdiv(2, 0.001)
+    assert fake.ch[2]["offset"] == pytest.approx(-0.00624)          # not -0.00312
+    drv.set_vdiv(2, 0.02)
+    assert fake.ch[2]["offset"] == pytest.approx(-0.0064)           # re-quantised to 0.8 mV steps

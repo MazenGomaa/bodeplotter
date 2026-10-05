@@ -306,6 +306,8 @@ class FakeScope(Transport):
         if what == "timebase":
             self.timebase = new
         else:
+            # the real scope keeps the offset in divisions (HW_REPORT 13.6)
+            self.ch[ch]["offset"] *= new / self.ch[ch]["scale"]
             self.ch[ch]["scale"] = new
         self._restart_if_running()
         return None

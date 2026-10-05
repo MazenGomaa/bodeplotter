@@ -73,6 +73,11 @@ class UniTUPO1000(Digitizer):
     RAIL_LOW, RAIL_HIGH = 1, 254
     SCREEN_VDIVS = 8.0
     DATA_VDIVS = (RAIL_HIGH - RAIL_LOW) / CODES_PER_DIV
+    # 500 uV/div is a real step of the scope but is not used. Measured 2026-10-06
+    # (HW_REPORT.md 13.6): a trace more than about 5 divisions from the centre does not
+    # stop at a rail code there, it comes back as mid-scale codes (around 125), so a
+    # clipped or off-scale capture cannot be told from a good one. 1 mV/div clips cleanly.
+    UNUSABLE_VDIV = (5e-4,)
 
     COMMANDS: tuple[Command, ...] = (
         Command("*IDN?", "U1K p.5", True),
@@ -122,6 +127,7 @@ class UniTUPO1000(Digitizer):
         self.tb: float | None = None
         self.vdiv: dict[int, float] = {}
         self.probe: dict[int, float] = {}
+        self.offset_v: dict[int, float] = {}    # channel offset in volts at the input, as last set
         self.panel_locked = False
         self.last_timeline: list = []
         self._gap_until = 0.0
@@ -136,11 +142,15 @@ class UniTUPO1000(Digitizer):
         tb = self.tables.timebase
         return DigitizerCaps(
             model=self.model or "UPO1000", channels=channels, bandwidth_hz=bw, max_sample_rate=1e9,
-            vdiv_steps=self.tables.vdiv, timebase_steps=tb,
+            vdiv_steps=self.usable_vdiv(), timebase_steps=tb,
             # auto-range aims at the 8 screen divisions; the data reach 10.1, which is headroom
             vertical_divs=self.SCREEN_VDIVS, horizontal_divs=float(self.HDIV),
             has_builtin_amplitude=False, has_builtin_phase=False,
             min_hz=5.0 / (self.HDIV * max(tb)), max_hz=bw, data_vertical_divs=self.DATA_VDIVS)
+
+    def usable_vdiv(self) -> tuple[float, ...]:
+        return tuple(s for s in self.tables.vdiv
+                     if not any(scpi.close(s, bad, rel=1e-3) for bad in self.UNUSABLE_VDIV))
 
     @staticmethod
     def _chan(n: int) -> str:
@@ -396,21 +406,29 @@ class UniTUPO1000(Digitizer):
         vd = self.query(f":{c}:SCALe?", scpi.v_float)                                 # U1K p.14
         self.vdiv[ch] = vd
         at_input = float(offset_v) / self.probe[ch]
-        self.set_verified(f":{c}:OFFSet", scpi.plain_decimal(at_input), scpi.v_float, at_input,
-                          tol_abs=vd / self.CODES_PER_DIV)                            # U1K p.14
+        self.offset_v[ch] = self.set_verified(f":{c}:OFFSet", scpi.plain_decimal(at_input), scpi.v_float,
+                                              at_input, tol_abs=vd / self.CODES_PER_DIV)   # U1K p.14
 
     def set_vdiv(self, ch: int, vdiv: float) -> float:
-        step = self._pick(self.tables.vdiv, vdiv, "V/div")
+        step = self._pick(self.usable_vdiv(), vdiv, "V/div")
         self.vdiv[ch] = self.set_verified(f":{self._chan(ch)}:SCALe", scpi.plain_decimal(step),
                                           scpi.v_float, step)                         # U1K p.14
+        # The scope keeps the offset in DIVISIONS when V/div changes (measured 2026-10-06,
+        # HW_REPORT.md 13.6: -6.24 mV at 2 mV/div read back -3.12 mV at 1 mV/div). Put the
+        # volts back, or a re-centred trace runs off the screen on the next range change.
+        want = self.offset_v.get(ch, 0.0)
+        if abs(want) > 0.0:
+            self.set_offset(ch, want)
         return self.vdiv[ch]
 
     def set_offset(self, ch: int, offset_v: float) -> float:
         """Offset at the scope input, positive = trace up (HW_REPORT.md 12.14: +1 division
         of offset raised the trace by 25 codes). Quantised to V/div / 25."""
         vd = self.vdiv.get(ch) or self.query(f":{self._chan(ch)}:SCALe?", scpi.v_float)
-        return self.set_verified(f":{self._chan(ch)}:OFFSet", scpi.plain_decimal(offset_v), scpi.v_float,
-                                 float(offset_v), tol_abs=vd / self.CODES_PER_DIV)       # U1K p.14
+        self.offset_v[ch] = self.set_verified(f":{self._chan(ch)}:OFFSet", scpi.plain_decimal(offset_v),
+                                              scpi.v_float, float(offset_v),
+                                              tol_abs=vd / self.CODES_PER_DIV)           # U1K p.14
+        return self.offset_v[ch]
 
     def set_timebase(self, s_per_div: float) -> float:
         step = self._pick(self.tables.timebase, s_per_div, "timebase")
