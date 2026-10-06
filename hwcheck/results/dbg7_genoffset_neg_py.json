@@ -119,15 +119,242 @@
         "HIGH": 0.5,
         "LOW": -0.5
       }
+    },
+    {
+      "label": "reset: OFFSet 0, AMPLitude 1",
+      "cmds": [
+        ":CHANnel1:BASE:OFFSet 0",
+        ":CHANnel1:BASE:AMPLitude 1"
+      ],
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      }
+    },
+    {
+      "label": "A 1, d 0.1: AMPLitude 1.2, HIGH 0.4",
+      "cmds": [
+        ":CHANnel1:BASE:AMPLitude 1.2",
+        ":CHANnel1:BASE:HIGH 0.4"
+      ],
+      "state": {
+        "OFFSet": -0.1,
+        "AMPLitude": 1.0,
+        "HIGH": 0.4,
+        "LOW": -0.6
+      }
+    },
+    {
+      "label": "reset: OFFSet 0, AMPLitude 1",
+      "cmds": [
+        ":CHANnel1:BASE:OFFSet 0",
+        ":CHANnel1:BASE:AMPLitude 1"
+      ],
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      }
+    },
+    {
+      "label": "A 1, d 0.3: AMPLitude 1.6, HIGH 0.2",
+      "cmds": [
+        ":CHANnel1:BASE:AMPLitude 1.6",
+        ":CHANnel1:BASE:HIGH 0.2"
+      ],
+      "state": {
+        "OFFSet": -0.3,
+        "AMPLitude": 1.0,
+        "HIGH": 0.2,
+        "LOW": -0.8
+      }
+    },
+    {
+      "label": "reset: OFFSet 0, AMPLitude 1",
+      "cmds": [
+        ":CHANnel1:BASE:OFFSet 0",
+        ":CHANnel1:BASE:AMPLitude 1"
+      ],
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      }
+    },
+    {
+      "label": "A 1, d 0.5: AMPLitude 2, HIGH 0",
+      "cmds": [
+        ":CHANnel1:BASE:AMPLitude 2",
+        ":CHANnel1:BASE:HIGH 0"
+      ],
+      "state": {
+        "OFFSet": -0.5,
+        "AMPLitude": 1.0,
+        "HIGH": 0.0,
+        "LOW": -1.0
+      }
+    },
+    {
+      "label": "reset: OFFSet 0, AMPLitude 0.2",
+      "cmds": [
+        ":CHANnel1:BASE:OFFSet 0",
+        ":CHANnel1:BASE:AMPLitude 0.2"
+      ],
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 0.2,
+        "HIGH": 0.1,
+        "LOW": -0.1
+      }
+    },
+    {
+      "label": "A 0.2, d 0.05: AMPLitude 0.3, HIGH 0.05",
+      "cmds": [
+        ":CHANnel1:BASE:AMPLitude 0.3",
+        ":CHANnel1:BASE:HIGH 0.05"
+      ],
+      "state": {
+        "OFFSet": -0.05,
+        "AMPLitude": 0.2,
+        "HIGH": 0.05,
+        "LOW": -0.15
+      }
+    },
+    {
+      "label": "reset: OFFSet 0, AMPLitude 1",
+      "cmds": [
+        ":CHANnel1:BASE:AMPLitude 1",
+        ":CHANnel1:BASE:OFFSet 0"
+      ],
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      }
+    },
+    {
+      "label": "reset again: HIGH 0.5",
+      "cmds": [
+        ":CHANnel1:BASE:HIGH 0.5"
+      ],
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      }
     }
   ],
-  "b": [],
+  "b": [
+    {
+      "label": "offset 0",
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      },
+      "tip_dc_v": 0.05223809523809525,
+      "vpp_tip": 0.9654606911848389
+    },
+    {
+      "label": "offset -0.1: AMPLitude 1.2, HIGH 0.4",
+      "state": {
+        "OFFSet": -0.1,
+        "AMPLitude": 1.0,
+        "HIGH": 0.4,
+        "LOW": -0.6
+      },
+      "tip_dc_v": -0.03139047619047625,
+      "vpp_tip": 0.9674708569360859
+    },
+    {
+      "label": "offset 0",
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      },
+      "tip_dc_v": 0.05169523809523812,
+      "vpp_tip": 0.9665584310554229
+    },
+    {
+      "label": "offset -0.3: AMPLitude 1.6, HIGH 0.2",
+      "state": {
+        "OFFSet": -0.3,
+        "AMPLitude": 1.0,
+        "HIGH": 0.2,
+        "LOW": -0.8
+      },
+      "tip_dc_v": -0.23635238095238068,
+      "vpp_tip": 0.9668874660077671
+    },
+    {
+      "label": "offset 0",
+      "state": {
+        "OFFSet": 0.0,
+        "AMPLitude": 1.0,
+        "HIGH": 0.5,
+        "LOW": -0.5
+      },
+      "tip_dc_v": 0.053361904761904784,
+      "vpp_tip": 0.9647843780261
+    }
+  ],
   "log": [
     "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
   ],
   "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
   "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
   "negative_via_levels": false,
+  "trick": [
+    {
+      "a_vpp": 1.0,
+      "d": 0.1,
+      "state": {
+        "OFFSet": -0.1,
+        "AMPLitude": 1.0,
+        "HIGH": 0.4,
+        "LOW": -0.6
+      }
+    },
+    {
+      "a_vpp": 1.0,
+      "d": 0.3,
+      "state": {
+        "OFFSet": -0.3,
+        "AMPLitude": 1.0,
+        "HIGH": 0.2,
+        "LOW": -0.8
+      }
+    },
+    {
+      "a_vpp": 1.0,
+      "d": 0.5,
+      "state": {
+        "OFFSet": -0.5,
+        "AMPLitude": 1.0,
+        "HIGH": 0.0,
+        "LOW": -1.0
+      }
+    },
+    {
+      "a_vpp": 0.2,
+      "d": 0.05,
+      "state": {
+        "OFFSet": -0.05,
+        "AMPLitude": 0.2,
+        "HIGH": 0.05,
+        "LOW": -0.15
+      }
+    }
+  ],
   "gen_outputs_final": [
     false,
     false
@@ -141,7 +368,7 @@
   },
   "scope_restore_failures": [],
   "scope_stats": {
-    "queries": 47,
+    "queries": 600,
     "empty_retries": 0,
     "reply_errors": 0,
     "out_of_step": 0,
@@ -151,7 +378,7 @@
     "empty_blocks": 0
   },
   "gen_stats": {
-    "queries": 67,
+    "queries": 128,
     "blocked": 0,
     "timeouts": 0,
     "clears": 0,
@@ -160,7 +387,7 @@
   },
   "_identity": {
     "script": "dbg7_genoffset_neg.py",
-    "sha256": "a0b1289d988ad271e7a77e242cd7df37fb82ed9fb8117bbda5a5b439e16951de",
+    "sha256": "168d0244165d681a038c0d37c4490747edbf535aec7ba3416c2b448c6124a625",
     "modules": {
       "common.py": "5ec7f6c3b6a9",
       "dbg0b_ch2.py": "e684dcfb50cd",
@@ -213,7 +440,7 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "2cfc941",
+    "git_commit": "d47828c",
     "git_dirty": []
   }
 }
