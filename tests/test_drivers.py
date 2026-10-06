@@ -798,14 +798,25 @@ def test_fast_preview_reads_the_running_scope_and_never_arms_a_single_shot():
     assert fake.clock.now() - t < 0.2
 
 
-def test_fast_preview_empty_reply_is_resynced_not_retried_in_place():
+def test_fast_preview_empty_reply_waits_and_reads_again_without_a_resync():
+    """Bench, HW_REPORT 13.24: a running scope has no record for a moment now and then; the
+    link stays in step, and a resync would end the validity of the skew check for nothing."""
+    drv, fake, clock = ready_scope()
+    drv.acquire_running([1, 2], 5.0)
+    epoch, t = drv.alignment_epoch, clock.now()
+    fake.empty_blocks = 2                                # two reads in a row, as on the bench
+    waves = drv.acquire_running([1, 2], 5.0)
+    assert drv.stats["empty_blocks"] == 2 and drv.alignment_epoch == epoch
+    assert clock.now() - t >= 1.0 and waves[2].volts.size == 700
+
+
+def test_fast_preview_empty_reply_with_the_link_out_of_step_is_resynced():
     drv, fake, _ = ready_scope()
     drv.acquire_running([1, 2], 5.0)
     epoch = drv.alignment_epoch
-    fake.empty_blocks = 1
+    fake.empty_blocks, fake.stray = 1, b"#3700" + bytes(700) + b"\r\n"   # a late block ahead of the sentinel
     waves = drv.acquire_running([1, 2], 5.0)
-    assert drv.stats["empty_blocks"] == 1 and drv.alignment_epoch == epoch + 1
-    assert waves[2].volts.size == 700
+    assert drv.alignment_epoch == epoch + 1 and waves[1].volts.size == 700
 
 
 def test_fast_preview_sweep_with_the_real_drivers():

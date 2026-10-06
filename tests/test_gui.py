@@ -504,3 +504,16 @@ def test_fast_preview_is_in_the_method_box_and_does_not_ask_for_a_skew_check(win
     with qtbot.waitSignal(win.engine.finished, timeout=30000):
         assert win.start_sweep()                              # check_skew left at its default
     assert asked == [] and all(p.flags & Flag.PREVIEW for p in win.result.points)
+
+
+def test_method_box_keeps_its_choice_when_the_session_updates(win, qtbot):
+    """User report: Fast preview went back to Sine fit when the sweep ended. The real scope has
+    no built-in measurement, and every session update reset the box to its first entry."""
+    from bodeplot.models import Method
+    win.config.method.setCurrentIndex(win.config.method.findData(Method.PREVIEW))
+    win.config.set_has_builtin(False)
+    assert win.config.measure().method is Method.PREVIEW
+    win.config.set_has_builtin(True)
+    win.config.method.setCurrentIndex(win.config.method.findData(Method.BUILTIN))
+    win.config.set_has_builtin(False)                    # the entry that is gone is the only one left
+    assert win.config.measure().method is Method.SINEFIT

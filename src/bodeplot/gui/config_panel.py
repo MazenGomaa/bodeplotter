@@ -208,5 +208,7 @@ class ConfigPanel(QScrollArea):
     def set_has_builtin(self, has: bool) -> None:
         item = self.method.model().item(1)
         item.setEnabled(has)
-        if not has:
+        # only away from the entry that is not there: this runs on every session update, and
+        # it used to put the Method box back on Sine fit after every sweep
+        if not has and self.method.currentData() is Method.BUILTIN:
             self.method.setCurrentIndex(0)

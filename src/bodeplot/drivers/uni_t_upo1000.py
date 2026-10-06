@@ -629,6 +629,7 @@ class UniTUPO1000(Digitizer):
         return ""
 
     RUN_QUIET_S = 0.1               # since the last setting change, before a read from the running scope
+    RUN_EMPTY_WAIT_S = 0.5          # after an empty reply of the running scope, before the next read
 
     def _wait_running(self, timeout_s: float) -> None:
         """Until the scope runs in sweep AUTO and shows a triggered record. A stopped scope
@@ -658,19 +659,36 @@ class UniTUPO1000(Digitizer):
         with no single shot and no stop: 0.21 s for two channels against 0.93 s (bench,
         HW_REPORT.md 13.21). Each channel is a DIFFERENT acquisition, each placed against its
         trigger with a scatter of about a tenth of a sample and not finer than about 0.8 ns,
-        so the phase between the channels scatters; the gain does not. An empty reply (about
-        1 read in 330 on the bench) is never retried in place: resync, then a new read."""
+        so the phase between the channels scatters; the gain does not. After an empty reply
+        the link is checked with the sentinel and the read is taken again 0.5 s later; a
+        resync only follows if the link is out of step."""
         self._check_alive("acquire_running")
         if self.tb is None:
             self.tb = self.query(":TIMebase:SCALe?", scpi.v_float)
         last: Exception | None = None
-        for _ in range(3):
+        for _ in range(6):
             try:
                 self._wait_running(timeout_s)
                 waves = {ch: self._fetch_channel(ch) for ch in chans}
             except (AcquireTimeout, InstrumentUnresponsive):
                 raise
-            except (EmptyBlock, ReplyError, OutOfStep, TransportError) as e:
+            except EmptyBlock as e:
+                # A running scope now and then has no record to give for a moment (bench,
+                # HW_REPORT.md 13.24: 14 times in 500 pair reads at 200 ns/div, status TRIGED
+                # all along, the read 0.5 s later empty as well, the one after that good).
+                # The link stays in step, so check that and wait; no resync, which would
+                # take 2 s and end the validity of the skew check.
+                last = e
+                try:
+                    self._sentinel(":WAVeform:DATA?")
+                except (OutOfStep, ReplyError, TransportError) as bad:
+                    log.warning("scope read while running: empty reply and %s; resync", bad)
+                    self.resync()
+                    continue
+                log.warning("scope read while running: empty reply (%s); in step, reading again", e)
+                self._sleep(self.RUN_EMPTY_WAIT_S)
+                continue
+            except (ReplyError, OutOfStep, TransportError) as e:
                 last = e
                 log.warning("scope read while running failed (%s: %s); resync, then a new read",
                             type(e).__name__, e)
