@@ -48,6 +48,15 @@ def _skew_check(win, qtbot):
     return check
 
 
+def _calibrate(win, qtbot):
+    with qtbot.waitSignal(win.engine.cal_measured, timeout=30000) as blocker:
+        win.engine.run_cal(win.configs())
+    cal = blocker.args[0]
+    win.engine.accept_cal(cal)
+    qtbot.waitUntil(lambda: win.info.cal_valid, timeout=5000)
+    return cal
+
+
 def test_window_starts_in_simulation_and_connects(win, qtbot):
     assert "SIMULATION" in win.sim_label.text()
     assert not win.act_start.isEnabled() and win.act_connect.text() == "Connect"
@@ -532,3 +541,55 @@ def test_connecting_does_not_pop_up_a_skew_question_but_starting_a_sweep_does(wi
     _short_sweep(win, 1e3, 1e5, 3)
     assert win.start_sweep() is False and asked == ["Channel skew"]     # asked, and Cancel stops it
     win.interactive = False
+
+
+# ---------------------------------------------------------------------- through calibration
+def test_engine_measures_accepts_and_drops_a_calibration(win, qtbot):
+    _connect(win, qtbot)
+    assert not win.info.cal_valid and win.info.cal is None and win.info.cal_text == "cal: none"
+    progress = []
+    win.engine.progress.connect(lambda i, n: progress.append((i, n)))
+    cal = _calibrate(win, qtbot)
+    assert cal.acceptable and len(cal.freqs_hz) == 58 and progress[-1] == (58, 58)
+    assert win.info.cal is cal and win.info.cal_text.startswith("cal: ") and "50 Hz to 20 MHz" in win.info.cal_text
+    assert not win.info.skew_valid                               # an independent record
+    assert "Through calibration accepted" in win.status_log.text.toPlainText()
+    assert win.state is EngineState.IDLE
+    with qtbot.waitSignal(win.engine.session_changed, timeout=5000):
+        win.engine.simulate_resync()
+    qtbot.waitUntil(lambda: not win.info.cal_valid, timeout=5000)
+    _calibrate(win, qtbot)
+    with qtbot.waitSignal(win.engine.session_changed, timeout=5000):
+        win.engine.discard_cal()
+    qtbot.waitUntil(lambda: not win.info.cal_valid, timeout=5000)
+    _calibrate(win, qtbot)
+    with qtbot.waitSignal(win.engine.session_changed, timeout=5000):
+        win.front_panel_used()
+    qtbot.waitUntil(lambda: not win.info.cal_valid, timeout=5000)
+
+
+def test_aborting_a_calibration_leaves_none(win, qtbot):
+    win.settings.sim["latency_ms"] = 20.0
+    _connect(win, qtbot)
+    seen = []
+    win.engine.progress.connect(lambda i, n: seen.append(i))
+    with qtbot.waitSignal(win.engine.cal_measured, timeout=30000) as blocker:
+        win.engine.run_cal(win.configs())
+        qtbot.waitUntil(lambda: len(seen) >= 2, timeout=20000)
+        win.abort()
+    assert blocker.args[0] is None and len(seen) < 58
+    qtbot.waitUntil(lambda: win.state is EngineState.IDLE, timeout=5000)
+    assert not win.info.cal_valid and "Calibration cancelled" in win.status_log.text.toPlainText()
+
+
+def test_a_refused_calibration_cannot_be_accepted(win, qtbot):
+    _connect(win, qtbot)
+    with qtbot.waitSignal(win.engine.cal_measured, timeout=30000) as blocker:
+        win.engine.run_cal(win.configs())
+    cal = blocker.args[0]
+    cal.acceptable = False
+    win.engine.accept_cal(cal)
+    # not waitSignal(session_changed): the run itself ends with one, which would be caught instead
+    qtbot.waitUntil(lambda: "not accepted" in win.status_log.text.toPlainText(), timeout=5000)
+    qtbot.wait(50)
+    assert not win.info.cal_valid

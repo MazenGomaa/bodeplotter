@@ -16,8 +16,9 @@ from ..drivers.mock import SimulatedDUT
 from ..measure import skew
 from ..measure.meters import MeasureCancelled
 from ..models import (EngineState, LogEntry, MeasureSettings, ScopeConfig, SkewCheck, StimulusConfig,
-                      SweepConfig, SweepResult)
-from .core import Callbacks, Session, SweepRunner, _now_iso, run_skew_check
+                      SweepConfig, SweepResult, ThroughCal)
+from . import calibration
+from .core import Callbacks, Session, SweepRunner, _now_iso, run_skew_check, run_through_cal
 
 log = logging.getLogger("bodeplot.engine")
 
@@ -43,6 +44,11 @@ class SessionInfo:
     skew_valid: bool = False
     recheck_reason: str | None = None
     skew_text: str = "skew: not checked"
+    # The through calibration of this connection (None after a resync). Whether it fits the
+    # scope settings on screen is decided by the GUI with calibration.matches().
+    cal: ThroughCal | None = None
+    cal_valid: bool = False
+    cal_text: str = "cal: none"
 
 
 @dataclass
@@ -69,6 +75,7 @@ class EngineWorker(QObject):
     error = Signal(str)
     session_changed = Signal(object)        # SessionInfo
     skew_measured = Signal(object)          # SkewCheck (not yet accepted)
+    cal_measured = Signal(object)           # ThroughCal (not yet accepted); None = cancelled
     point_remeasured = Signal(object, object)   # SweepResult, PointResult
 
     def __init__(self):
@@ -84,9 +91,11 @@ class EngineWorker(QObject):
             return SessionInfo()
         valid = s.skew_valid()
         caps = s.digitizer.caps
+        cal = s.cal_current()
         return SessionInfo(True, s.simulated, s.source_idn, s.digitizer_idn, True,
                            caps.has_builtin_amplitude and caps.has_builtin_phase, s.skew, valid,
-                           s.recheck_reason, skew.describe(s.skew if valid else None))
+                           s.recheck_reason, skew.describe(s.skew if valid else None),
+                           cal=cal, cal_valid=cal is not None, cal_text=calibration.describe(cal))
 
     def _emit_session(self):
         self._drop_if_dead()
@@ -209,6 +218,55 @@ class EngineWorker(QObject):
                 self._say("warn", w)
         self._emit_session()
 
+    @Slot(object)
+    def through_cal(self, cfg: Configs):
+        if self.session is None:
+            self.error.emit("Not connected.")
+            return
+        self._cancel_skew = False
+        self.state_changed.emit(EngineState.RUNNING)
+        try:
+            cal = run_through_cal(self.session, cfg.stimulus, cfg.scope, cfg.measure,
+                                  should_stop=lambda: self._cancel_skew, on_log=self.log.emit,
+                                  on_progress=self.progress.emit)
+            self.state_changed.emit(EngineState.IDLE)
+            self.cal_measured.emit(cal)
+        except MeasureCancelled:
+            self._say("warn", "Calibration cancelled.")
+            self.state_changed.emit(EngineState.IDLE)
+            self.cal_measured.emit(None)
+        except Exception as e:
+            msg = "Calibration failed: %s" % e
+            self._say("error", msg)
+            self.state_changed.emit(EngineState.ERROR)
+            self.error.emit(msg)
+        self._emit_session()
+
+    @Slot(object)
+    def accept_cal(self, cal: ThroughCal):
+        if self.session is None:
+            return
+        if not cal.acceptable:
+            self._say("warn", "Calibration not accepted: " + " ".join(cal.warnings))
+        elif cal.alignment_epoch != self.session.digitizer.alignment_epoch:
+            self._say("warn", "Calibration discarded: the scope was resynchronised after it.")
+        else:
+            self.session.accept_cal(cal)
+            self._say("info", "Through calibration accepted: %s, %d points, largest gain deviation %.3f dB, "
+                              "delay %+.2f ns." % (calibration.range_text(cal), len(cal.freqs_hz),
+                                                   calibration.max_gain_db(cal),
+                                                   calibration.fitted_delay_s(cal) * 1e9))
+            for w in cal.warnings:
+                self._say("warn", w)
+        self._emit_session()
+
+    @Slot()
+    def discard_cal(self):
+        if self.session is not None and self.session.cal is not None:
+            self.session.invalidate_cal()
+            self._say("info", "Through calibration discarded.")
+        self._emit_session()
+
     @Slot()
     def front_panel_used(self):
         if self.session is not None:
@@ -235,7 +293,7 @@ class EngineWorker(QObject):
             self.runner.resume()
 
     def abort(self):
-        self._cancel_skew = True
+        self._cancel_skew = True            # skew check and calibration
         if self.runner:
             self.runner.abort()
 
@@ -248,6 +306,9 @@ class SweepEngine(QObject):
     _req_remeasure = Signal(object, object, float)
     _req_skew = Signal(object)
     _req_accept_skew = Signal(object)
+    _req_cal = Signal(object)
+    _req_accept_cal = Signal(object)
+    _req_discard_cal = Signal()
     _req_front_panel = Signal()
     _req_sim_resync = Signal()
     # Results, re-emitted in the main thread. Receivers connect to THESE, never to the
@@ -262,6 +323,7 @@ class SweepEngine(QObject):
     error = Signal(str)
     session_changed = Signal(object)
     skew_measured = Signal(object)
+    cal_measured = Signal(object)
     point_remeasured = Signal(object, object)
 
     def __init__(self, parent=None):
@@ -277,10 +339,14 @@ class SweepEngine(QObject):
         self._req_remeasure.connect(w.remeasure)
         self._req_skew.connect(w.skew_check)
         self._req_accept_skew.connect(w.accept_skew)
+        self._req_cal.connect(w.through_cal)
+        self._req_accept_cal.connect(w.accept_cal)
+        self._req_discard_cal.connect(w.discard_cal)
         self._req_front_panel.connect(w.front_panel_used)
         self._req_sim_resync.connect(w.simulate_resync)
         for name in ("point_measured", "waveform_captured", "log", "progress", "state_changed",
-                     "finished", "error", "session_changed", "skew_measured", "point_remeasured"):
+                     "finished", "error", "session_changed", "skew_measured", "cal_measured",
+                     "point_remeasured"):
             getattr(w, name).connect(getattr(self, name), Qt.QueuedConnection)
         self.qthread.finished.connect(w.deleteLater)
         self.qthread.start()
@@ -291,6 +357,9 @@ class SweepEngine(QObject):
     def remeasure(self, cfg: Configs, result: SweepResult, f: float): self._req_remeasure.emit(cfg, result, f)
     def skew_check(self, cfg: Configs): self._req_skew.emit(cfg)
     def accept_skew(self, check: SkewCheck): self._req_accept_skew.emit(check)
+    def run_cal(self, cfg: Configs): self._req_cal.emit(cfg)
+    def accept_cal(self, cal: ThroughCal): self._req_accept_cal.emit(cal)
+    def discard_cal(self): self._req_discard_cal.emit()
     def front_panel_used(self): self._req_front_panel.emit()
     def simulate_resync(self): self._req_sim_resync.emit()
     def pause(self): self.worker.pause()
