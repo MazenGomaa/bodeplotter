@@ -42,7 +42,7 @@ PC software that sweeps a UNI-T generator and reads a UNI-T scope to draw a Bode
 
 ### What exists
 
-- App: `src/bodeplot/`, tests in `tests/`, venv `.venv` (PySide6 6.11, pyqtgraph 0.14, numpy 2.5, Python 3.14). Run: `run.bat --sim` or `.venv\Scripts\python -m bodeplot --sim`. Tests: `.venv\Scripts\python -m pytest`.
+- App: `src/bodeplot/`, tests in `tests/`, venv `.venv` (PySide6 6.11, pyqtgraph 0.14, numpy 2.5, Python 3.14). Run: `run.bat` (real instruments unless Settings > Start-up mode says otherwise; add `--sim` for one simulated run) or `.venv\Scripts\python -m bodeplot`. Tests: `.venv\Scripts\python -m pytest`.
 - Qt-free sweep logic is `sweep/core.py`; `sweep/engine.py` is the QThread wrapper. GUI tests run offscreen with `MainWindow.interactive = False` (no modal dialogs).
 - v1 skew feature, built to the user's spec (SPEC 8.6): `measure/skew.py` (states -1.85/+0.15/+2.15/+4.15 ns, snap within 0.3 ns, gain warn > 0.3 dB, `phase_corr = phase - 360 f dt`), wizard in `gui/dialogs.py`, session validity in `sweep/core.py` (`Session`, `alignment_epoch`), mock skew in `drivers/mock.py`, tests in `tests/test_skew.py`.
 - GUI changes after the user's review (2026-10-06): Fit view / follow mode (`gui/bode_plot.py`), k/M number entry and axes (`gui/si_widgets.py`, `units.py`), File/View/Help menus, all panels shown at every start-up, dark theme. `gui/theme.py` holds every colour; nothing else hard-codes one except the white-background image export. The palette is the dataviz skill's reference dark palette; its validator passes (2026-10-06). The user tested the dark theme on their display and approved it.
