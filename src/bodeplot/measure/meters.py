@@ -118,6 +118,8 @@ class DualChannelScopeMeter(ResponseMeter):
         return state.timebase
 
     def _acquire(self, settings: MeasureSettings) -> dict[int, Waveform]:
+        if settings.method is Method.PREVIEW:
+            return self.dig.acquire_running(self.chans, settings.acquire_timeout_s)
         return self.dig.acquire(self.chans, settings.acquire_timeout_s)
 
     def _autorange(self, settings: MeasureSettings, state: MeterState):
@@ -206,6 +208,8 @@ class DualChannelScopeMeter(ResponseMeter):
             w_ref, w_dut = waves[ref_ch], waves[dut_ch]
             pair = WaveformPair(freq_hz, w_ref.t, w_ref.volts, w_dut.volts)
         else:
+            if settings.method is Method.PREVIEW:
+                flags |= Flag.PREVIEW
             for i in range(n_avg):
                 if i > 0:
                     if self.should_stop():

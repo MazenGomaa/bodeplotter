@@ -171,6 +171,7 @@ class FakeScope(Transport):
         self.dead = False
         self.unplugged = False          # with dead: gone from the bus, not just silent
         self.fail_writes = 0            # this many writes time out, then the scope is fine again
+        self.run_jitter_s = 0.0         # scatter of a record against its trigger while running
         self.stale_preambles = 0        # this many preambles describe a record at stale_tb
         self.stale_tb = 1e-3
         self.die_after_data_reads: int | None = None    # stop answering after this many waveform reads
@@ -446,6 +447,10 @@ class FakeScope(Transport):
         t = -7.0 * self.timebase + dt * np.arange(700)
         amp, ph, dc = self._signal(n)
         delay = self.delay_ch2_s if n == 2 else 0.0
+        if self.mode == "run" and self.run_jitter_s:
+            # every read of a running scope is another acquisition, placed against its
+            # trigger with a scatter (HW_REPORT 13.21)
+            delay += float(self.rng.normal(0.0, self.run_jitter_s))
         # edge trigger on CH1, rising through its level: CH1's zero crossing is at t = 0
         # same sign convention as drivers/mock.py: a positive delay advances CH2
         tip = amp * np.sin(2 * math.pi * self.freq * (t + delay) + ph) + (dc if c["coupling"] == "DC" else 0.0)
@@ -464,7 +469,10 @@ class FakeScope(Transport):
         if self.die_after_data_reads is not None and self.data_reads > self.die_after_data_reads:
             self.dead = True
             return None
-        if self.empty_blocks > 0 or not (self.mode == "stopped" and self.has_record):
+        # a running scope has a record once its cycle is through (HW_REPORT 13.21); a restart
+        # or a setting change empties the screen first (S4)
+        running = self.mode == "run" and self.clock.now() - self.t_mark >= 0.40
+        if self.empty_blocks > 0 or not ((self.mode == "stopped" and self.has_record) or running):
             self.empty_blocks = max(0, self.empty_blocks - 1)
             return b"\r\n"              # no record: no block (HW_REPORT S4)
         body = self.codes(int(self.wav["src"][-1])).tobytes()

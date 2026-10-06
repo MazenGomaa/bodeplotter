@@ -776,3 +776,55 @@ def test_an_offset_the_generator_cannot_reach_is_refused_in_plain_words():
     with pytest.raises(DriverError, match="output is off"):
         drv.configure_sine(1, 1000.0, 1.0, -0.1, "HIGHZ")
     assert fake.ch[1]["amp"] == pytest.approx(1.0)                  # never widened with the output on
+
+
+# ---------------------------------------------------------------------- fast preview
+def test_fast_preview_reads_the_running_scope_and_never_arms_a_single_shot():
+    """HW_REPORT 13.21: no single shot, no stop; the scope is restarted with sweep AUTO and
+    given time before the first read, because a scope that has just restarted has no record."""
+    drv, fake, _ = ready_scope()
+    drv.acquire([1, 2], 5.0)                             # leaves the scope stopped
+    n_single = fake.sent().count(":TRIGger:SWEep SINGle")
+    waves = drv.acquire_running([1, 2], 5.0)
+    sent = fake.sent()
+    assert sent.count(":TRIGger:SWEep SINGle") == n_single and ":STOP" not in sent
+    restart = len(sent) - 1 - sent[::-1].index(":TRIGger:SWEep AUTO")
+    first_data = sent.index(":WAVeform:DATA?", restart)
+    assert fake.log[first_data][0] - fake.log[restart][0] >= 0.3
+    assert waves[1].volts.size == 700 and waves[2].volts.size == 700
+    assert drv.stats["empty_blocks"] == 0 and fake.forbidden == []
+    t = fake.clock.now()
+    drv.acquire_running([1, 2], 5.0)                     # already running: no restart, no wait
+    assert fake.clock.now() - t < 0.2
+
+
+def test_fast_preview_empty_reply_is_resynced_not_retried_in_place():
+    drv, fake, _ = ready_scope()
+    drv.acquire_running([1, 2], 5.0)
+    epoch = drv.alignment_epoch
+    fake.empty_blocks = 1
+    waves = drv.acquire_running([1, 2], 5.0)
+    assert drv.stats["empty_blocks"] == 1 and drv.alignment_epoch == epoch + 1
+    assert waves[2].volts.size == 700
+
+
+def test_fast_preview_sweep_with_the_real_drivers():
+    rc = 1e3 * 100e-9
+    session, fgen, fscope, clock = fake_bench(h=lambda f: 1.0 / (1.0 + 2j * math.pi * f * rc))
+    fscope.run_jitter_s = 1e-7
+    from bodeplot.models import Flag, Method
+    from bodeplot.sweep.core import Callbacks
+    logs = []
+    runner = SweepRunner(session, SweepConfig(start_hz=100.0, stop_hz=1e5, points_per_decade=3),
+                         StimulusConfig(), ScopeConfig(), MeasureSettings(method=Method.PREVIEW),
+                         Callbacks(log=logs.append), sleep=clock.sleep)
+    result = runner.run()
+    assert result.meta["error"] is None and len(result.points) == 10
+    for p in result.points:
+        h = 1.0 / (1.0 + 2j * math.pi * p.freq_hz * rc)
+        assert p.gain_db == pytest.approx(20 * math.log10(abs(h)), abs=0.15)
+        assert p.flags & Flag.PREVIEW and not p.flags & Flag.SKEW_UNCHECKED
+    assert ":TRIGger:SWEep SINGle" not in fscope.sent() and fscope.forbidden == []
+    assert any("Fast preview" in e.text for e in logs) and not any("skew" in e.text.lower() for e in logs)
+    assert not fgen.ch[1]["output"] and not fscope.lock and fscope.mode == "run"
+    session.close()

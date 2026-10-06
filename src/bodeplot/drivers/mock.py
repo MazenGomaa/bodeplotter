@@ -186,6 +186,7 @@ class MockScope(Digitizer):
                      for ch in range(1, 5)}
         self._saved = None
         self.acquire_count = 0
+        self.running_reads = 0
         self.fail_next: str | None = None       # test hook
         self.timeout_next = 0                   # test hook: this many acquisitions time out
 
@@ -296,6 +297,20 @@ class MockScope(Digitizer):
         dc_gain = 1.0 if self.same_node else abs(self.dut.h(1e-9))
         dut = ref * h * 10 ** (self.dut_gain_error_db / 20.0)
         return complex(ref), complex(dut), src.offset_v * div, src.offset_v * div * dc_gain
+
+    def acquire_running(self, chans, timeout_s) -> dict[int, Waveform]:
+        """Every channel is another acquisition, each placed against its trigger with the
+        scatter measured on the bench (HW_REPORT.md 13.21): the two channels differed by
+        0.09 to 0.12 sample intervals and by not less than 0.8 ns (standard deviation)."""
+        keep, out = self.jitter_s, {}
+        try:
+            self.jitter_s = max(0.07 * self.timebase / 50.0, 0.6e-9)
+            for ch in chans:
+                out.update(self.acquire([ch], timeout_s))
+        finally:
+            self.jitter_s = keep
+        self.running_reads += 1
+        return out
 
     def acquire(self, chans, timeout_s) -> dict[int, Waveform]:
         self._cmd("acquire")

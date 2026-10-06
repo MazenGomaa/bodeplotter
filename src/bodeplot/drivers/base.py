@@ -129,6 +129,12 @@ class Digitizer(ABC):
     def acquire(self, chans: list[int], timeout_s: float) -> dict[int, Waveform]:
         """One acquisition; every channel in chans is read from that same record."""
 
+    def acquire_running(self, chans: list[int], timeout_s: float) -> dict[int, Waveform]:
+        """The channels read one after the other from a scope that keeps triggering: fast,
+        but each channel is then a different acquisition (Method.PREVIEW). A digitizer
+        that cannot do that takes an ordinary acquisition."""
+        return self.acquire(chans, timeout_s)
+
     def set_offset(self, ch: int, offset_v: float) -> float:
         """Vertical offset of a channel in volts at the scope input; positive moves the
         trace up. Returns the value actually set. Optional: auto-range works without it,

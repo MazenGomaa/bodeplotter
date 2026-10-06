@@ -491,3 +491,16 @@ def test_descending_sweep_measures_from_the_top_down(win, qtbot):
     _sweep(win, qtbot)
     assert win.config.descending.isChecked()
     assert order[0] == pytest.approx(20e6) and order == sorted(order, reverse=True)
+
+
+def test_fast_preview_is_in_the_method_box_and_does_not_ask_for_a_skew_check(win, qtbot):
+    from bodeplot.models import Method
+    _connect(win, qtbot)
+    _short_sweep(win, 1e3, 1e5, 3)
+    win.config.method.setCurrentIndex(win.config.method.findData(Method.PREVIEW))
+    assert win.config.measure().method is Method.PREVIEW
+    asked = []
+    win._ask = lambda *a, **k: asked.append(a) or None
+    with qtbot.waitSignal(win.engine.finished, timeout=30000):
+        assert win.start_sweep()                              # check_skew left at its default
+    assert asked == [] and all(p.flags & Flag.PREVIEW for p in win.result.points)

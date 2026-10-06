@@ -19,7 +19,7 @@ from ..units import fmt_si
 from . import theme
 from .si_widgets import SiAxis
 
-QUIET = Flag.REMEASURED | Flag.BUILTIN          # flags that do not mark a point as suspect
+QUIET = Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW         # flags that do not mark a point as suspect
 # Vertical unit of the upper plot: key -> (box text, axis label, axis unit, smallest span shown)
 UNITS = {"db": ("dB", "Gain", "dB", 1.0),
          "v": ("Voltage", "Output", "Vpp", 0.0),

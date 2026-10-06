@@ -14,6 +14,10 @@ class SweepType(enum.Enum):
 class Method(enum.Enum):
     SINEFIT = "sinefit"
     BUILTIN = "builtin"
+    # Sine fit on channels read from the RUNNING scope: about four times faster per capture,
+    # same gain, but the channels come from different acquisitions, so the phase scatters
+    # (bench, HW_REPORT.md 13.21: sd 0.3 to 0.4 deg up to 1 MHz, 6 deg at 20 MHz).
+    PREVIEW = "preview"
 
 
 class Flag(enum.Flag):
@@ -26,6 +30,7 @@ class Flag(enum.Flag):
     BUILTIN = enum.auto()
     SKEW_UNCHECKED = enum.auto()
     REF_SUSPECT = enum.auto()       # the reference capture did not hold the stimulus, even after retries
+    PREVIEW = enum.auto()           # measured in Fast preview: the phase is rough
 
     def names(self) -> list[str]:
         return [f.name for f in Flag if f is not Flag.NONE and f in self]

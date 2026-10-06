@@ -51,7 +51,7 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None) -> 
     phase = np.array([p.phase_deg for p in pts])
     if opts.unwrap and len(pts):
         phase = unwrap_deg(phase)
-    quiet = Flag.NONE | Flag.REMEASURED | Flag.BUILTIN
+    quiet = Flag.NONE | Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW
     flagged = np.array([bool(p.flags & ~quiet) for p in pts], dtype=bool)
 
     rows = 2 if opts.show_phase else 1

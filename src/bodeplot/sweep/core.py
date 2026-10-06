@@ -20,7 +20,7 @@ from ..drivers.mock import SimulatedDUT, make_sim
 from ..drivers.scpi import InstrumentUnresponsive
 from ..measure import sinefit, skew
 from ..measure.meters import DualChannelScopeMeter, MeasureCancelled, MeterState, ResponseMeter
-from ..models import (EngineState, Flag, LogEntry, MeasureSettings, PointResult, ScopeConfig,
+from ..models import (EngineState, Flag, LogEntry, MeasureSettings, Method, PointResult, ScopeConfig,
                       SkewCheck, StimulusConfig, SweepConfig, SweepResult, WaveformPair,
                       config_snapshot)
 from . import plan as plan_mod
@@ -202,6 +202,9 @@ def save_bad_capture(session: Session, info: dict) -> str:
 
 
 REF_LEVEL_WARN_FRACTION = 0.3
+PREVIEW_NOTE = ("Fast preview: the gain is as accurate as in a normal sweep, the phase is rough "
+                "(about 1 degree below 1 MHz, up to about 10 degrees at 20 MHz). Use Sine fit "
+                "for a phase you can rely on.")
 
 
 def reference_level_warning(points, amp_vpp: float) -> str | None:
@@ -269,7 +272,6 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
 
     meter = DualChannelScopeMeter(dig, scope_cfg, should_stop, sleep, on_bad_capture=bad)
     settings = MeasureSettings(**{**meas.__dict__, "averages": SKEW_CAPTURES})
-    from ..models import Method
     settings.method = Method.SINEFIT
     same_node = getattr(dig, "sim_set_same_node", None)     # simulation only
     hs = []
@@ -394,7 +396,8 @@ class SweepRunner:
 
     def _apply_skew(self, point: PointResult, delay_s: float | None) -> PointResult:
         if delay_s is None:
-            point.flags |= Flag.SKEW_UNCHECKED
+            if self.meas.method is not Method.PREVIEW:      # a preview's phase is rough anyway
+                point.flags |= Flag.SKEW_UNCHECKED
             return point
         point.skew_corr_deg = skew.correction_deg(point.freq_hz, delay_s)
         point.h = skew.correct_h(point.h, point.freq_hz, delay_s)
@@ -455,7 +458,9 @@ class SweepRunner:
             p = self.make_plan()
             for w in p.warnings:
                 self._log("warn", w)
-            if delay_s is None:
+            if self.meas.method is Method.PREVIEW:
+                self._log("info", PREVIEW_NOTE)
+            elif delay_s is None:
                 self._log("warn", "No valid channel skew check: phase is NOT corrected and every "
                                   "point is flagged SKEW_UNCHECKED. " + (self.session.recheck_reason or ""))
             else:

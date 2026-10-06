@@ -264,3 +264,23 @@ def test_reference_level_warning(make_session, no_sleep):
     SweepRunner(make_session(seed=5), SweepConfig(SweepType.LOG, 1e3, 1e5, 5), StimulusConfig(),
                 ScopeConfig(), MeasureSettings(), Callbacks(log=logs.append), sleep=no_sleep).run()
     assert not any("reference channel saw only" in entry.text for entry in logs)
+
+
+def test_fast_preview_keeps_the_gain_and_marks_every_point(make_session, no_sleep):
+    """Bench, HW_REPORT 13.21: read from the running scope the gain is as good as in a single
+    shot; the phase scatters because the two channels are different acquisitions."""
+    r, c = 1000.0, 100e-9
+    session = make_session(SimulatedDUT.rc_lpf(r, c), seed=7, checked=False)
+    logs = []
+    res = SweepRunner(session, SweepConfig(SweepType.LOG, 100.0, 1e5, 5), StimulusConfig(), ScopeConfig(),
+                      MeasureSettings(method=Method.PREVIEW), Callbacks(log=logs.append), sleep=no_sleep).run()
+    assert res.meta["error"] is None and session.digitizer.running_reads >= len(res.points)
+    errs = []
+    for p in res.points:
+        h = 1.0 / (1.0 + 2j * math.pi * p.freq_hz * r * c)
+        assert p.gain_db == pytest.approx(20 * math.log10(abs(h)), abs=0.2)
+        assert p.flags & Flag.PREVIEW and not p.flags & Flag.SKEW_UNCHECKED
+        errs.append(abs(p.phase_deg - math.degrees(math.atan2(h.imag, h.real))))
+    assert max(errs) < 3.0 and max(errs) > 0.05              # rough, and really scattered
+    assert any("Fast preview" in e.text for e in logs)
+    assert not any("No valid channel skew check" in e.text for e in logs)

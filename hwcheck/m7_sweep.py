@@ -58,7 +58,14 @@ def on_point(p):
 
 
 def main():
-    stim, scope_cfg, meas = StimulusConfig(offset_v=OFFSET), ScopeConfig(coupling=COUPLING), MeasureSettings()
+    # --preview: Method.PREVIEW (read from the running scope). --ch=REF,DUT: scope channels (default 1,2)
+    from bodeplot.models import Method
+    ref, dut = next((tuple(int(x) for x in a.split("=", 1)[1].split(",")) for a in sys.argv
+                     if a.startswith("--ch=")), (1, 2))
+    stim = StimulusConfig(offset_v=OFFSET)
+    scope_cfg = ScopeConfig(ref_channel=ref, dut_channel=dut, probe_atten={ref: 10.0, dut: 10.0}, coupling=COUPLING)
+    meas = MeasureSettings(method=Method.PREVIEW if "--preview" in sys.argv else Method.SINEFIT)
+    out["method"], out["channels"] = meas.method.value, [ref, dut]
     out["offset_v"] = OFFSET
     out["coupling"] = COUPLING
     t0 = time.perf_counter()

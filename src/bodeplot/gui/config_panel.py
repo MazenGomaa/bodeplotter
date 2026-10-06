@@ -105,6 +105,9 @@ class ConfigPanel(QScrollArea):
         self.method = QComboBox()
         self.method.addItem("Sine fit", Method.SINEFIT)
         self.method.addItem("Scope built-in", Method.BUILTIN)
+        self.method.addItem("Fast preview (rough phase)", Method.PREVIEW)
+        self.method.setToolTip("Fast preview reads the scope while it runs: about twice as fast, the same "
+                               "gain, but the phase is rough (about 1° below 1 MHz, up to about 10° at 20 MHz).")
         self.averages = _spin(1, 256, 1)
         self.settle_ms = _dspin(0.0, 10000.0, 50.0, 1, " ms", 10.0)
         self.settle_cycles = _dspin(0.0, 100.0, 3.0, 1)

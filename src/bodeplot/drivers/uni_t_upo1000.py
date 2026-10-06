@@ -137,6 +137,7 @@ class UniTUPO1000(Digitizer):
         self.last_timeline: list = []
         self._gap_until = 0.0
         self._last_set_t = 0.0
+        self._run_t = 0.0                       # when sweep AUTO was last sent (free_run)
         self.caps = self._make_caps()
 
     # ------------------------------------------------------------------ helpers
@@ -548,6 +549,7 @@ class UniTUPO1000(Digitizer):
         """Leave the scope running for the user: sweep AUTO restarts a stopped scope
         (HW_REPORT.md 12.11, 12.13). Never ':RUN'."""
         self.set_verified(":TRIGger:SWEep", "AUTO", V_SWEEP, "AUTO")                  # U1K p.36
+        self._run_t = self._clock()
 
     # ------------------------------------------------------------------ acquisition
     # Margins of one single-shot capture (HW_REPORT.md 12.4). Class attributes so the bench
@@ -607,18 +609,83 @@ class UniTUPO1000(Digitizer):
         acquisition taken, without a resync: the link is in step, the record is just old."""
         for left in (2, 1, 0):
             waves = self._acquire(chans, timeout_s)
-            span = self.HDIV * self.tb
-            stale = [ch for ch, w in waves.items() if abs(w.dt * w.volts.size - span) > 0.02 * span]
-            if not stale:
+            text = self._stale(waves)
+            if not text:
                 return waves
             self.stats["stale_records"] += 1
-            text = "scope record of CH%s spans %.3g s, the timebase set gives %.3g s" % (
-                "/".join(str(ch) for ch in stale), waves[stale[0]].dt * waves[stale[0]].volts.size, span)
             if left == 0:
                 raise DriverError(text + ": stale record, three times running", "acquire")
             log.warning("%s: stale record, taking a new acquisition", text)
             self._sleep(max(self.STOP_HOLD_S, 0.1))
         raise AssertionError("unreachable")
+
+    def _stale(self, waves: dict[int, Waveform]) -> str:
+        """'' or what is wrong: a record whose time span is not the timebase that is set."""
+        span = self.HDIV * self.tb
+        for ch, w in waves.items():
+            if abs(w.dt * w.volts.size - span) > 0.02 * span:
+                return "scope record of CH%d spans %.3g s, the timebase set gives %.3g s" % (
+                    ch, w.dt * w.volts.size, span)
+        return ""
+
+    RUN_QUIET_S = 0.1               # since the last setting change, before a read from the running scope
+
+    def _wait_running(self, timeout_s: float) -> None:
+        """Until the scope runs in sweep AUTO and shows a triggered record. A stopped scope
+        is restarted with sweep AUTO and then left running for max(0.3 s, 30 x timebase):
+        before that it has no record and ':WAVeform:DATA?' is answered empty (HW_REPORT.md
+        S4). With no trigger (status AUTO) the read goes ahead after 1 s: the amplitude of
+        an auto-triggered record is still right."""
+        t0 = self._clock()
+        restarted = False
+        while True:
+            st = self.status()
+            now = self._clock()
+            if st == "STOP" and not restarted:
+                self.free_run()
+                restarted = True
+            elif now - self._last_set_t >= self.RUN_QUIET_S and \
+                    now - self._run_t >= max(0.3, 30 * self.tb) and \
+                    (st == "TRIGED" or (st == "AUTO" and now - t0 > max(1.0, 60 * self.tb))):
+                return
+            if now - t0 > timeout_s:
+                raise AcquireTimeout(f"the scope does not show a record while running (status {st})",
+                                     ":TRIGger:STATus?")
+            self._sleep(self.STATUS_POLL_S)
+
+    def acquire_running(self, chans: list[int], timeout_s: float = 5.0) -> dict[int, Waveform]:
+        """The channels read one after the other from the scope while it keeps triggering,
+        with no single shot and no stop: 0.21 s for two channels against 0.93 s (bench,
+        HW_REPORT.md 13.21). Each channel is a DIFFERENT acquisition, each placed against its
+        trigger with a scatter of about a tenth of a sample and not finer than about 0.8 ns,
+        so the phase between the channels scatters; the gain does not. An empty reply (about
+        1 read in 330 on the bench) is never retried in place: resync, then a new read."""
+        self._check_alive("acquire_running")
+        if self.tb is None:
+            self.tb = self.query(":TIMebase:SCALe?", scpi.v_float)
+        last: Exception | None = None
+        for _ in range(3):
+            try:
+                self._wait_running(timeout_s)
+                waves = {ch: self._fetch_channel(ch) for ch in chans}
+            except (AcquireTimeout, InstrumentUnresponsive):
+                raise
+            except (EmptyBlock, ReplyError, OutOfStep, TransportError) as e:
+                last = e
+                log.warning("scope read while running failed (%s: %s); resync, then a new read",
+                            type(e).__name__, e)
+                self.resync()
+                continue
+            text = self._stale(waves)
+            if not text:
+                return waves
+            self.stats["stale_records"] += 1
+            last = DriverError(text + ": stale record", "acquire_running")
+            log.warning("%s: stale record, reading again", text)
+            self._sleep(0.1)
+        if isinstance(last, DriverError):
+            raise last
+        raise DriverError(str(last), "acquire_running")
 
     def _acquire(self, chans: list[int], timeout_s: float = 5.0) -> dict[int, Waveform]:
         """One single-shot acquisition; every channel is read from that stopped record.

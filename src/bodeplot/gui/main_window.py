@@ -15,7 +15,7 @@ from .. import __version__
 from ..io import export_csv, export_image, export_touchstone, presets
 from ..io.settings import AppSettings, load_settings, save_settings
 from ..measure import skew
-from ..models import EngineState, LogEntry, PointResult, SweepResult, SweepType
+from ..models import EngineState, LogEntry, Method, PointResult, SweepResult, SweepType
 from ..sweep import plan as plan_mod
 from ..sweep.engine import Configs, ConnectRequest, SessionInfo, SweepEngine
 from . import theme
@@ -475,7 +475,8 @@ class MainWindow(QMainWindow):
         if err:
             self._warn_box("Sweep", err)
             return False
-        if check_skew and not self.info.skew_valid:
+        # a Fast preview's phase is rough anyway, so it does not ask for the skew check
+        if check_skew and not self.info.skew_valid and self.config.measure().method is not Method.PREVIEW:
             answer = self._ask(
                 "Channel skew",
                 (self.info.recheck_reason or "No skew check has been done in this session.") +
