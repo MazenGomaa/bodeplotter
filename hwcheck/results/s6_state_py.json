@@ -63,20 +63,20 @@
       "s6_capbench.py": "3cf22e3bd96c",
       "s6_lock.py": "d864c44fbb0b",
       "s6_overdrive.py": "cfe7c4e166ca",
+      "s7_capspeed.py": "bd411edc468a",
       "s7_dcoffset.py": "9da4c6b4759a",
       "s7_dcsource.py": "771a51aa35d6",
       "s7_gendc.py": "d47960b9fe2e",
       "s7_genoffset.py": "59938843324f",
       "s7_rangephase.py": "7b4e85f31478",
       "s7_smallsig.py": "03c100e7276e",
+      "s7_stream.py": "e900517ecf06",
       "scpi.py": "141705ebc0d6",
       "t0b_iolayer.py": "b89d4cc28906",
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "485bfe2",
-    "git_dirty": [
-      "?? hwcheck/results/m7/probe_walk_20261006.json"
-    ]
+    "git_commit": "16d1906",
+    "git_dirty": []
   }
 }
