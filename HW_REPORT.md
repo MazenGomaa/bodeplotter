@@ -108,6 +108,6 @@ The watchdog on a scope that is frozen but still on USB, whether paced table wal
 | 12.12 to 12.14 | Milestone 6 bench checks: capture benchmark, why free-running capture failed, rail codes, division count, panel lock | `docs/hw/m6-bench.md` |
 | 13.1 to 13.12 | Milestone 7 bring-up: probe tool, first sweeps, RC low-pass, the generator's DC, restore of the scope settings, bad-capture retry | `docs/hw/m7-bringup.md` |
 | 13.13 to 13.28 | Milestone 7 bench sessions with the user: skew wizard, CH3 / CH4, watchdog, panel lock, table walk, capacitor loss, sweep speed, running capture, Fast preview, the +2.15 ns state, built-in measurements, acceptance | `docs/hw/m7-bench-sessions.md` |
-| 14.1 to 14.3 | Milestone A1: through calibration and through sweep with 1 and 4 averages, the user's acceptance run in the GUI with an RC low-pass | `docs/hw/a1-through-cal.md` |
+| 14.1 to 14.4 | Milestone A1: through calibration and through sweep with 1 and 4 averages, the user's acceptance run in the GUI with an RC low-pass, the capacitor branch's series resonance above 1 MHz | `docs/hw/a1-through-cal.md` |
 
 Raw data of every run, failed ones included: `hwcheck/results/`.

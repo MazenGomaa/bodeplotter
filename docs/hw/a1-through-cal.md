@@ -55,3 +55,9 @@ Done by the user on the real instruments, reported in their words and with two e
 4. **Disconnect, connect again:** the status bar shows the skew as UNCHECKED and no calibration. The calibration did not survive the reconnect, as designed.
 
 Also reported by the user: no skew prompt on connect. That is the behaviour decided on 2026-10-06 (13.28 and `docs/STATE.md`: the status bar and the log say that the check is needed; only starting a Sine fit sweep without a check or a calibration asks).
+
+### 14.4 Above 1 MHz the RC sweep shows the capacitor branch's series resonance
+
+In the user's RC sweep (14.3, `gui_rc.csv`) the phase leaves -90 deg above 100 kHz, the gain has a minimum of -76 dB near 3.2 MHz where the phase passes through zero, and above that the gain rises again (-53 dB at 20 MHz) with the phase near +60 deg. A series inductance and resistance in the capacitor branch, fitted to the points from 200 kHz up, give about 21 nH and 0.15 ohm (self-resonance 3.5 MHz with 98 nF); that model follows the measured gain within 0.1 dB up to the notch and within about 1 dB above it, where an ideal capacitor would be 29 dB lower at 20 MHz. The phase above the notch stays 10 to 25 deg below the model, and every point from 1.15 MHz to about 18 MHz is flagged `BELOW_FLOOR` or `LOW_SNR` (a few hundred microvolts at the scope input), so pickup into the DUT probe is not excluded as a second contribution.
+
+The user then changed the wiring as suggested (shorter leads, or a small capacitor in parallel) and reported that the response "kind of did that" (the notch moved up and the high-frequency gain dropped); no data file of that sweep. So the effect belongs to the DUT's wiring, not to the instruments or to the calibration (which removed 0.2 dB and 0.5 deg at 20 MHz).

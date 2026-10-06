@@ -27,7 +27,7 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | Scope channels | CH1 / CH2 and CH3 / CH4 |
 | Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
 
-**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, built on 2026-10-06; then a connection spec for other transports, trace overlay, auto markers), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
+**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay, auto markers), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
 
 Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; LAN is not supported.
 

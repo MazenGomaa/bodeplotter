@@ -4,13 +4,21 @@ What is done, what is next, and the decisions that are not obvious from the code
 
 ## Start here
 
-**v1 is done and accepted. v2, milestone A1 (through calibration) is built and tested against the simulators; its bench acceptance has been run; the user's verdict on the result is the open step.**
+**v1 and milestone A1 of v2 (through calibration) are done. Next is A2 (`docs/spec/roadmap.md` section 16): connection spec and per-driver skew data.** A2 has no design yet: it starts with the brainstorming step, not with code.
 
-1. Built on 2026-10-06 on branch `a1-through-calibration` (cut from `docs-split`; neither is merged into `main` yet), test-first, one commit per task. `pytest`: 349 passed (after the branch review and its fixes). Design: `docs/superpowers/specs/2026-10-06-through-calibration-design.md`. Plan: `docs/superpowers/plans/2026-10-06-through-calibration.md` (all tasks done; the review's two important findings fixed, its minor ones listed in the session's final message and not fixed).
-2. Six departures from the design, listed at the top of the plan and taken as accepted (the user read them and said to start): top frequency limited to 40 % of the scope bandwidth (20 MHz); 58 points, not 57; the phase is interpolated after one fitted delay is taken out (a straight line over log f misses a delay); the extra field `ThroughCal.acceptable`; the image footer names the calibration; Skew check and Calibrate are both in the File menu.
-3. **Bench acceptance run on 2026-10-07** (`HW_REPORT.md` section 14, `docs/hw/a1-through-cal.md`): headless with 1 and 4 averages, and the user's four steps in the GUI (calibrate, through sweep, RC low-pass, reconnect), all done. The correction leaves no mean error; the per-point target of 0.02 dB and 0.1 deg is limited by measurement noise (met for gain with 4 averages, missed by one point in phase; not met with one capture). **Open: the user's word on whether that is accepted as it stands** (asked 2026-10-07), and the merge of the two branches.
-4. Bench when that session ended: the user had moved the DUT probe (scope CH1 in their panel setting: reference CH2, DUT CH1, 5 Vpp) to an RC low-pass (997.8 ohm, 98.2 nF ceramic) and reconnected the app. ASK what is wired before any run.
-5. After A1: the final review of the branch and the merge (the user decides), then `docs/spec/roadmap.md` sections 15 and 16. Do not start A2 or anything later without the user.
+1. A1 was built on 2026-10-06 and run on the bench on 2026-10-07 (`HW_REPORT.md` section 14). The user saw the results (no mean error; per-point scatter limited by noise: 0.008 dB and 0.05 deg standard deviation with one capture, 0.004 dB and 0.03 deg with 4 averages; the design's "every point within 0.02 dB and 0.1 deg" is met for gain with 4 averages and missed by one point in phase) and answered "lets continue". That is taken as acceptance of A1 as it stands; the criterion in the design was not reworded.
+2. Both branches (`docs-split`, `a1-through-calibration`) were merged into `main` on 2026-10-07. `pytest`: 349 passed.
+3. Design `docs/superpowers/specs/2026-10-06-through-calibration-design.md`, plan `docs/superpowers/plans/2026-10-06-through-calibration.md`. Six departures from the design, listed at the top of the plan: top frequency limited to 40 % of the scope bandwidth (20 MHz); 58 points, not 57; the phase is interpolated after one fitted delay is taken out; the extra field `ThroughCal.acceptable`; the image footer names the calibration; Skew check and Calibrate are both in the File menu. Added after the branch review: `meta["cal_covered"]` and the header wording `cal: applied in part`.
+4. Left open from the branch review of A1, none fixed, the user has not chosen (offered 2026-10-07):
+   - a NaN in a measured response makes `cal_report` raise, and the dialog stays on "Measuring ..." instead of showing the refusal (nothing wrong is stored);
+   - Fast preview beyond the calibrated range: the log says the points are flagged `SKEW_UNCHECKED`, they carry only `PREVIEW`;
+   - re-measuring a point does not update `result.meta` (calibration or skew);
+   - `SessionInfo.cal_valid` / `cal_text` describe the connection, not the panel settings (the GUI decides with `calibration.matches`);
+   - the dialog's "Current calibration" line also shows one that belongs to other scope settings;
+   - a Cancel clicked before the worker picks the run up is lost (same in the skew check); closed `CalDialog` objects are not deleted (same as `SkewWizard`); the main window's clock is wrong while a calibration runs;
+   - weak or missing tests: RC low-pass with tilt (passes without the correction), image footer, `CalDialog.reject` / `_failed`, `open_cal_dialog`, scope restore after a cancel;
+   - an inverted (180 deg) through is accepted without a warning: the design has no phase plausibility rule.
+5. Bench when the session of 2026-10-07 ended: the user had the DUT probe on an RC low-pass (997.8 ohm, 98.2 nF ceramic) and had been changing its wiring; panel setting reference CH2, DUT CH1, 5 Vpp. ASK what is wired before any run. `bode1.csv` and `bode2.csv` in the project root are the user's exports (copies are in `hwcheck/results/m8/`).
 
 The documents were split on 2026-10-06 at the user's request (`docs/spec/`, `docs/hw/`, `docs/ARCHITECTURE.md`, this file); `tests/test_docs.py` guards the split.
 
