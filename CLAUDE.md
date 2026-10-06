@@ -1,6 +1,44 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Bode plotter — working notes for Claude
 
 PC software that sweeps a UNI-T generator and reads a UNI-T scope to draw a Bode plot. `docs/SPEC.md` is the source of truth; `HW_REPORT.md` records what the hardware really does and overrides the manuals where they disagree.
+
+## Commands
+
+Run from the project root (PowerShell). There is no build step and no linter or formatter configured.
+
+| Task | Command |
+|---|---|
+| Run the app (creates `.venv`, installs when `requirements.txt` changed) | `run.bat` (real instruments) or `run.bat --sim`; add `--debug` to log every instrument command |
+| Run the app without the launcher | `.venv\Scripts\python -m bodeplot --sim` |
+| All tests (no hardware, no display) | `.venv\Scripts\python -m pytest` |
+| One file / one test / by name | `.venv\Scripts\python -m pytest tests\test_sweep.py`, `... tests\test_sweep.py::test_name`, `... -k skew` |
+| Probe tool (touches the real instruments) | `.venv\Scripts\python -m bodeplot.tools.probe` (`--no-acquire`, `--json FILE`, `--unlock`, `--walk-tables`) |
+| Bench script (touches the real instruments) | `.venv-hwcheck\Scripts\python.exe -W ignore hwcheck\<script>.py "@py"` |
+
+`tests/conftest.py` puts `src/` on the path, sets `QT_QPA_PLATFORM=offscreen` and sets `BODEPLOT_NO_HARDWARE`. `BODEPLOT_CONFIG_DIR` redirects the settings and presets folder (`io/settings.py`).
+
+## Architecture
+
+One measurement goes down this chain; each layer only knows the one below it:
+
+1. **GUI** (`gui/main_window.py` and the panels) builds the config dataclasses in `models.py` (`SweepConfig`, `StimulusConfig`, `ScopeConfig`, `MeasureSettings`) and talks only to `SweepEngine`.
+2. **`sweep/engine.py`**: `SweepEngine` owns a QThread with an `EngineWorker`. Requests go in as queued signals, results come back as signals; pause / resume / abort are called directly on the worker. It holds the one `Session` and drops it when the watchdog marks it dead.
+3. **`sweep/core.py`** (no Qt, so it is what the tests and `hwcheck/m7_*.py` drive): `Session` = one source + one digitizer + the skew check that belongs to that connection; `SweepRunner` walks the plan from `sweep/plan.py`, reports through `Callbacks`, applies the skew correction and guarantees `safe_off` and the scope restore on every exit path.
+4. **`measure/meters.py`**: `DualChannelScopeMeter` does one frequency point: timebase from the step table, auto-range (`sweep/autorange.py` holds the pure decisions), capture, then `measure/sinefit.py` or the scope's built-in measurement. It returns a `PointResult` with `Flag`s.
+5. **Drivers** (`drivers/base.py`: `SignalSource`, `Digitizer`, `Waveform`, caps). `drivers/registry.py` maps an `*IDN?` string to a driver class; `drivers/connect.py` scans, picks and opens a real `Session`. `drivers/mock.py` implements the same interfaces with a `SimulatedDUT` (this is Simulation mode).
+6. **`drivers/transport.py`**: the real drivers speak SCPI through a `Transport`. `VisaTransport` is the only place a VISA resource is opened (`visa_util.py` holds the `BODEPLOT_NO_HARDWARE` guard). `drivers/scpi.py` has the command descriptions, reply validators and the driver error types (`InstrumentUnresponsive` is what triggers the watchdog).
+
+Two levels of simulation, used for different things:
+- `drivers/mock.py` replaces the drivers. Used by `--sim`, the GUI tests and the sweep / skew tests (`make_session` fixture in `tests/conftest.py`).
+- `tests/fakes.py` (`FakeScope`, `FakeGen`, `FakeClock`) replaces the Transport under the REAL drivers, reproduces the faults in `HW_REPORT.md` and records forbidden commands. Time is virtual, so pacing and arm sequences are asserted exactly. `tests/test_drivers.py` also scans `src/` for `:RUN` and `subprocess`.
+
+`hwcheck/` is a separate program family with its own venv and its own I/O layer (`iolayer.py`, `scpi.py`); the app never imports it (the real drivers are a port of it). The dependency only runs the other way: `hwcheck/m7_*.py` import the app's drivers and `sweep/core.py` to run them headless on the bench. A hardware finding goes into `HW_REPORT.md`, then into the driver, then into `tests/fakes.py` so the suite keeps it.
+
+Persistence (`io/`): settings and presets are JSON in the user config folder, loaded through `models.from_dict`, which falls back to defaults field by field; exports are CSV (round-trips), image, Touchstone.
 
 ## Current state (updated 2026-10-06)
 
