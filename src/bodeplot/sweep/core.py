@@ -21,8 +21,9 @@ from ..drivers.scpi import InstrumentUnresponsive
 from ..measure import sinefit, skew
 from ..measure.meters import DualChannelScopeMeter, MeasureCancelled, MeterState, ResponseMeter
 from ..models import (EngineState, Flag, LogEntry, MeasureSettings, Method, PointResult, ScopeConfig,
-                      SkewCheck, StimulusConfig, SweepConfig, SweepResult, WaveformPair,
+                      SkewCheck, StimulusConfig, SweepConfig, SweepResult, ThroughCal, WaveformPair,
                       config_snapshot)
+from . import calibration
 from . import plan as plan_mod
 
 log = logging.getLogger("bodeplot.sweep")
@@ -37,13 +38,15 @@ def _now_iso() -> str:
 # ---------------------------------------------------------------------- session
 @dataclass
 class Session:
-    """One connection to a source and a digitizer, and the skew check that belongs to it."""
+    """One connection to a source and a digitizer, and the skew check and the through
+    calibration that belong to it."""
     source: SignalSource
     digitizer: Digitizer
     simulated: bool = False
     source_idn: str = ""
     digitizer_idn: str = ""
     skew: SkewCheck | None = None
+    cal: ThroughCal | None = None
     recheck_reason: str | None = "No skew check has been done in this session."
     # Set by the watchdog when an instrument stops answering: the connection is finished
     # and the engine closes it (SPEC.md section 13).
@@ -73,6 +76,7 @@ class Session:
             self.close()
             raise
         self.invalidate_skew("Connected: the channel skew must be checked once per session.")
+        self.invalidate_cal()
         self.digitizer.on_link_trouble = self._link_trouble
 
     def _link_trouble(self) -> None:
@@ -101,6 +105,7 @@ class Session:
     def mark_dead(self, reason: str) -> None:
         self.dead_reason = reason
         self.invalidate_skew("The connection was lost.")
+        self.invalidate_cal()
 
     def lock_panel(self, on: bool) -> None:
         """Keep the scope's front panel out of a running measurement. Never raises:
@@ -151,6 +156,7 @@ class Session:
 
     def front_panel_used(self) -> None:
         self.invalidate_skew("The front panel was used: the channel skew may have changed.")
+        self.invalidate_cal()
 
     def skew_valid(self) -> bool:
         if self.skew is None:
@@ -166,6 +172,27 @@ class Session:
 
     def skew_delay(self) -> float | None:
         return self.skew.delay_s if self.skew_valid() else None
+
+    # ---- through calibration validity (SPEC.md 8.7)
+    def accept_cal(self, cal: ThroughCal) -> None:
+        """Independent of the skew check: accepting one does not create or change the other."""
+        self.cal = cal
+
+    def invalidate_cal(self) -> None:
+        self.cal = None
+
+    def cal_current(self) -> ThroughCal | None:
+        """The calibration of this connection. One measured before a resync is dropped:
+        the channel alignment may have changed."""
+        if self.cal is not None and self.cal.alignment_epoch != self.digitizer.alignment_epoch:
+            self.cal = None
+        return self.cal
+
+    def cal_for(self, scope_cfg: ScopeConfig) -> ThroughCal | None:
+        """The calibration, if it was measured through the paths scope_cfg uses. One that
+        only fails this test is kept: the user may switch the setting back."""
+        cal = self.cal_current()
+        return cal if calibration.matches(cal, scope_cfg) else None
 
 
 # ---------------------------------------------------------------------- rejected captures
@@ -309,6 +336,77 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
             session.end_measurement()
     return skew.evaluate(freqs, hs, alignment_epoch=epoch,
                          snap_states=skew.snaps(scope_cfg.ref_channel, scope_cfg.dut_channel))
+
+
+# ---------------------------------------------------------------------- through calibration
+def through_cal_frequencies(session: Session) -> list[float]:
+    s, d = session.source.caps, session.digitizer.caps
+    return calibration.frequencies(s.sine_min_hz, s.sine_max_hz, d.min_hz, d.max_hz or d.bandwidth_hz,
+                                   d.bandwidth_hz)
+
+
+def run_through_cal(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfig, meas: MeasureSettings,
+                    should_stop: Callable[[], bool] = lambda: False,
+                    sleep: Callable[[float], None] = time.sleep,
+                    on_log: Callable[[LogEntry], None] | None = None,
+                    on_progress: Callable[[int, int], None] | None = None) -> ThroughCal:
+    """Measure Vdut / Vref over the full range with both probes on the same node (SPEC.md
+    8.7). The caller has already asked the user to connect them. Always Sine fit on single
+    shots, with the averages and settle times given: a Fast preview's phase scatter would
+    be built into every later result. No skew correction is applied. Same safety frame as
+    a sweep. Raises MeasureCancelled when stopped. Does not store the result: see
+    Session.accept_cal."""
+    src, dig = session.source, session.digitizer
+    freqs = through_cal_frequencies(session)
+
+    def say(level, text):
+        if on_log:
+            on_log(LogEntry(level, text, _now_iso()))
+
+    def bad(info):
+        text = save_bad_capture(session, info)
+        log.warning(text)
+        say("warn", text)
+
+    meter = DualChannelScopeMeter(dig, scope_cfg, should_stop, sleep, on_bad_capture=bad)
+    settings = MeasureSettings(**{**meas.__dict__, "method": Method.SINEFIT})
+    same_node = getattr(dig, "sim_set_same_node", None)     # simulation only
+    points: list[PointResult] = []
+    epoch = dig.alignment_epoch
+    try:
+        if same_node:
+            same_node(True)
+        session.begin_measurement()
+        src.configure_sine(stim.gen_channel, freqs[0], stim.amp_vpp, stim.offset_v, stim.load)
+        meter.prepare(stim.amp_vpp, stim.offset_v)
+        src.set_output(stim.gen_channel, True)
+        state = meter.initial_state()
+        for i, f in enumerate(freqs):
+            if should_stop():
+                raise MeasureCancelled()
+            src.set_frequency(stim.gen_channel, f)
+            settle = lambda f=f: sleep(max(meas.settle_ms / 1000.0, meas.settle_cycles / f))
+            settle()
+            point, _ = measure_with_output(session, stim.gen_channel,
+                                           lambda f=f: meter.measure(f, settings, state), settle,
+                                           lambda text: say("warn", text))
+            points.append(point)
+            if on_progress:
+                on_progress(i + 1, len(freqs))
+    except InstrumentUnresponsive as e:
+        src.safe_off()
+        session.mark_dead(watchdog_message(e))
+        raise DriverError(session.dead_reason, e.last_command)
+    finally:
+        src.safe_off()
+        if same_node:
+            same_node(False)
+        if session.dead_reason is None:
+            session.end_measurement()
+    if dig.alignment_epoch != epoch:
+        raise DriverError("The scope was resynchronised during the calibration: its points may belong "
+                          "to two alignment states. Measure it again.")
+    return calibration.evaluate(points, scope_cfg, stim.amp_vpp, alignment_epoch=epoch)
 
 
 def watchdog_message(e: InstrumentUnresponsive) -> str:

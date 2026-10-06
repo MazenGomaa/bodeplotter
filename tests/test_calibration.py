@@ -6,11 +6,13 @@ import math
 
 import pytest
 
+from bodeplot.drivers.base import DriverError
 from bodeplot.drivers.mock import SimulatedDUT
+from bodeplot.measure.meters import MeasureCancelled
 from bodeplot.models import (Flag, MeasureSettings, PointResult, ScopeConfig, StimulusConfig, SweepConfig,
                              SweepType, ThroughCal)
 from bodeplot.sweep import calibration
-from bodeplot.sweep.core import SweepRunner
+from bodeplot.sweep.core import SweepRunner, run_through_cal, through_cal_frequencies
 
 
 def make_cal(freqs, hs, **kw):
@@ -189,3 +191,114 @@ def test_mock_dut_channel_can_tilt_with_frequency(make_session, no_sleep):
         expect = 0.2 * math.log10(p.freq_hz / 1e3) / math.log10(20e6 / 1e3) if p.freq_hz > 1e3 else 0.0
         assert p.gain_db == pytest.approx(expect, abs=0.02), p.freq_hz
     assert res.points[-1].gain_db == pytest.approx(0.2, abs=0.02)
+
+
+# ------------------------------------------------------------------ measuring it
+def _calibrate(session, no_sleep, scope=None, meas=None, **kw):
+    return run_through_cal(session, StimulusConfig(), scope or ScopeConfig(), meas or MeasureSettings(),
+                           sleep=no_sleep, **kw)
+
+
+def test_calibration_finds_the_tilt_and_the_delay(make_session, no_sleep):
+    session = make_session(SimulatedDUT.rc_lpf(), seed=61, skew_state=2, checked=False)   # +2.15 ns
+    session.digitizer.dut_gain_tilt_db_at_20mhz = 0.2
+    progress = []
+    cal = _calibrate(session, no_sleep, on_progress=lambda i, n: progress.append((i, n)))
+    assert cal.freqs_hz == through_cal_frequencies(session)
+    assert cal.freqs_hz[0] == 50.0 and cal.freqs_hz[-1] == 20e6 and len(cal.freqs_hz) == 58
+    assert progress[0] == (1, 58) and progress[-1] == (58, 58)
+    assert cal.acceptable and cal.warnings == []
+    assert calibration.fitted_delay_s(cal) == pytest.approx(2.15e-9, abs=0.05e-9)
+    assert calibration.max_gain_db(cal) == pytest.approx(0.2, abs=0.03)
+    assert cal.alignment_epoch == session.digitizer.alignment_epoch
+    # the simulated DUT probe was moved to the reference node and is back; nothing was stored
+    assert session.digitizer.same_node is False and session.cal is None
+    assert session.source.output == {1: False, 2: False}
+    assert session.skew is None                                    # no skew check was made of it
+
+
+def test_calibration_is_never_a_fast_preview(make_session, no_sleep):
+    from bodeplot.models import Method
+    session = make_session(seed=62, checked=False)
+    cal = _calibrate(session, no_sleep, meas=MeasureSettings(method=Method.PREVIEW))
+    assert cal.acceptable and session.digitizer.running_reads == 0
+
+
+def test_a_filter_is_refused(make_session, no_sleep):
+    session = make_session(SimulatedDUT.rc_lpf(), seed=63, checked=False)
+    session.digitizer.sim_set_same_node = lambda on: None           # the probe stays on the filter
+    cal = _calibrate(session, no_sleep)
+    assert not cal.acceptable and any(calibration.NOT_A_THROUGH in w for w in cal.warnings)
+
+
+def test_a_gain_mismatch_is_a_warning_only(make_session, no_sleep):
+    session = make_session(seed=64, checked=False)
+    session.digitizer.dut_gain_error_db = 0.5
+    cal = _calibrate(session, no_sleep)
+    assert cal.acceptable and any("Gain mismatch" in w for w in cal.warnings)
+
+
+def test_cancel_leaves_no_result_and_the_generator_off(make_session, no_sleep):
+    session = make_session(seed=65, checked=False)
+    seen = []
+    with pytest.raises(MeasureCancelled):
+        _calibrate(session, no_sleep, on_progress=lambda i, n: seen.append(i),
+                   should_stop=lambda: len(seen) >= 3)
+    assert len(seen) == 3 and session.cal is None
+    assert session.source.output == {1: False, 2: False} and session.digitizer.same_node is False
+
+
+def test_a_resync_during_the_calibration_is_refused(make_session, no_sleep):
+    session = make_session(seed=66, checked=False)
+
+    def on_progress(i, n):
+        if i == 5:
+            session.digitizer.simulate_resync()
+    with pytest.raises(DriverError, match="resynchronised"):
+        _calibrate(session, no_sleep, on_progress=on_progress)
+    assert session.source.output == {1: False, 2: False}
+
+
+def test_a_generator_fault_switches_off_and_restores(make_session, no_sleep):
+    session = make_session(seed=67, checked=False)
+    before = session.digitizer.timebase
+
+    def on_progress(i, n):
+        if i == 2:
+            session.source.fail_next = "generator said no"
+    with pytest.raises(DriverError, match="generator said no"):
+        _calibrate(session, no_sleep, on_progress=on_progress)
+    assert session.source.output == {1: False, 2: False}
+    assert session.digitizer.timebase == before and session.digitizer.same_node is False
+
+
+# ------------------------------------------------------------------ validity
+def test_validity(make_session, no_sleep):
+    session = make_session(seed=68, checked=False)
+    assert session.cal_for(ScopeConfig()) is None
+    cal = _calibrate(session, no_sleep)
+    session.accept_cal(cal)
+    assert session.cal_for(ScopeConfig()) is cal
+    assert not session.skew_valid()                                # an independent record
+    # other settings: not used, but kept (the user may switch back)
+    for other in (ScopeConfig(ref_channel=2, dut_channel=1),
+                  ScopeConfig(probe_atten={1: 10.0, 2: 1.0}),
+                  ScopeConfig(coupling="AC"), ScopeConfig(bw_limit=True)):
+        assert session.cal_for(other) is None
+    assert session.cal is cal and session.cal_for(ScopeConfig()) is cal
+    # a resync ends it for good
+    session.digitizer.simulate_resync()
+    assert session.cal_for(ScopeConfig()) is None and session.cal is None
+    # front panel
+    session.accept_cal(_calibrate(session, no_sleep))
+    session.front_panel_used()
+    assert session.cal is None
+    # reconnect
+    session.accept_cal(_calibrate(session, no_sleep))
+    session.close()
+    session.open()
+    assert session.cal is None and session.cal_for(ScopeConfig()) is None
+    # a lost connection
+    session.accept_cal(_calibrate(session, no_sleep))
+    session.mark_dead("gone")
+    assert session.cal is None
