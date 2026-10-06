@@ -26,6 +26,13 @@ class ImageOptions:
     unwrap: bool = False
     log_x: bool = True
     show_phase: bool = True
+    unit: str = "db"            # vertical unit of the upper plot, as in the GUI: "db" | "v" | "pct"
+
+
+# unit -> (axis label, value of a point); the same three as gui/bode_plot.py UNITS
+UNITS = {"db": ("Gain (dB)", lambda p: p.gain_db),
+         "v": ("Output (Vpp)", lambda p: 2.0 * p.vdut_amp),
+         "pct": ("Output / input (%)", lambda p: 100.0 * abs(p.h))}
 
 
 def write_image(path, result: SweepResult, opts: ImageOptions | None = None) -> Path:
@@ -39,7 +46,8 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None) -> 
         raise ValueError("unsupported image format %r (use png, svg or pdf)" % path.suffix)
     pts = sorted(result.points, key=lambda p: p.freq_hz)
     f = np.array([p.freq_hz for p in pts])
-    gain = np.array([p.gain_db for p in pts])
+    gain_label, value = UNITS.get(opts.unit, UNITS["db"])
+    gain = np.array([value(p) for p in pts])
     phase = np.array([p.phase_deg for p in pts])
     if opts.unwrap and len(pts):
         phase = unwrap_deg(phase)
@@ -49,7 +57,7 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None) -> 
     rows = 2 if opts.show_phase else 1
     fig, axes = plt.subplots(rows, 1, sharex=True, figsize=(opts.width_in, opts.height_in))
     axes = np.atleast_1d(axes)
-    for ax, y, label in zip(axes, (gain, phase), ("Gain (dB)", "Phase (deg)")):
+    for ax, y, label in zip(axes, (gain, phase), (gain_label, "Phase (deg)")):
         ax.plot(f, y, "-", color="#2a78d6", linewidth=1.2)
         if len(pts):
             ax.plot(f[~flagged], y[~flagged], "o", color="#2a78d6", markersize=3)

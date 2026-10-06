@@ -650,7 +650,7 @@ class MainWindow(QMainWindow):
         elif fmt in export_image.FORMATS:
             o = image_opts or self._image_opts
             o = export_image.ImageOptions(o.title, o.dpi, o.width_in, o.height_in, self.plot.unwrap(),
-                                          self.config.sweep().sweep_type is SweepType.LOG, self.info.has_phase)
+                                          self.config.sweep().sweep_type is SweepType.LOG, self.info.has_phase, self.plot.unit())
             out = export_image.write_image(path, self.result, o)
         else:
             raise ValueError("unknown export format %r" % fmt)

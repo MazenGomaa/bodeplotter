@@ -982,3 +982,29 @@ So DC coupling with the offset handling works with at least +/-100 mV of DC at t
 - What works, with positive numbers only: at offset 0 set the amplitude to A + 2d, then `:CHANnel1:BASE:HIGH` (UTG p.13) to A/2 - d. The bottom of the wave stays, the top comes down: read-backs offset -d and amplitude A (tried: A = 1, d = 0.1, 0.3, 0.5; A = 0.2, d = 0.05). Measured at the output: -84 mV for -0.1 V and -289 mV for -0.3 V (at 50 mV/div, where one code is 20 mV at the tip).
 - Limit: HIGH cannot go below 0 this way, so the lowest offset is minus half the amplitude.
 - The app's generator driver now does this (`UniTUTG900E._set_level`): never sends a negative number, sets a negative offset by the route above with the output off, verifies offset and amplitude by read-back, and refuses an offset below minus half the amplitude with a plain message. Before, a negative offset in the GUI ended the sweep with a read-back error. `:CHANnel<n>:BASE:HIGH` is added to the driver's command list.
+
+### 13.12 More open items, still with nobody at the bench (2026-10-06, later)
+
+**Restore from an awkward scope state** (`hwcheck/m7_restore.py`: set the scope up, run a 5-point sweep through the app, compare 19 settings before and after; data `results/m7/m7_restore_run1.json` and `m7_restore.json`).
+- CH2 switched off before the sweep (50 mV/div, offset 20 mV; CH1 500 mV/div, 1 ms/div): **all 19 settings came back**, CH2 off again with its scale and offset.
+- CH1 at probe ratio 10X, AC, 20 MHz limit, offset 0.1 V, trigger slope negative, level 2 V: first run, **everything came back except the trigger level** (2.0 V before, 2.4 V after). Cause: `:TRIGger:LEVel` takes input-referred volts and reports probe-scaled ones (0.2 sent at 10X reads back 2.0), like `:CHANnel<n>:SCALe` (0.05 sent reads back 0.5). `:CHANnel<n>:OFFSet` is not scaled (0.1 sent reads back 0.1). The restore sent the read-back value, the scope clamped it at 2.4 V. Fixed: the level is divided by the trigger source's probe ratio before it is sent. **Second run: all 19 settings came back in both cases.**
+- The simulated scope now reports V/div and trigger level probe-scaled, as the real one does.
+- 0 scope errors in both runs; generator OFF, panel unlocked, sweep AUTO, start state put back at the end.
+
+**The bad capture of 13.9 could not be reproduced** (`hwcheck/m7_repeat.py`, data `results/m7/m7_repeat_ac.json`): 40 AC-coupled sweeps from 50 to 100 Hz, each crossing the 10 to 5 ms/div change, 200 points in 327 s: **0 rejected captures**, 0 scope errors. So the fault is rarer than about one in 13 such transitions (95 % bound for 0 in 40), and its cause is still not known. The retry of 13.10 stays as the guard.
+
+**Phase lead of the RC filter above 20 kHz.**
+- Fits to the recorded sweeps (`hwcheck/a7_phase_lead.py`, no instrument; points from 300 Hz up to where the DUT SNR is 20 dB): capacitance 104.9 to 105.1 nF in every run and model. A series resistance alone needs 0.6 to 1.3 ohm depending on the run's frequency span, a constant loss angle alone 0.56 to 0.78 deg (tan d 0.010 to 0.014), both together 0.4 to 1.0 ohm with 0.2 to 0.45 deg. Both together leave at most 0.6 deg of phase error; neither alone describes the data, and the fitted values move with the span, so **these are descriptions, not measurements of the capacitor**.
+- **The lead is not a V/div-range effect of the scope** (`hwcheck/s7_rangephase.py`, AC coupled): the same capacitor voltage measured with CH2 on every step it fits on, CH1 fixed at 20 mV/div.
+
+| Frequency | CH2 steps compared | Phase on each step | Gain on each step | Lead over the ideal RC |
+|---|---|---|---|---|
+| 5 kHz | 5, 10, 20 mV/div | -72.76, -72.79, -72.78 deg | -10.786, -10.794, -10.792 dB | +0.4 deg |
+| 20 kHz | 2, 5, 10, 20 mV/div | -84.75, -84.83, -84.89, -84.78 deg | -22.45, -22.44, -22.36, -22.51 dB | +0.8 to +0.9 deg |
+| 50 kHz | 1, 2, 5, 10 mV/div | -87.00, -87.11, -86.99, -87.06 deg | -30.29, -30.34, -30.32, -30.21 dB | +1.2 to +1.3 deg |
+| 100 kHz | 1, 2 mV/div | -87.35, -87.45 deg | -36.32, -36.41 dB | +1.7 to +1.8 deg |
+
+  Where the signal fills at least 0.8 division the steps agree within 0.14 deg and 0.09 dB. (Smaller than that the scatter grows: at 100 kHz on 20 mV/div, 0.1 division, the spread is 7.6 deg.)
+- With the through sweeps of 13.5 (both probes on one node: phase within 0.2 deg to 20 MHz) this leaves the circuit itself: the capacitor's loss, its series resistance, and the breadboard contacts and ground lead. Telling those apart needs another capacitor or an LCR meter, so a person at the bench.
+
+**Image export follows the vertical unit**: PNG, SVG and PDF now draw the upper plot in dB, Vpp or percent of the input, whichever the Vertical box shows (`ImageOptions.unit`).

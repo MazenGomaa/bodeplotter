@@ -162,3 +162,17 @@ def test_settings_round_trip_and_defaults(cfg_dir):
     assert odd.backend == "py" and odd.simulate is True
     settings.settings_path().write_text("garbage", encoding="utf-8")
     assert settings.load_settings() == settings.AppSettings()
+
+
+@pytest.mark.parametrize("unit,label,top", [("db", "Gain (dB)", 0.0), ("v", "Output (Vpp)", 1.0),
+                                            ("pct", "Output / input (%)", 100.0)])
+def test_image_follows_the_vertical_unit(tmp_path, result, unit, label, top, monkeypatch):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    seen = {}
+    real = plt.close
+    monkeypatch.setattr(plt, "close", lambda fig: (seen.update(ax=fig.axes[0], y=fig.axes[0].lines[0].get_ydata()), real(fig)))
+    path = export_image.write_image(tmp_path / "plot.svg", result, export_image.ImageOptions(unit=unit))
+    assert path.exists() and seen["ax"].get_ylabel() == label
+    assert float(max(seen["y"])) == pytest.approx(top, abs=0.05 * max(1.0, top))
