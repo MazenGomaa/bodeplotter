@@ -12,7 +12,7 @@ import numpy as np
 
 from ..measure.sinefit import unwrap_deg
 from ..models import Flag, SweepResult
-from .export_csv import describe_skew
+from .export_csv import describe_correction
 
 FORMATS = ("png", "svg", "pdf")
 QUIET = Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW | Flag.CALIBRATED    # as gui/bode_plot.py QUIET
@@ -74,7 +74,7 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None) -> 
     st = result.config.get("stimulus", {})
     footer = "%s   %s to %s Hz   %s Vpp   %s%s%s" % (
         str(result.meta.get("finished", ""))[:19], _g(sw.get("start_hz")), _g(sw.get("stop_hz")),
-        _g(st.get("amp_vpp")), describe_skew(result.meta),
+        _g(st.get("amp_vpp")), describe_correction(result.meta),
         "   phase unwrapped" if opts.unwrap else "",
         "   ABORTED (partial)" if result.meta.get("aborted") else "")
     fig.text(0.01, 0.005, footer, fontsize=7, ha="left", va="bottom")

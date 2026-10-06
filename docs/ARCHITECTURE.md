@@ -52,7 +52,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `gui/status_log.py` | point table and log text | `models.py`, `units.py` |
 | `gui/theme.py` | every colour of the app, `status_html` | - |
 | `gui/waveform_view.py` | the two captured waveforms with their fits | `gui/theme.py`, `models.py`, `units.py` |
-| `io/export_csv.py` | CSV writer and loader, the skew header lines | `measure/sinefit.py`, `measure/skew.py`, `models.py` |
+| `io/export_csv.py` | CSV writer and loader, the skew and calibration header lines | `measure/sinefit.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py` |
 | `io/export_image.py` | PNG / SVG / PDF with matplotlib | `io/export_csv.py`, `measure/sinefit.py`, `models.py` |
 | `io/export_touchstone.py` | `.s2p` writer | `io/export_csv.py`, `models.py` |
 | `io/presets.py` | presets as JSON files | `io/settings.py`, `models.py` |

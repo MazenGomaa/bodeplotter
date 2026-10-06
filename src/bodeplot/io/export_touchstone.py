@@ -11,7 +11,7 @@ import math
 from pathlib import Path
 
 from ..models import SweepResult
-from .export_csv import skew_header
+from .export_csv import cal_header, skew_header
 
 
 def write_touchstone(path, result: SweepResult) -> Path:
@@ -28,7 +28,7 @@ def write_touchstone(path, result: SweepResult) -> Path:
     ]
     if result.meta.get("aborted"):
         lines.append("! NOTE: the sweep was aborted; this file holds a partial result.")
-    for key, value in skew_header(result.meta):
+    for key, value in skew_header(result.meta) + cal_header(result.meta):
         lines.append("! %s: %s" % (key, value))
     lines.append("! config: %s" % json.dumps(result.config, default=str))
     lines.append("# Hz S RI R 50")

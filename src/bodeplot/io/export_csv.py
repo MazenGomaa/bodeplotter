@@ -11,11 +11,12 @@ from pathlib import Path
 
 from ..measure import skew
 from ..measure.sinefit import unwrap_deg
-from ..models import Flag, PointResult, SkewCheck, SweepResult
+from ..models import Flag, PointResult, SkewCheck, SweepResult, ThroughCal
+from ..sweep import calibration
 
 COLUMNS = ["freq_hz", "gain_db", "phase_deg", "phase_unwrapped_deg", "h_re", "h_im", "vref_amp_v",
            "vdut_amp_v", "vdiv_ref", "vdiv_dut", "timebase_s", "n_avg", "snr_ref_db", "snr_dut_db",
-           "skew_corr_deg", "flags"]
+           "skew_corr_deg", "flags", "cal_gain_db", "cal_phase_deg"]
 
 
 def _num(x) -> str:
@@ -28,6 +29,8 @@ def skew_header(meta: dict) -> list[tuple[str, str]]:
     """The skew lines shared by the CSV header and the Touchstone comments."""
     sk = meta.get("skew")
     if not sk:
+        if meta.get("cal"):
+            return [("skew", "not used (the through calibration was applied)")]
         return [("skew", "not checked (phase is NOT corrected for channel skew)")]
     return [("skew", "checked"),
             ("skew_delay_ns", "%.4f" % (sk["delay_s"] * 1e9)),
@@ -36,6 +39,18 @@ def skew_header(meta: dict) -> list[tuple[str, str]]:
             ("skew_gain_mismatch_db", "%.4f" % sk["gain_db"]),
             ("skew_check_freqs_hz", ", ".join("%g" % f for f in sk["freqs_hz"])),
             ("skew_checked_at", str(sk["checked_at"]))]
+
+
+def cal_header(meta: dict) -> list[tuple[str, str]]:
+    """The through-calibration lines shared by the CSV header and the Touchstone comments."""
+    cal = ThroughCal.from_meta(meta.get("cal"))
+    if cal is None:
+        return [("cal", "none")]
+    return [("cal", "applied"),
+            ("cal_checked_at", cal.checked_at),
+            ("cal_range_hz", "%g, %g" % (cal.freqs_hz[0], cal.freqs_hz[-1])),
+            ("cal_points", str(len(cal.freqs_hz))),
+            ("cal_max_gain_db", "%.4f" % calibration.max_gain_db(cal))]
 
 
 def write_csv(path, result: SweepResult) -> Path:
@@ -48,7 +63,7 @@ def write_csv(path, result: SweepResult) -> Path:
                     "simulated", "aborted", "error"):
             if key in result.meta:
                 f.write("# %s: %s\n" % (key, result.meta[key]))
-        for key, value in skew_header(result.meta):
+        for key, value in skew_header(result.meta) + cal_header(result.meta):
             f.write("# %s: %s\n" % (key, value))
         f.write("# meta_json: %s\n" % json.dumps(result.meta, default=str))
         f.write("# config_json: %s\n" % json.dumps(result.config, default=str))
@@ -59,7 +74,7 @@ def write_csv(path, result: SweepResult) -> Path:
                         _num(p.h.real), _num(p.h.imag), _num(p.vref_amp), _num(p.vdut_amp),
                         _num(p.vdiv_ref), _num(p.vdiv_dut), _num(p.timebase), p.n_avg,
                         _num(p.snr_ref_db), _num(p.snr_dut_db), _num(p.skew_corr_deg),
-                        p.flags.to_text()])
+                        p.flags.to_text(), _num(p.cal_gain_db), _num(p.cal_phase_deg)])
     return path
 
 
@@ -113,7 +128,8 @@ def load_csv(path) -> SweepResult:
             vdiv_dut=_f(row, "vdiv_dut", math.nan), timebase=_f(row, "timebase_s", math.nan),
             n_avg=int(_f(row, "n_avg", 1)), snr_ref_db=_f(row, "snr_ref_db"),
             snr_dut_db=_f(row, "snr_dut_db"), flags=Flag.from_text(row.get("flags", "")),
-            duration_s=0.0, skew_corr_deg=_f(row, "skew_corr_deg", 0.0)))
+            duration_s=0.0, skew_corr_deg=_f(row, "skew_corr_deg", 0.0),
+            cal_gain_db=_f(row, "cal_gain_db", 0.0), cal_phase_deg=_f(row, "cal_phase_deg", 0.0)))
     points.sort(key=lambda p: p.freq_hz)
     return SweepResult(config, points, meta)
 
@@ -130,3 +146,9 @@ def skew_from_meta(meta: dict) -> SkewCheck | None:
 
 def describe_skew(meta: dict) -> str:
     return skew.describe(skew_from_meta(meta))
+
+
+def describe_correction(meta: dict) -> str:
+    """One line for a footer: the calibration when one was applied, else the skew check."""
+    cal = ThroughCal.from_meta(meta.get("cal"))
+    return calibration.describe(cal) if cal is not None else describe_skew(meta)
