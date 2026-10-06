@@ -171,6 +171,8 @@ class FakeScope(Transport):
         self.dead = False
         self.unplugged = False          # with dead: gone from the bus, not just silent
         self.fail_writes = 0            # this many writes time out, then the scope is fine again
+        self.stale_preambles = 0        # this many preambles describe a record at stale_tb
+        self.stale_tb = 1e-3
         self.die_after_data_reads: int | None = None    # stop answering after this many waveform reads
         self.empty_next = 0             # 'busy': this many ordinary replies come back empty
         self.empty_blocks = 0           # this many :WAVeform:DATA? replies carry no block
@@ -406,8 +408,12 @@ class FakeScope(Transport):
         if name == ":WAVeform:PREamble?":
             c = self.ch[int(self.wav["src"][-1])]
             yinc = c["scale"] / 25.0
+            tb = self.timebase
+            if self.stale_preambles > 0:    # the record of the previous timebase (HW_REPORT 13.20)
+                self.stale_preambles -= 1
+                tb = self.stale_tb
             return self._text("0,0,1000,1,%.6e ,%.6e,0,%.6e ,%.6e ,128" % (
-                self.timebase / 50.0, -7.0 * self.timebase, yinc, round(c["offset"] / yinc)))
+                tb / 50.0, -7.0 * tb, yinc, round(c["offset"] / yinc)))
         key = {":WAVeform:SOURce": "src", ":WAVeform:MODE": "mode", ":WAVeform:FORMat": "fmt"}.get(name.rstrip("?"))
         if key is None:
             return None

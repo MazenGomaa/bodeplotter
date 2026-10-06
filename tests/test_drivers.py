@@ -253,6 +253,26 @@ def test_empty_block_is_not_retried_in_place():
     assert waves[2].volts.size == 700
 
 
+def test_a_record_of_the_previous_timebase_is_thrown_away_without_a_resync():
+    """Bench, HW_REPORT 13.20: read too soon after a timebase change the scope hands out the
+    old record. Its sample interval gives it away."""
+    drv, fake, _ = ready_scope()
+    epoch, tb = drv.alignment_epoch, drv.tb
+    fake.stale_tb, fake.stale_preambles = tb * 2.5, 1                # the reference only, as on the bench
+    waves = drv.acquire([1, 2], 5.0)
+    assert drv.stats["stale_records"] == 1 and drv.alignment_epoch == epoch
+    assert all(w.dt * w.volts.size == pytest.approx(14 * tb) for w in waves.values())
+    assert fake.sent().count(":TRIGger:SWEep SINGle") == 2           # a new acquisition, not a re-read
+
+
+def test_a_record_that_stays_stale_is_an_error():
+    drv, fake, _ = ready_scope()
+    fake.stale_tb, fake.stale_preambles = drv.tb * 2.5, 99
+    with pytest.raises(DriverError, match="stale record"):
+        drv.acquire([1, 2], 5.0)
+    assert drv.stats["stale_records"] == 3
+
+
 # ---------------------------------------------------------------------- scope: watchdog
 def test_dead_scope_raises_unresponsive_and_then_fails_fast():
     drv, fake, clock = ready_scope()

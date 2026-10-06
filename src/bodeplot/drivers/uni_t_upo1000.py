@@ -123,7 +123,7 @@ class UniTUPO1000(Digitizer):
         self.dead = False
         self.warnings: list[str] = []           # for the user; drained by the session
         self.stats = dict(queries=0, empty_retries=0, reply_errors=0, out_of_step=0, resyncs=0,
-                          set_retries=0, forced_triggers=0, empty_blocks=0, rearms=0)
+                          set_retries=0, forced_triggers=0, empty_blocks=0, rearms=0, stale_records=0)
         self.idn_text = ""
         self.model = self.firmware = ""
         self.tables: step_tables.StepTables = step_tables.FALLBACK
@@ -599,6 +599,28 @@ class UniTUPO1000(Digitizer):
                         rail_fraction=float(at_rail.mean()))
 
     def acquire(self, chans: list[int], timeout_s: float = 5.0) -> dict[int, Waveform]:
+        """A single-shot acquisition whose record has the timebase that is set.
+
+        Read too soon after STOP following a timebase change, the scope hands out the
+        record of the PREVIOUS timebase (bench: 12 of 12 with no hold time, HW_REPORT.md
+        13.20; probably the bad capture of 13.9). Such a record is thrown away and a new
+        acquisition taken, without a resync: the link is in step, the record is just old."""
+        for left in (2, 1, 0):
+            waves = self._acquire(chans, timeout_s)
+            span = self.HDIV * self.tb
+            stale = [ch for ch, w in waves.items() if abs(w.dt * w.volts.size - span) > 0.02 * span]
+            if not stale:
+                return waves
+            self.stats["stale_records"] += 1
+            text = "scope record of CH%s spans %.3g s, the timebase set gives %.3g s" % (
+                "/".join(str(ch) for ch in stale), waves[stale[0]].dt * waves[stale[0]].volts.size, span)
+            if left == 0:
+                raise DriverError(text + ": stale record, three times running", "acquire")
+            log.warning("%s: stale record, taking a new acquisition", text)
+            self._sleep(max(self.STOP_HOLD_S, 0.1))
+        raise AssertionError("unreachable")
+
+    def _acquire(self, chans: list[int], timeout_s: float = 5.0) -> dict[int, Waveform]:
         """One single-shot acquisition; every channel is read from that stopped record.
 
         ':TRIGger:SWEep SINGle' is itself the arm command. Completion is polled on
