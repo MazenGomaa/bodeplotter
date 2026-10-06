@@ -45,6 +45,11 @@ class Transport:
     def close(self) -> None:
         raise NotImplementedError
 
+    def present(self) -> bool:
+        """False only when the device is known to be gone from the bus (cable pulled,
+        power off). Sends nothing to the instrument."""
+        return True
+
 
 def usbtmc_clear(vid: int, pid: int) -> list:
     """USBTMC clear with pyusb while no VISA session is open: INITIATE_CLEAR (bRequest 5),
@@ -148,6 +153,16 @@ class VisaTransport(Transport):
             finally:
                 self._open()
             return "USBTMC INITIATE_CLEAR via pyusb"
+
+    def present(self) -> bool:
+        ids = visa_util.usb_ids(self.resource)
+        if ids is None:
+            return True                         # not USB: cannot tell
+        try:
+            import libusb_package
+            return libusb_package.find(idVendor=ids[0], idProduct=ids[1]) is not None
+        except Exception:
+            return True
 
     def close(self) -> None:
         for obj in (self.inst, self.rm):

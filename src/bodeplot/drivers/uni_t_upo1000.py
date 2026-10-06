@@ -52,6 +52,10 @@ V_SRC = scpi.enum(["CHANnel1", "CHANnel2", "CHANnel3", "CHANnel4", "EXT", "ACLIN
 UNRESPONSIVE_ADVICE = ("The scope stopped answering and could not be resynchronised. The generator "
                        "outputs have been switched off. Power-cycle the scope (off, wait 5 seconds, on), "
                        "then connect again and repeat the channel skew check.")
+# the scope is gone from the USB bus (bench: cable pulled mid-sweep, HW_REPORT.md 13.15)
+UNPLUGGED_ADVICE = ("The scope is no longer on USB. The generator outputs have been switched off. "
+                    "Check the scope's USB cable and that it is switched on, then connect again "
+                    "and repeat the channel skew check.")
 
 _SCALE_CMD = re.compile(r"^:(TIMebase|CHANnel[1-4]):SCALe\b", re.IGNORECASE)
 _FORBIDDEN = (
@@ -163,7 +167,8 @@ class UniTUPO1000(Digitizer):
         if self.t is None:
             raise DriverError("scope is not open", cmd)
         if self.dead:
-            raise InstrumentUnresponsive("the scope is not answering", cmd, UNRESPONSIVE_ADVICE)
+            raise InstrumentUnresponsive("the scope is not answering", cmd,
+                                         getattr(self, "_dead_advice", UNRESPONSIVE_ADVICE))
 
     def _pace(self) -> None:
         wait = self._gap_until - self._clock()
@@ -297,8 +302,9 @@ class UniTUPO1000(Digitizer):
         if not ok:
             self.dead = True
             log.error("scope resync failed: the scope is not answering")
+            self._dead_advice = UNRESPONSIVE_ADVICE if self.t.present() else UNPLUGGED_ADVICE
             raise InstrumentUnresponsive("the scope does not answer after a resync", "*IDN?",
-                                         UNRESPONSIVE_ADVICE)
+                                         self._dead_advice)
         log.info("scope resync ok")
 
     def _clear(self) -> None:

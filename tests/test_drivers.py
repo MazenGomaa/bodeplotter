@@ -268,6 +268,18 @@ def test_dead_scope_raises_unresponsive_and_then_fails_fast():
     drv.close()                                                     # must not raise
 
 
+def test_unplugged_scope_is_told_apart_from_a_frozen_one():
+    """Bench, HW_REPORT 13.15: with the USB cable pulled the advice was to power-cycle."""
+    drv, fake, clock = ready_scope()
+    fake.dead = fake.unplugged = True
+    with pytest.raises(InstrumentUnresponsive) as e:
+        drv.acquire([1, 2], 5.0)
+    assert "USB cable" in e.value.advice and "Power-cycle" not in e.value.advice
+    with pytest.raises(InstrumentUnresponsive) as again:            # the fast failure says the same
+        drv.set_timebase(1e-3)
+    assert "USB cable" in again.value.advice
+
+
 def test_watchdog_stops_the_sweep_keeps_partial_data_and_switches_the_generator_off():
     clock = FakeClock()
     fgen = FakeGen(clock)
@@ -276,12 +288,13 @@ def test_watchdog_stops_the_sweep_keeps_partial_data_and_switches_the_generator_
                       UniTUPO1000(lambda r, b: fscope, sleep=clock.sleep, clock=clock.now))
     session.open("FAKE::GEN", "FAKE::SCOPE", "py")
     fscope.die_after_data_reads = 2 * 4 + 1          # dies during the fifth capture
-    errors = []
+    errors, logs = [], []
     from bodeplot.sweep.core import Callbacks
     runner = SweepRunner(session, SweepConfig(start_hz=1e3, stop_hz=1e5, points_per_decade=5),
                          StimulusConfig(), ScopeConfig(), MeasureSettings(),
-                         Callbacks(error=errors.append), sleep=clock.sleep)
+                         Callbacks(error=errors.append, log=logs.append), sleep=clock.sleep)
     result = runner.run()
+    assert not any("was resynchronised" in entry.text for entry in logs)  # the resync failed
     assert 1 <= len(result.points) < 11                              # partial data kept
     assert result.meta["error"] and "Power-cycle the scope" in result.meta["error"]
     assert "points were measured and are kept" in errors[0]

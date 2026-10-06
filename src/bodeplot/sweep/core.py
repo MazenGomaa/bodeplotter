@@ -432,7 +432,7 @@ class SweepRunner:
             if self.session.dead_reason is None:
                 self.session.end_measurement()
         # an epoch change during the sweep means the correction may be stale
-        if delay_s is not None and not self.session.skew_valid():
+        if delay_s is not None and not self.session.skew_valid() and self.session.dead_reason is None:
             self._log("warn", "The scope was resynchronised during the sweep; the skew correction "
                               "used may no longer be right. Re-check the skew.")
         points.sort(key=lambda q: q.freq_hz)

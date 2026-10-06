@@ -169,6 +169,7 @@ class FakeScope(Transport):
         self.rng = np.random.default_rng(1)
         # faults
         self.dead = False
+        self.unplugged = False          # with dead: gone from the bus, not just silent
         self.die_after_data_reads: int | None = None    # stop answering after this many waveform reads
         self.empty_next = 0             # 'busy': this many ordinary replies come back empty
         self.empty_blocks = 0           # this many :WAVeform:DATA? replies carry no block
@@ -220,6 +221,7 @@ class FakeScope(Transport):
     def set_timeout(self, seconds): self.timeout = seconds
     def get_timeout(self): return self.timeout
     def close(self): self.closed = True
+    def present(self): return not self.unplugged
 
     # ---- acquisition state machine (timings from HW_REPORT.md 12.4 and 12.13)
     def status(self) -> str:
