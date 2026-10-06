@@ -900,3 +900,32 @@ The user ran the scope's self calibration, removed all probes and reported that 
 - Open-input noise: 7 codes rms at 500 uV/div, 3 at 1 mV/div, 1.5 at 2 mV/div (mains pickup included).
 - **The +6.2 mV (CH2) and +8.6 mV (CH1) measured in 13.6 are 20 times larger than this.** So they did not come from the scope's input stage as it is now. Two explanations remain: the generator output carries 60 to 90 mV of DC (seen through the 10X probes), or the scope had a larger offset that the self calibration removed. `hwcheck/s7_dcsource.py` (written, NOT yet run; needs the probes back on the RC) separates the two: DC with the generator output OFF, ON at 1 Vpp and 0.1 Vpp, and ON with the generator's offset set to cancel it.
 - New scope fact: **`:CHANnel<n>:SCALe` is ignored on a channel that is switched off** (`:CHANnel<n>:DISPlay 0`): no error, the read-back stays at the old value. CH2 was off when the script started (left so by the user); the restore switched it off first and then could not put 50 mV/div back. Restored by hand (display on, scale, display off). The scripts now restore DISPlay last.
+### 13.8 Generator DC check and the RC sweep re-run: the DC is gone, the sweep passes (2026-10-06)
+
+RC low-pass wired again by the user (as in 13.6). Data: `results/s7_dcsource_py.json`, `results/m7/m7_sweep_rc_retest.*`.
+
+**`hwcheck/s7_dcsource.py`** (DC of both channels, corrected with the open-input reading of 13.7):
+
+| Case | CH1 at the scope input | CH2 at the scope input |
+|---|---|---|
+| output OFF, 2 mV/div | +0.17 mV | +0.27 mV |
+| ON 1 Vpp 1 kHz, 20 mV/div | -0.43 mV | -1.10 mV |
+| ON 1 Vpp 35 kHz, CH1 20 mV/div, CH2 2 mV/div | -0.02 mV | -0.69 mV |
+| ON 0.1 Vpp 1 kHz, 5 mV/div | +0.02 mV | +0.11 mV |
+
+- **The +6.2 mV (CH2) and +8.6 mV (CH1) of 13.6 are gone.** In the same condition as then (1 Vpp, 35 kHz, CH2 at 2 mV/div) CH2 now reads -0.7 mV. Every reading is within about 1 mV of the open-input value, which at 20 mV/div is 1 to 2 codes.
+- So the generator does not put out 60 to 90 mV of DC. What changed between 13.6 and now is the scope's self calibration (and the probes were removed and put back). **The self calibration removing the offset is the explanation that fits; it was not proven** (there is no measurement of the open inputs from before it).
+- The last step (generator offset set to cancel the DC) failed: `:CHANnel1:BASE:OFFSet -0.011` read back `0.0`. Not followed up, there being nothing left to cancel. Outputs OFF at the end, no restore failures.
+
+**RC sweep re-run** (`m7_sweep.py rc_retest 50 20000000 10 --no-skew`, DC coupling, with the four changes of 13.6): 58 points in 65.1 s, **no AUTORANGE_FAILED**, 0 scope errors, 0 resyncs after connect, generator OFF, panel unlocked and sweep AUTO at the end. The most sensitive step used was 1 mV/div.
+
+| Range | Gain against a first-order low-pass, corner 1513 Hz | Phase against it |
+|---|---|---|
+| 50 Hz to 22.5 kHz (0 to -23 dB) | -0.05 to +0.05 dB | -0.1 to +1.1 deg |
+| 22.5 to 110 kHz (to -37 dB) | -0.08 to +0.17 dB | +0.7 to +2.8 deg |
+| 110 to 340 kHz (to -47 dB) | -0.19 to +0.47 dB | up to +5 deg |
+| above 430 kHz | noise: DUT SNR 1 dB and lower, readings between -51 and -64 dB | meaningless |
+
+- The measurement is correct down to about -47 dB (340 kHz, 2.2 mV at the tip, SNR 2 dB). LOW_SNR is flagged from 35 kHz (SNR 19 dB) and BELOW_FLOOR from 1.3 MHz. The floor of this setup is about -52 to -60 dB with 1 Vpp and 10X probes.
+- The phase leads the ideal RC more and more with frequency (+1 deg at 22 kHz, +2.8 deg at 110 kHz). A series resistance of roughly 0.5 to 1 ohm in the capacitor branch (ESR plus contacts) would do that. This is an estimate from two points, not a measurement.
+- AC coupling was not needed for this run. Whether it should be offered is still open; note from 13.7 that it does not remove the scope's own residual offset.
