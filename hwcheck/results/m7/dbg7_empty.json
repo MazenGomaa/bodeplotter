@@ -1,0 +1,2682 @@
+{
+  "n": 200,
+  "channels": [
+    1,
+    2
+  ],
+  "amp_vpp": 5.0,
+  "reads": [
+    {
+      "k": 0,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.125,
+        0.081
+      ]
+    },
+    {
+      "k": 1,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.079
+      ]
+    },
+    {
+      "k": 2,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.081
+      ]
+    },
+    {
+      "k": 3,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.135,
+        0.081
+      ]
+    },
+    {
+      "k": 4,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.081
+      ]
+    },
+    {
+      "k": 5,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.085
+      ]
+    },
+    {
+      "k": 6,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.136,
+        0.082
+      ]
+    },
+    {
+      "k": 7,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.082
+      ]
+    },
+    {
+      "k": 8,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": "CH2 after status TRIGED",
+      "t": [
+        0.128
+      ]
+    },
+    {
+      "k": 9,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.086,
+        0.105
+      ]
+    },
+    {
+      "k": 10,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.082
+      ]
+    },
+    {
+      "k": 11,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.085
+      ]
+    },
+    {
+      "k": 12,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.08
+      ]
+    },
+    {
+      "k": 13,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.084
+      ]
+    },
+    {
+      "k": 14,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.08
+      ]
+    },
+    {
+      "k": 15,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.083
+      ]
+    },
+    {
+      "k": 16,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.082
+      ]
+    },
+    {
+      "k": 17,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.08
+      ]
+    },
+    {
+      "k": 18,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 19,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.086
+      ]
+    },
+    {
+      "k": 20,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 21,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.099
+      ]
+    },
+    {
+      "k": 22,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.082
+      ]
+    },
+    {
+      "k": 23,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 24,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": "CH2 after status TRIGED",
+      "t": [
+        0.126
+      ]
+    },
+    {
+      "k": 25,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 26,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.08
+      ]
+    },
+    {
+      "k": 27,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.099
+      ]
+    },
+    {
+      "k": 28,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.079
+      ]
+    },
+    {
+      "k": 29,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.071,
+        0.11
+      ]
+    },
+    {
+      "k": 30,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.079
+      ]
+    },
+    {
+      "k": 31,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.081
+      ]
+    },
+    {
+      "k": 32,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 33,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.099
+      ]
+    },
+    {
+      "k": 34,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.08
+      ]
+    },
+    {
+      "k": 35,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.081
+      ]
+    },
+    {
+      "k": 36,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.08
+      ]
+    },
+    {
+      "k": 37,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.099
+      ]
+    },
+    {
+      "k": 38,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.08
+      ]
+    },
+    {
+      "k": 39,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.081
+      ]
+    },
+    {
+      "k": 40,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.09,
+        0.103
+      ]
+    },
+    {
+      "k": 41,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 42,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.082
+      ]
+    },
+    {
+      "k": 43,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.079
+      ]
+    },
+    {
+      "k": 44,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.076,
+        0.104
+      ]
+    },
+    {
+      "k": 45,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.1
+      ]
+    },
+    {
+      "k": 46,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.078,
+        0.105
+      ]
+    },
+    {
+      "k": 47,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.079
+      ]
+    },
+    {
+      "k": 48,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.1
+      ]
+    },
+    {
+      "k": 49,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.101
+      ]
+    },
+    {
+      "k": 50,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.137,
+        0.08
+      ]
+    },
+    {
+      "k": 51,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.079
+      ]
+    },
+    {
+      "k": 52,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.081
+      ]
+    },
+    {
+      "k": 53,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 54,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 55,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.081
+      ]
+    },
+    {
+      "k": 56,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.083
+      ]
+    },
+    {
+      "k": 57,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.135,
+        0.08
+      ]
+    },
+    {
+      "k": 58,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.081
+      ]
+    },
+    {
+      "k": 59,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.081
+      ]
+    },
+    {
+      "k": 60,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.08
+      ]
+    },
+    {
+      "k": 61,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.082
+      ]
+    },
+    {
+      "k": 62,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 63,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.077,
+        0.105
+      ]
+    },
+    {
+      "k": 64,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.08
+      ]
+    },
+    {
+      "k": 65,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.081
+      ]
+    },
+    {
+      "k": 66,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.08
+      ]
+    },
+    {
+      "k": 67,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.082
+      ]
+    },
+    {
+      "k": 68,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.081
+      ]
+    },
+    {
+      "k": 69,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.08
+      ]
+    },
+    {
+      "k": 70,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.083
+      ]
+    },
+    {
+      "k": 71,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.081
+      ]
+    },
+    {
+      "k": 72,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.1
+      ]
+    },
+    {
+      "k": 73,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.083
+      ]
+    },
+    {
+      "k": 74,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.09
+      ]
+    },
+    {
+      "k": 75,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.08
+      ]
+    },
+    {
+      "k": 76,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.083
+      ]
+    },
+    {
+      "k": 77,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.08
+      ]
+    },
+    {
+      "k": 78,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.099
+      ]
+    },
+    {
+      "k": 79,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.081
+      ]
+    },
+    {
+      "k": 80,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.081
+      ]
+    },
+    {
+      "k": 81,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.1
+      ]
+    },
+    {
+      "k": 82,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.081
+      ]
+    },
+    {
+      "k": 83,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.081
+      ]
+    },
+    {
+      "k": 84,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.1
+      ]
+    },
+    {
+      "k": 85,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.082
+      ]
+    },
+    {
+      "k": 86,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.081
+      ]
+    },
+    {
+      "k": 87,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.083
+      ]
+    },
+    {
+      "k": 88,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.08
+      ]
+    },
+    {
+      "k": 89,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.081
+      ]
+    },
+    {
+      "k": 90,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.082
+      ]
+    },
+    {
+      "k": 91,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.136,
+        0.079
+      ]
+    },
+    {
+      "k": 92,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.081
+      ]
+    },
+    {
+      "k": 93,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.079
+      ]
+    },
+    {
+      "k": 94,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.084
+      ]
+    },
+    {
+      "k": 95,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.081
+      ]
+    },
+    {
+      "k": 96,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.079
+      ]
+    },
+    {
+      "k": 97,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.122,
+        0.081
+      ]
+    },
+    {
+      "k": 98,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.084
+      ]
+    },
+    {
+      "k": 99,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.079
+      ]
+    },
+    {
+      "k": 100,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.079
+      ]
+    },
+    {
+      "k": 101,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.081
+      ]
+    },
+    {
+      "k": 102,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.08
+      ]
+    },
+    {
+      "k": 103,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.081
+      ]
+    },
+    {
+      "k": 104,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.081
+      ]
+    },
+    {
+      "k": 105,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.083
+      ]
+    },
+    {
+      "k": 106,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.08
+      ]
+    },
+    {
+      "k": 107,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.083
+      ]
+    },
+    {
+      "k": 108,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.08
+      ]
+    },
+    {
+      "k": 109,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 110,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.08
+      ]
+    },
+    {
+      "k": 111,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.08
+      ]
+    },
+    {
+      "k": 112,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.08
+      ]
+    },
+    {
+      "k": 113,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.082
+      ]
+    },
+    {
+      "k": 114,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.079
+      ]
+    },
+    {
+      "k": 115,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 116,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.081
+      ]
+    },
+    {
+      "k": 117,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.08
+      ]
+    },
+    {
+      "k": 118,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.082
+      ]
+    },
+    {
+      "k": 119,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 120,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 121,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.081
+      ]
+    },
+    {
+      "k": 122,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.081
+      ]
+    },
+    {
+      "k": 123,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.08
+      ]
+    },
+    {
+      "k": 124,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.081
+      ]
+    },
+    {
+      "k": 125,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.087
+      ]
+    },
+    {
+      "k": 126,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.099
+      ]
+    },
+    {
+      "k": 127,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.081
+      ]
+    },
+    {
+      "k": 128,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.08
+      ]
+    },
+    {
+      "k": 129,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": "CH2 after status TRIGED",
+      "t": [
+        0.13
+      ]
+    },
+    {
+      "k": 130,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.082,
+        0.106
+      ]
+    },
+    {
+      "k": 131,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.088
+      ]
+    },
+    {
+      "k": 132,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 133,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.083
+      ]
+    },
+    {
+      "k": 134,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 135,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.083
+      ]
+    },
+    {
+      "k": 136,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.081
+      ]
+    },
+    {
+      "k": 137,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.123,
+        0.083
+      ]
+    },
+    {
+      "k": 138,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.079
+      ]
+    },
+    {
+      "k": 139,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.1
+      ]
+    },
+    {
+      "k": 140,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.083
+      ]
+    },
+    {
+      "k": 141,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.08
+      ]
+    },
+    {
+      "k": 142,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.083
+      ]
+    },
+    {
+      "k": 143,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.136,
+        0.081
+      ]
+    },
+    {
+      "k": 144,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.143
+      ]
+    },
+    {
+      "k": 145,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.122,
+        0.08
+      ]
+    },
+    {
+      "k": 146,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.08
+      ]
+    },
+    {
+      "k": 147,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.081
+      ]
+    },
+    {
+      "k": 148,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.079
+      ]
+    },
+    {
+      "k": 149,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.141
+      ]
+    },
+    {
+      "k": 150,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.081
+      ]
+    },
+    {
+      "k": 151,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.099
+      ]
+    },
+    {
+      "k": 152,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.141
+      ]
+    },
+    {
+      "k": 153,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": "CH2 after status TRIGED",
+      "t": [
+        0.13
+      ]
+    },
+    {
+      "k": 154,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.122,
+        0.08
+      ]
+    },
+    {
+      "k": 155,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.142,
+        0.079
+      ]
+    },
+    {
+      "k": 156,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.079
+      ]
+    },
+    {
+      "k": 157,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.079
+      ]
+    },
+    {
+      "k": 158,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.069,
+        0.105
+      ]
+    },
+    {
+      "k": 159,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.079
+      ]
+    },
+    {
+      "k": 160,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.08
+      ]
+    },
+    {
+      "k": 161,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.079
+      ]
+    },
+    {
+      "k": 162,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.08
+      ]
+    },
+    {
+      "k": 163,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.079
+      ]
+    },
+    {
+      "k": 164,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.081
+      ]
+    },
+    {
+      "k": 165,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.128,
+        0.085
+      ]
+    },
+    {
+      "k": 166,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": "CH2 after status TRIGED",
+      "t": [
+        0.134
+      ]
+    },
+    {
+      "k": 167,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.123,
+        0.08
+      ]
+    },
+    {
+      "k": 168,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.079,
+        0.108
+      ]
+    },
+    {
+      "k": 169,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.08
+      ]
+    },
+    {
+      "k": 170,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.08
+      ]
+    },
+    {
+      "k": 171,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.088
+      ]
+    },
+    {
+      "k": 172,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.099
+      ]
+    },
+    {
+      "k": 173,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.13,
+        0.083
+      ]
+    },
+    {
+      "k": 174,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.082
+      ]
+    },
+    {
+      "k": 175,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.082
+      ]
+    },
+    {
+      "k": 176,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.134,
+        0.08
+      ]
+    },
+    {
+      "k": 177,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.084,
+        0.108
+      ]
+    },
+    {
+      "k": 178,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 179,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.068,
+        0.106
+      ]
+    },
+    {
+      "k": 180,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.133,
+        0.081
+      ]
+    },
+    {
+      "k": 181,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.08
+      ]
+    },
+    {
+      "k": 182,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": "CH2 after status TRIGED",
+      "t": [
+        0.129
+      ]
+    },
+    {
+      "k": 183,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.123,
+        0.086
+      ]
+    },
+    {
+      "k": 184,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.131,
+        0.08
+      ]
+    },
+    {
+      "k": 185,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.085
+      ]
+    },
+    {
+      "k": 186,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.08
+      ]
+    },
+    {
+      "k": 187,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.079
+      ]
+    },
+    {
+      "k": 188,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.08
+      ]
+    },
+    {
+      "k": 189,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.134,
+        0.084
+      ]
+    },
+    {
+      "k": 190,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.082
+      ]
+    },
+    {
+      "k": 191,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.08
+      ]
+    },
+    {
+      "k": 192,
+      "f": 1852237.46,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.079
+      ]
+    },
+    {
+      "k": 193,
+      "f": 2000000.0,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.07,
+        0.106
+      ]
+    },
+    {
+      "k": 194,
+      "f": 2159550.32,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.127,
+        0.081
+      ]
+    },
+    {
+      "k": 195,
+      "f": 2331828.8,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.129,
+        0.08
+      ]
+    },
+    {
+      "k": 196,
+      "f": 2517850.82,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.08
+      ]
+    },
+    {
+      "k": 197,
+      "f": 2718712.78,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.08
+      ]
+    },
+    {
+      "k": 198,
+      "f": 2935598.54,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.132,
+        0.078
+      ]
+    },
+    {
+      "k": 199,
+      "f": 3169786.38,
+      "status": [
+        "TRIGED",
+        "TRIGED"
+      ],
+      "empty": null,
+      "t": [
+        0.126,
+        0.083
+      ]
+    }
+  ],
+  "scope_stats": {
+    "queries": 2106,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 7,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 6,
+    "rearms": 0,
+    "stale_records": 0
+  },
+  "_identity": {
+    "script": "dbg7_empty.py",
+    "sha256": "98e30d927a18ef613cf3a737bd77d8342b67432b9859ca35d215a70ae682c788",
+    "modules": {
+      "a7_phase_lead.py": "da897892c9d3",
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg7_genoffset_neg.py": "168d0244165d",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "m7_repeat.py": "4480a8fdc713",
+      "m7_restore.py": "7050708385d0",
+      "m7_sweep.py": "0e35bef5e74e",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "s7_capspeed.py": "bd411edc468a",
+      "s7_dcoffset.py": "9da4c6b4759a",
+      "s7_dcsource.py": "771a51aa35d6",
+      "s7_gendc.py": "d47960b9fe2e",
+      "s7_genoffset.py": "59938843324f",
+      "s7_rangephase.py": "7b4e85f31478",
+      "s7_smallsig.py": "03c100e7276e",
+      "s7_stream.py": "e900517ecf06",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "b38ea20",
+    "git_dirty": []
+  }
+}

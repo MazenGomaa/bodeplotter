@@ -45,6 +45,11 @@ def opt(name, n, cast, default):
 
 REF, DUT = opt("--ch", 2, int, [1, 2])
 AMP = opt("--amp", 1, float, [5.0])[0]
+# --sentinel: after an empty reply only check that the link is in step ('*IDN?' five times);
+# resync only if it is not. Shows whether an empty reply of a RUNNING scope needs a resync.
+SENTINEL = "--sentinel" in argv
+if SENTINEL:
+    argv.remove("--sentinel")
 N = int(argv[0]) if argv else 200
 FREQS = [1852237.46, 2000000.0, 2159550.32, 2331828.80, 2517850.82, 2718712.78, 2935598.54, 3169786.38]
 out = {"n": N, "channels": [REF, DUT], "amp_vpp": AMP, "reads": []}
@@ -87,6 +92,22 @@ def main():
                 empties.append(rec)
                 print("   read %3d  %.0f Hz: EMPTY on CH%d, status before the read: %s   (%s)" % (
                     k, f, ch, rec["status"], e), flush=True)
+                if SENTINEL:
+                    # is the link still in step? five '*IDN?' 50 ms apart, raw replies recorded.
+                    # This is what the resync does too, without the device clear before it.
+                    raws = []
+                    for _ in range(5):
+                        scope.t.write("*IDN?")
+                        r = scope.t.read()
+                        raws.append((len(r), r[:12].decode("ascii", "replace")))
+                        time.sleep(0.05)
+                    rec["sentinel"] = raws
+                    clean = all(txt.startswith("UNI-T") for _, txt in raws)
+                    print("      sentinel replies: %s -> %s" % (raws, "in step, no resync" if clean else "OUT OF STEP"),
+                          flush=True)
+                    if clean:
+                        out["reads"].append(rec)
+                        continue
                 scope.resync()
                 scope.free_run()
                 time.sleep(0.5)
