@@ -31,6 +31,7 @@ class Flag(enum.Flag):
     SKEW_UNCHECKED = enum.auto()
     REF_SUSPECT = enum.auto()       # the reference capture did not hold the stimulus, even after retries
     PREVIEW = enum.auto()           # measured in Fast preview: the phase is rough
+    CALIBRATED = enum.auto()        # corrected with a through calibration; says so, marks no fault
 
     def names(self) -> list[str]:
         return [f.name for f in Flag if f is not Flag.NONE and f in self]
@@ -124,6 +125,8 @@ class PointResult:
     duration_s: float
     skew_corr_deg: float = 0.0  # phase removed by the skew correction; raw = phase_deg + this
     retries: int = 0
+    cal_gain_db: float = 0.0    # gain removed by the through calibration; raw = gain_db + this
+    cal_phase_deg: float = 0.0  # phase removed by it; raw = phase_deg + this
 
 
 @dataclass
@@ -142,6 +145,44 @@ class SkewCheck:
 
     def to_meta(self) -> dict:
         return asdict(self)
+
+
+@dataclass
+class ThroughCal:
+    """Result of a through calibration (SPEC.md section 8.7): Vdut / Vref with both probes
+    on one node, over the full range. No skew correction is applied to h: the calibration
+    holds the channel delay itself."""
+    freqs_hz: list[float]           # ascending
+    h: list[complex]
+    checked_at: str                 # ISO time
+    alignment_epoch: int            # digitizer epoch when measured
+    ref_channel: int
+    dut_channel: int
+    probe_atten: dict[int, float]
+    coupling: str
+    bw_limit: bool
+    amp_vpp: float                  # stimulus used, for the record
+    warnings: list[str] = field(default_factory=list)
+    acceptable: bool = True         # False: it is not a through connection, or a point is unusable
+
+    def to_meta(self) -> dict:
+        return to_jsonable(self)
+
+    @classmethod
+    def from_meta(cls, data) -> "ThroughCal | None":
+        """From SweepResult.meta["cal"] as read back from a file; None if it is not one."""
+        try:
+            return cls(freqs_hz=[float(f) for f in data["freqs_hz"]],
+                       h=[complex(re, im) for re, im in data["h"]],
+                       checked_at=str(data["checked_at"]), alignment_epoch=int(data["alignment_epoch"]),
+                       ref_channel=int(data["ref_channel"]), dut_channel=int(data["dut_channel"]),
+                       probe_atten={int(k): float(v) for k, v in data["probe_atten"].items()},
+                       coupling=str(data["coupling"]), bw_limit=bool(data["bw_limit"]),
+                       amp_vpp=float(data["amp_vpp"]),
+                       warnings=[str(w) for w in data.get("warnings", [])],
+                       acceptable=bool(data.get("acceptable", True)))
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return None
 
 
 @dataclass
@@ -165,7 +206,7 @@ class LogEntry:
 class SweepResult:
     config: dict                # full snapshot of all configs
     points: list[PointResult]   # sorted by frequency
-    meta: dict                  # app version, timestamps, IDNs, aborted flag, skew check
+    meta: dict                  # app version, timestamps, IDNs, aborted flag, skew check, through calibration
 
 
 # ------------------------------------------------------------------ (de)serialisation

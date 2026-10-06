@@ -15,6 +15,7 @@ from ..models import Flag, SweepResult
 from .export_csv import describe_skew
 
 FORMATS = ("png", "svg", "pdf")
+QUIET = Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW | Flag.CALIBRATED    # as gui/bode_plot.py QUIET
 
 
 @dataclass
@@ -51,8 +52,7 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None) -> 
     phase = np.array([p.phase_deg for p in pts])
     if opts.unwrap and len(pts):
         phase = unwrap_deg(phase)
-    quiet = Flag.NONE | Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW
-    flagged = np.array([bool(p.flags & ~quiet) for p in pts], dtype=bool)
+    flagged = np.array([bool(p.flags & ~QUIET) for p in pts], dtype=bool)
 
     rows = 2 if opts.show_phase else 1
     fig, axes = plt.subplots(rows, 1, sharex=True, figsize=(opts.width_in, opts.height_in))

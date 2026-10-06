@@ -36,3 +36,22 @@ A sweep started without a valid check asks first (this is the only pop-up; Fast 
 **Optional tool, not used by the app:** `hwcheck/s0c_realign.py` re-rolls the scope until it is aligned by deliberately using the fault (reopen session, `:RUN`). It stays in `hwcheck/` for bench use only. The app never sends `:RUN`.
 
 **Limits.** One 2 ns step is 14.4° at 20 MHz and 7.2° at 10 MHz against a measurement spread of about 0.1°, so the states are easy to tell apart there; below about 1 MHz a step is under 0.7° and the check loses its meaning. The check also folds in any real difference between the two probes at the check frequencies.
+
+
+### 8.7 Through calibration (v2)
+
+Design: `docs/superpowers/specs/2026-10-06-through-calibration-design.md`. Code: `sweep/calibration.py` (pure functions), `core.run_through_cal`, `Session.cal_for`, `CalDialog` in `gui/dialogs.py`.
+
+**What it is.** With both probes on one node the app measures `H_cal(f) = V_dut / V_ref` over the full range of the instruments and divides every later measurement by it: `H = H_meas / H_cal(f)`. That removes the gain and phase difference between the two measurement paths (probe, scope input, channel), which the skew check does only for the delay. Both exist; the skew check stays the quick everyday step.
+
+**Measuring.** Toolbar and File menu "Calibrate". Logarithmic, 10 points per decade, from the higher of the two instruments' lower limits (not below 50 Hz) to the lowest of the generator's upper limit, the scope's `max_hz` and 40 % of the scope bandwidth: 50 Hz to 20 MHz, 58 points, on the UPO1054 with the UTG932E. Always Sine fit on single shots, with the averages and settle times of the panel; never Fast preview. No skew correction is applied to the stored values: the calibration holds the delay. Same safety frame as a sweep.
+
+**Plausibility.** Not accepted: any gain beyond ±1 dB, a reference below 30 % of the stimulus setting ("This does not look like a through connection"), any point flagged `REF_SUSPECT`, `CLIPPED`, `BELOW_FLOOR` or `AUTORANGE_FAILED`, a resync during the run. Warning only: a gain beyond ±0.3 dB.
+
+**Validity.** This connection only; nothing is saved to disk. A reconnect, a resync (the digitizer's `alignment_epoch`), "Front panel was used" and a lost connection drop it. It is used only for sweeps with the same reference channel, DUT channel, probe settings, coupling and bandwidth limit; with other settings it is kept and not used. Accepting a calibration does not create or change a skew check.
+
+**Applying.** Decided once per sweep: the calibration where it covers the frequency (point flagged `CALIBRATED`, `cal_gain_db` and `cal_phase_deg` hold what was removed, no skew correction), the skew correction outside its range if a skew check is valid, else `SKEW_UNCHECKED`. No extrapolation. Between two calibration points the gain in dB is linear in log frequency; for the phase one delay is fitted to the whole calibration, the remainder is interpolated in log frequency and the delay is added back exactly (a delay is linear in frequency, and a straight line over log f would miss it by 0.09° near 18 MHz in the +2.15 ns state). Fast preview and re-measure use the same rule.
+
+**It does not** correct the gain differences between V/div steps (up to about 0.09 dB, HW_REPORT 13.12), and it is not a 50 Ω or S-parameter calibration.
+
+**Mock.** `MockScope.dut_gain_tilt_db_at_20mhz` adds a gain error of the DUT channel that grows with log frequency above 1 kHz; the simulated "same node" mode keeps it and the skew.
