@@ -52,6 +52,8 @@
       "m7_repeat.py": "4480a8fdc713",
       "m7_restore.py": "7050708385d0",
       "m7_sweep.py": "0e35bef5e74e",
+      "m8_rc_compare.py": "761d0a381246",
+      "m8_throughcal.py": "e93e856a1f16",
       "make_table.py": "189dfc588f10",
       "s03_visa_list.py": "b25adeb97e9e",
       "s04_s05_basic.py": "f594ce1600ca",
@@ -79,20 +81,7 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "9905c48",
-    "git_dirty": [
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_1.csv",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_1.json",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_2.csv",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_2.json",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_3.csv",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_3.json",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_4.csv",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_4.json",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_5.csv",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_5.json",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_6.csv",
-      "?? hwcheck/results/m7/m7_sweep_tbfix_preview_6.json"
-    ]
+    "git_commit": "7761596",
+    "git_dirty": []
   }
 }
