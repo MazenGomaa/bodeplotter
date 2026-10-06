@@ -751,9 +751,9 @@ Resolved in Milestone 7 on the bench, 2026-10-06 (details in `HW_REPORT.md` §13
 
 Still open after Milestone 7:
 - What put the scope into the +2.15 ns alignment state on 2026-10-06 (13.25); the check of §8.6 handles the state, the trigger is unknown.
-- The running scope's busy episodes at 200 and 500 ns/div (about 3.4 s, roughly once per Fast preview sweep, 13.24), and one report of a gain drop near the end of a Fast preview sweep that was not reproduced.
+- What the running scope is busy with at 200 and 500 ns/div (about 3.4 s now and then, 13.24); Fast preview keeps off those two timebases, which removed the pauses (13.27). One report of a gain drop near the end of a Fast preview sweep was not reproduced.
 - A scope that is frozen but still on USB (cannot be provoked); the generator is switched off at the first failed transfer of the resync, tested against the simulated transport only.
-- LAN and the scope's web interface; Linux; through calibration (§15).
+- Linux; through calibration (§15). LAN and the scope's web interface were dropped by the user on 2026-10-06.
 
 Still open (list from before Milestone 7):
 - **Channel alignment:** whether the front panel's Run/Stop or Single keys, a power cycle, Auto-set, a USB replug or vendor PC software also shift it; which state the scope powers up in; whether other channel pairs or other numbers of active channels behave the same; whether it happens over LAN. Until these are known the §8.6 check is the only safeguard.

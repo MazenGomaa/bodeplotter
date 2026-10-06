@@ -1180,3 +1180,14 @@ User's report, no log or screenshot: while testing the app the skew check "was a
 - **Time**: 0.056 s per query on a stopped record, 0.006 s on the running scope.
 - **Conclusion: no use for the Bode plot.** Phase needs the stopped record, so the single shot's 0.5 s stays; the three queries (two amplitudes, one phase) would take 0.17 s in place of the 0.28 s waveform read, about 0.1 s per point, and would cost a factor of ten or more in resolution (0.07 dB and 0.36 deg against 0.005 dB and 0.03 deg). On the running scope only the amplitudes are available, which Fast preview already measures better. The driver keeps declaring no built-in measurement.
 - The manual (p.27) says a measurement query switches the measurement on by itself; nothing was switched off afterwards, so a read-out may be left on the scope's screen.
+
+### 13.27 Fast preview keeps off 200 and 500 ns/div: the pauses are gone (2026-10-06, night)
+
+Both probes on the generator output, CH1 / CH2, 5 Vpp (user confirmed the wiring).
+
+- **The busy episodes belong to the timebase** (`dbg7_empty.py --driver --tb`, 300 pair reads each with frequency steps, commit `dfe6cc9`): 100 ns/div at 1.85 to 3.2 MHz, 0 slow reads and 0 empty replies; 1 us/div at 0.74 to 1.7 MHz, 0 and 0. Against 14 episodes in 500 pair reads at 200 ns/div (13.24).
+- **Change**: `DigitizerCaps.running_avoid_timebases` (UPO1000: 200 and 500 ns/div, `RUNNING_BUSY_TB`). In Fast preview the meter takes the next slower step that is not on the list if a cycle still gets 20 samples, otherwise the next faster one if a whole cycle still fits (`DualChannelScopeMeter._off_busy_timebase`). In practice 1 us/div up to about 2.5 MHz and 100 ns/div from there to 3.5 MHz. Sine fit (single shot) is unchanged and keeps using 200 and 500 ns/div.
+- **Bench check** (`m7_sweep.py tbfix_preview_N 2e5 2e7 30 --preview --amp=5`, commit `9905c48`): **6 sweeps, no empty reply, no resync, slowest point 0.63 s**, 24.8 to 25.2 s per sweep of 61 points (before: 2 of 4 and 1 of 5 sweeps had a point of about 4 s).
+- **Quality in the changed range (0.7 to 3.5 MHz) is the same**: gain sd 0.007 dB (before 0.008), phase sd 0.57 deg (before 0.59), over 126 and 105 points.
+- Still unexplained: what the scope is busy with at those two timebases. The user's report of a gain drop near the end of a preview sweep (13.24) was not seen in these 6 sweeps either.
+- **Dropped by the user**: the scope's web interface and LAN ("not an option most of the time").

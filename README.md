@@ -27,11 +27,11 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | Scope channels | CH1 / CH2 and CH3 / CH4 |
 | Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
 
-Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); pauses of about 4 s in Fast preview between 0.7 and 3.5 MHz, which come from the scope; a scope that freezes while still on USB could not be provoked; LAN, Linux and through calibration are untested or not built.
+Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; through calibration is not built. LAN is not supported.
 
 Simulation mode (`--sim`) needs no hardware.
 
-`pytest` is green: 261 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
+`pytest` is green: 263 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
 
 ## Run it
 
