@@ -442,8 +442,8 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------------ skew
     def skew_freqs_hint(self) -> tuple[float, float]:
-        sw = self.config.sweep()
-        return skew.check_frequencies(min(30e6, 50e6, max(sw.start_hz, sw.stop_hz)))
+        # the check does not follow the sweep range (core.skew_check_frequencies)
+        return skew.DEFAULT_FREQS_HZ
 
     def open_skew_wizard(self) -> bool:
         if not self.info.connected:
