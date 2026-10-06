@@ -6,6 +6,7 @@ All instrument I/O happens in whichever thread calls these methods.
 from __future__ import annotations
 
 import logging
+import math
 import threading
 import time
 from pathlib import Path
@@ -198,6 +199,25 @@ def save_bad_capture(session: Session, info: dict) -> str:
     except Exception as e:                          # never let the diagnosis break the sweep
         log.warning("could not save the rejected capture: %s", e)
         return text
+
+
+REF_LEVEL_WARN_FRACTION = 0.3
+
+
+def reference_level_warning(points, amp_vpp: float) -> str | None:
+    """A reference far below the generator setting means the stimulus is not reaching the
+    probe: on the bench a loose ground gave 0 dB 'through' readings on a collapsed level
+    (HW_REPORT.md 13.3). The limit is loose on purpose, since a DUT may load the generator."""
+    usable = [p for p in points if math.isfinite(p.vref_amp)]
+    if not usable or amp_vpp <= 0:
+        return None
+    low = min(usable, key=lambda p: p.vref_amp)
+    if 2.0 * low.vref_amp >= REF_LEVEL_WARN_FRACTION * amp_vpp:
+        return None
+    return ("The reference channel saw only %.3g Vpp at %s Hz, with the generator set to %.3g Vpp "
+            "(%.0f %%). Check the reference probe, its ground clip and the connection to the "
+            "generator; gain and phase may be meaningless." % (
+                2.0 * low.vref_amp, "%g" % low.freq_hz, amp_vpp, 200.0 * low.vref_amp / amp_vpp))
 
 
 def measure_with_output(session: Session, gen_channel: int, measure: Callable, settle: Callable[[], None],
@@ -479,6 +499,9 @@ class SweepRunner:
         if delay_s is not None and not self.session.skew_valid() and self.session.dead_reason is None:
             self._log("warn", "The scope was resynchronised during the sweep; the skew correction "
                               "used may no longer be right. Re-check the skew.")
+        level = reference_level_warning(points, self.stim.amp_vpp)
+        if level:
+            self._log("warn", level)
         points.sort(key=lambda q: q.freq_hz)
         result = SweepResult(config, points, self._meta(started, delay_s, self._abort.is_set(), error))
         if error:

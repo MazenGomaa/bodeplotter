@@ -247,3 +247,20 @@ def test_rejected_captures_are_not_kept_without_a_folder_and_are_limited(make_se
     session.capture_dir = tmp_path
     session.captures_saved = core.MAX_SAVED_CAPTURES
     assert "Raw waveforms" not in core.save_bad_capture(session, info) and not list(tmp_path.glob("*.npz"))
+
+
+def test_reference_level_warning(make_session, no_sleep):
+    """A collapsed reference (bench: a loose ground clip) is reported; a normal sweep and a
+    reference that a DUT pulls down a little are not."""
+    from types import SimpleNamespace as P
+    from bodeplot.sweep.core import reference_level_warning
+    ok = [P(freq_hz=1e3, vref_amp=0.50), P(freq_hz=1e4, vref_amp=0.30)]          # 1 Vpp set: 100 % and 60 %
+    assert reference_level_warning(ok, 1.0) is None
+    low = ok + [P(freq_hz=1e5, vref_amp=0.02), P(freq_hz=2e5, vref_amp=math.nan)]
+    text = reference_level_warning(low, 1.0)
+    assert "0.04 Vpp at 100000 Hz" in text and "(4 %)" in text
+    assert reference_level_warning([], 1.0) is None
+    logs = []
+    SweepRunner(make_session(seed=5), SweepConfig(SweepType.LOG, 1e3, 1e5, 5), StimulusConfig(),
+                ScopeConfig(), MeasureSettings(), Callbacks(log=logs.append), sleep=no_sleep).run()
+    assert not any("reference channel saw only" in entry.text for entry in logs)
