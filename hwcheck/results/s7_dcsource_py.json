@@ -1,0 +1,262 @@
+{
+  "backend": "@py",
+  "cases": [
+    {
+      "label": "output OFF",
+      "freq_hz": null,
+      "ch": {
+        "1": {
+          "vdiv": 0.02,
+          "dc_input_v": -1.5238095238095236e-05,
+          "dc_shots": [
+            1.4857142857142858e-05,
+            1.142857142857143e-06,
+            -6.171428571428571e-05
+          ],
+          "open_input_v": -0.0015148571428571429,
+          "dc_corrected_input_v": 0.0014996190476190476,
+          "dc_tip_v": 0.014996190476190475,
+          "vpp_input_v": 0.0016,
+          "rail_samples": 0
+        },
+        "2": {
+          "vdiv": 0.02,
+          "dc_input_v": -0.0006693333333333334,
+          "dc_shots": [
+            -0.0005645714285714286,
+            -0.0006902857142857144,
+            -0.0007531428571428572
+          ],
+          "open_input_v": -0.002001714285714286,
+          "dc_corrected_input_v": 0.0013323809523809525,
+          "dc_tip_v": 0.013323809523809526,
+          "vpp_input_v": 0.0013333333333333333,
+          "rail_samples": 0
+        }
+      }
+    },
+    {
+      "label": "output OFF",
+      "freq_hz": null,
+      "ch": {
+        "1": {
+          "vdiv": 0.002,
+          "dc_input_v": 0.0001680762114857143,
+          "dc_shots": [
+            0.00017017144984285713,
+            0.00018068573687142855,
+            0.00015337144774285713
+          ],
+          "open_input_v": 0.00010400001299999998,
+          "dc_corrected_input_v": 6.407619848571432e-05,
+          "dc_tip_v": 0.0006407619848571432,
+          "vpp_input_v": 0.0013600001699999996,
+          "rail_samples": 0
+        },
+        "2": {
+          "vdiv": 0.002,
+          "dc_input_v": 0.0002691809860285714,
+          "dc_shots": [
+            0.0002694857479714285,
+            0.00028434289268571423,
+            0.00025371431742857143
+          ],
+          "open_input_v": 0.0002281143142285714,
+          "dc_corrected_input_v": 4.106667179999999e-05,
+          "dc_tip_v": 0.0004106667179999999,
+          "vpp_input_v": 0.0016533335399999997,
+          "rail_samples": 0
+        }
+      }
+    },
+    {
+      "label": "ON 1 Vpp 1 kHz, gen offset 0",
+      "freq_hz": 1000.0,
+      "ch": {
+        "1": {
+          "vdiv": 0.02,
+          "dc_input_v": -0.00042895238095237687,
+          "dc_shots": [
+            -0.00041942857142856854,
+            -0.0004479999999999954,
+            -0.00041942857142856664
+          ],
+          "open_input_v": -0.0015148571428571429,
+          "dc_corrected_input_v": 0.001085904761904766,
+          "dc_tip_v": 0.01085904761904766,
+          "vpp_input_v": 0.09708516868958372,
+          "rail_samples": 0
+        },
+        "2": {
+          "vdiv": 0.02,
+          "dc_input_v": -0.0011036190476190488,
+          "dc_shots": [
+            -0.0011085714285714284,
+            -0.0011337142857142878,
+            -0.00106857142857143
+          ],
+          "open_input_v": -0.002001714285714286,
+          "dc_corrected_input_v": 0.0008980952380952371,
+          "dc_tip_v": 0.00898095238095237,
+          "vpp_input_v": 0.08072701475005821,
+          "rail_samples": 0
+        }
+      }
+    },
+    {
+      "label": "ON 1 Vpp 35 kHz, gen offset 0",
+      "freq_hz": 35000.0,
+      "ch": {
+        "1": {
+          "vdiv": 0.02,
+          "dc_input_v": -2.2869820383993897e-05,
+          "dc_shots": [
+            4.4659206218421985e-05,
+            -4.670366873888722e-05,
+            -6.656499863151645e-05
+          ],
+          "open_input_v": -0.0015148571428571429,
+          "dc_corrected_input_v": 0.001491987322473149,
+          "dc_tip_v": 0.01491987322473149,
+          "vpp_input_v": 0.09271303294617173,
+          "rail_samples": 0
+        },
+        "2": {
+          "vdiv": 0.002,
+          "dc_input_v": -0.0006918236281446217,
+          "dc_shots": [
+            -0.0006875008410240781,
+            -0.000705754793162664,
+            -0.0006822152502471231
+          ],
+          "open_input_v": 0.0002281143142285714,
+          "dc_corrected_input_v": -0.0009199379423731931,
+          "dc_tip_v": -0.00919937942373193,
+          "vpp_input_v": 0.004032872896352613,
+          "rail_samples": 0
+        }
+      }
+    },
+    {
+      "label": "ON 0.1 Vpp 1 kHz, gen offset 0",
+      "freq_hz": 1000.0,
+      "ch": {
+        "1": {
+          "vdiv": 0.005,
+          "dc_input_v": 2.2190476190475865e-05,
+          "dc_shots": [
+            1.9714285714285396e-05,
+            5.714285714285441e-06,
+            4.1142857142856766e-05
+          ],
+          "open_input_v": -0.00014542857142857144,
+          "dc_corrected_input_v": 0.0001676190476190473,
+          "dc_tip_v": 0.001676190476190473,
+          "vpp_input_v": 0.00974917703275007,
+          "rail_samples": 0
+        },
+        "2": {
+          "vdiv": 0.005,
+          "dc_input_v": 0.00011266666666666651,
+          "dc_shots": [
+            9.657142857142854e-05,
+            0.00010485714285714278,
+            0.00013657142857142823
+          ],
+          "open_input_v": 6.714285714285715e-06,
+          "dc_corrected_input_v": 0.0001059523809523808,
+          "dc_tip_v": 0.001059523809523808,
+          "vpp_input_v": 0.008071582204712956,
+          "rail_samples": 0
+        }
+      }
+    }
+  ],
+  "log": [
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+  ],
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "cancel_offset_v": -0.011,
+  "fatal": "Traceback (most recent call last):\n  File \"C:\\Users\\mazen\\Desktop\\bodeplotter\\hwcheck\\s7_dcsource.py\", line 141, in main\n    g.set_verified(c + \":BASE:OFFSet\", num(cancel), io.v_float, cancel, tol_abs=0.0011)   # UTG p.13\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mazen\\Desktop\\bodeplotter\\hwcheck\\iolayer.py\", line 828, in set_verified\n    raise SetError(f\"gen {cmd} {arg}: read back {last!r}, wanted {expect!r}\")\niolayer.SetError: gen :CHANnel1:BASE:OFFSet -0.011: read back 0.0, wanted -0.011\n",
+  "gen_outputs_final": [
+    false,
+    false
+  ],
+  "gen_restore_failures": [],
+  "scope_restore_failures": [],
+  "scope_stats": {
+    "queries": 899,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 3,
+    "empty_blocks": 0
+  },
+  "gen_stats": {
+    "queries": 108,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 2
+  },
+  "_identity": {
+    "script": "s7_dcsource.py",
+    "sha256": "771a51aa35d6b2bc86527ee5af9381f767da8972c14e968c725d235b1f36eed6",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "m7_sweep.py": "5602c70727bf",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "s7_dcoffset.py": "9da4c6b4759a",
+      "s7_smallsig.py": "03c100e7276e",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "aa85f4b",
+    "git_dirty": []
+  }
+}
