@@ -388,6 +388,7 @@ class SweepResult:
 4. **Measure** `averages` times, with a fresh acquisition each time. Each acquisition is one single shot from which both channels are read (§9.2); it costs about 0.77 s on the UPO1054.
    - **SINEFIT:** fit both channels at the known generator frequency (§8.4). `H_i = A_dut·e^{jφ_dut} / (A_ref·e^{jφ_ref})`. Then apply the skew correction of §8.6: `H_i ← H_i·e^{−j·2π·f·Δt}`.
    - **BUILTIN:** read the scope's amplitude for both channels and the phase measurement ref→dut. Construct H from those. Set the `BUILTIN` flag.
+   - **PREVIEW** ("Fast preview", added 2026-10-06 on the user's request): the same sine fit, but the two channels are read one after the other from the scope while it keeps triggering (sweep AUTO, no single shot, no stop; `Digitizer.acquire_running`). About 0.21 s per capture in place of 0.93 s; a 114-point sweep took 53 s in place of about 115 s. The gain is as accurate as SINEFIT. The phase is rough, because the two channels are different acquisitions: sd 0.4° to 100 kHz, 0.6° to 1 MHz, 0.8° to 5 MHz, 3.6° above (HW_REPORT 13.21, 13.23). Every point carries the `PREVIEW` flag; no skew check is asked for and `SKEW_UNCHECKED` is not set. An empty `:WAVeform:DATA?` reply is never retried in place: resync, then a new read.
    - Average H as the **complex mean** across captures.
 5. `gain_db = 20·log10(|H|)`, `phase_deg = angle(H)` in degrees, wrapped to (-180, 180].
 6. Emit `point_measured` and `waveform_captured` (last capture).

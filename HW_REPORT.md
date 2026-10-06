@@ -1123,3 +1123,16 @@ User's idea: no single shot and no stop, read the two channels from the scope wh
 ### 13.22 Stale-record check in the driver, proven on the bench (2026-10-06, evening)
 
 `UniTUPO1000.acquire` now compares the time span of every record (sample interval x points) with the timebase that is set; a record that does not match is thrown away and a new acquisition is taken, without a resync, up to two times (`stats["stale_records"]`). Bench check with `s7_capspeed.py custom 0.3 0.0 0.05 0.01` (no STOP hold time, the setting that gave 12 stale captures of 12 in 13.20), commit `79930d3`: **13 stale records caught and retaken, 48 of 48 captures good**; a capture after a timebase change then takes 1.97 s (two acquisitions). With the normal 0.1 s hold the baseline block of the same run needed no retake (1.09 s per capture after a timebase change, as before).
+
+### 13.23 Fast preview mode, timed on the bench (2026-10-06, evening)
+
+The user asked for a preview / gain-only mode built on 13.21, with the phase shown and marked rough. `Method.PREVIEW` ("Fast preview (rough phase)" in the Method box): the sine fit as before, the channels read with `UniTUPO1000.acquire_running` from the scope in sweep AUTO. Every point is flagged `PREVIEW`; no skew check is asked for.
+
+Bench: `m7_sweep.py preview_full 50 20e6 20 --no-skew --preview --ch=3,4`, commit `737f70a`, both probes on generator CH1, 1 Vpp. Data: `hwcheck/results/m7/m7_sweep_preview_full.csv`.
+
+- **114 points in 52.8 s, 0.46 s per point**, against 114 to 119 s for the same sweep single shot: 2.2 times faster. A point costs about 0.21 s of measuring, 0.3 to 0.37 s on the points where the timebase changes; the rest is the generator and the settle time.
+- **Gain +0.04 to +0.16 dB over the whole range**, the same picture as the single-shot through sweeps on this channel pair with the probes swapped (13.19).
+- **Phase scatter (through connection, so the true value is near 0)**: sd 0.38 deg below 100 kHz (-0.92 to +0.89), 0.56 deg from 100 kHz to 1 MHz, 0.75 deg from 1 to 5 MHz, 3.64 deg above 5 MHz (-7.39 to +3.35).
+- **No empty reply, no resync during the sweep. 3 stale records** were caught by the check of 13.22 and read again: reading a running scope straight after a timebase change does hand out the old record now and then (it did not in the 8 reads per wait of 13.21).
+- Scope settings restored, panel unlocked, generator off, scope left in sweep AUTO.
+- Not yet seen by the user in the GUI.
