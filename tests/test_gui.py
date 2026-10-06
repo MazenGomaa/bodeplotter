@@ -517,3 +517,18 @@ def test_method_box_keeps_its_choice_when_the_session_updates(win, qtbot):
     win.config.method.setCurrentIndex(win.config.method.findData(Method.BUILTIN))
     win.config.set_has_builtin(False)                    # the entry that is gone is the only one left
     assert win.config.measure().method is Method.SINEFIT
+
+
+def test_connecting_does_not_pop_up_a_skew_question_but_starting_a_sweep_does(win, qtbot):
+    """User: the question on every connect was a nuisance. The status bar and the log say that
+    the check is needed; only starting a sweep without one asks."""
+    from PySide6.QtWidgets import QMessageBox
+    asked = []
+    win.interactive = True
+    win._ask = lambda *a, **k: asked.append(a[0]) or QMessageBox.Cancel
+    _connect(win, qtbot)
+    qtbot.wait(50)                                       # anything posted to the event loop has run
+    assert asked == [] and "UNCHECKED" in win.skew_status[1]
+    _short_sweep(win, 1e3, 1e5, 3)
+    assert win.start_sweep() is False and asked == ["Channel skew"]     # asked, and Cancel stops it
+    win.interactive = False

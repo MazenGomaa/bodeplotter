@@ -455,12 +455,10 @@ class MainWindow(QMainWindow):
         self.engine.front_panel_used()
 
     def _prompt_recheck(self, reason: str) -> None:
-        """SPEC 8.6: prompt after reconnect, after any resync, and when the front panel was used."""
+        """After a connect, a resync or 'Front panel was used': say so in the status log. No
+        pop-up (user decision 2026-10-06: it came up on every connect); the status bar shows
+        UNCHECKED, and starting a sweep without a valid check still asks (start_sweep)."""
         self._say("warn", "Skew check needed: " + reason)
-        if not self.interactive or self.state in BUSY:
-            return
-        if self._ask("Channel skew check", reason + "\n\nRun the skew check now?") == QMessageBox.Yes:
-            self.open_skew_wizard()
 
     # ------------------------------------------------------------------ sweep control
     def start_sweep(self, check_skew: bool = True) -> bool:

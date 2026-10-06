@@ -102,7 +102,7 @@ The UPO1054's two channels can sit a whole number of 2 ns samples apart in time 
 
 Do the check with both probes on the generator output, **not** through the DUT: with a DUT in between it would measure the DUT's phase. Then move the DUT probe and sweep.
 
-The check belongs to one session. The app asks for it again after connecting, after any driver resync, and when you press **Front panel was used**. A sweep run without a valid check is not corrected and every point carries the `SKEW_UNCHECKED` flag. The delay and the time of the check are written into the sweep metadata, the CSV header and the Touchstone comments.
+The check belongs to one session. After connecting, after any driver resync, and when you press **Front panel was used**, the status bar shows the skew as UNCHECKED; the app asks for the check when you start a Sine fit sweep without one. A sweep run without a valid check is not corrected and every point carries the `SKEW_UNCHECKED` flag. The delay and the time of the check are written into the sweep metadata, the CSV header and the Touchstone comments.
 
 The simulated scope picks one of the four skew states at random each time it is opened or resynchronised, so this path is exercised in simulation too.
 

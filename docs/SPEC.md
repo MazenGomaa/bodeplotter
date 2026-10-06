@@ -434,11 +434,11 @@ This replaces the plain "same-node check" of the first draft of this section. Co
 
 **Correction.** For every measured point: `phase_corr = phase − 360°·f·Δt`, wrapped to (−180°, 180°]. Equivalently `H_corr = H·e^{−j·2π·f·Δt}`; the stored `PointResult.h` is the corrected one, and `PointResult.skew_corr_deg` keeps the amount removed so the raw phase can be recovered. Gain is not corrected in v1; the frequency-dependent calibration of §15 stays in v2.
 
-**Validity: once per session.** A check belongs to one connection. The app prompts for a re-check:
+**Validity: once per session.** A check belongs to one connection. The app marks the check as needed (red "UNCHECKED" in the status bar and a line in the status log; no pop-up, user decision 2026-10-06, the pop-up on every connect was a nuisance):
 - after connect or reconnect,
 - after any driver resync (the digitizer driver exposes an `alignment_epoch` counter that it increments on connect and on every resync; the engine compares it with the value stored at the check),
 - when the user says the front panel was used (toolbar action "Front panel was used").
-A sweep started without a valid check asks first; if the user declines, the sweep runs uncorrected and every point carries the `SKEW_UNCHECKED` flag.
+A sweep started without a valid check asks first (this is the only pop-up; Fast preview does not ask); if the user declines, the sweep runs uncorrected and every point carries the `SKEW_UNCHECKED` flag.
 
 **Records.** Δt applied, Δt measured, snapped flag, gain mismatch, check frequencies and the check time go into `SweepResult.meta["skew"]`, into the CSV `# key: value` header, and into the Touchstone `!` comment lines. With no check, those say so.
 
