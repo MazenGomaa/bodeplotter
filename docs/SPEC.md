@@ -739,7 +739,23 @@ Resolved in Milestones 0b and 0c (details in `HW_REPORT.md` §12):
 - Cause of the intermittent CH1/CH2 phase offsets: `:RUN` after a session reopen (§8.6).
 - Free backend (pyvisa-py + WinUSB) carries the whole I/O layer.
 
-Still open:
+Resolved in Milestone 7 on the bench, 2026-10-06 (details in `HW_REPORT.md` §13; these supersede the matching "still open" lines below):
+- The app's drivers, engine and GUI run on the real instruments: skew wizard, through sweeps within 0.05 dB and 0.3° to 20 MHz, RC low-pass correct down to −47 dB (13.5 to 13.13).
+- CH3 / CH4 work as measurement channels; the delay of a channel pair depends on the pair and on the probes, so the skew check applies the measured value and never a table value (13.14, 13.25).
+- Watchdog with the scope's USB cable pulled: generator off after 2.6 s, partial data kept; reconnect needs no power cycle (13.15).
+- A power cycle clears a panel lock left on, and (one observation) puts the channel alignment back to its usual state (13.16, 13.25).
+- A paced step-table walk ran once without a freeze; the tables equal the shipped ones (13.17).
+- Real per-point time: 1.05 s single shot (0.77 s of it is the scope's own), 0.46 s in Fast preview (13.20, 13.23).
+- `:MEASure:PHASe?` answers, on a stopped record only, with 0.36° resolution; not used (13.26).
+- The one bad capture of 13.9 is probably a record read before the scope had finished it after a timebase change; the driver now checks the record's time span and acquires again (13.20, 13.22).
+
+Still open after Milestone 7:
+- What put the scope into the +2.15 ns alignment state on 2026-10-06 (13.25); the check of §8.6 handles the state, the trigger is unknown.
+- The running scope's busy episodes at 200 and 500 ns/div (about 3.4 s, roughly once per Fast preview sweep, 13.24), and one report of a gain drop near the end of a Fast preview sweep that was not reproduced.
+- A scope that is frozen but still on USB (cannot be provoked); the generator is switched off at the first failed transfer of the resync, tested against the simulated transport only.
+- LAN and the scope's web interface; Linux; through calibration (§15).
+
+Still open (list from before Milestone 7):
 - **Channel alignment:** whether the front panel's Run/Stop or Single keys, a power cycle, Auto-set, a USB replug or vendor PC software also shift it; which state the scope powers up in; whether other channel pairs or other numbers of active channels behave the same; whether it happens over LAN. Until these are known the §8.6 check is the only safeguard.
 - **Capture method: settled 2026-10-06, single shot.** Benchmark in `HW_REPORT.md` section 12.12: a free-running capture (sweep AUTO, `:STOP`, read both channels, restart with sweep SINGle then AUTO) took the same 0.8 s when it worked and failed every second capture. Cause found (`HW_REPORT.md` 12.13): a `:STOP` sent before the status has read `TRIGED` after a restart either does not last or stops the scope with no record (empty waveform block). With that rule the best free-running method takes 0.93 s per capture, still slower than single shot. Normal sweep could not be confirmed as set. Still open: shortening the 0.35 s two-channel read.
 - CH3/CH4 as measurement channels on the UPO1054.

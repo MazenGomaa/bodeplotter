@@ -15,11 +15,23 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | 4: GUI | Done. |
 | 5: persistence and export | Done. |
 | 6: real drivers and probe tool | Done 2026-10-06, tested against simulated instruments only. |
-| 7: hardware bring-up | **In progress.** Probe tool and through sweeps pass on the real instruments; the RC low-pass is correct down to -23 dB and exposed a DC and small-signal problem whose fix is not yet bench-tested (`HW_REPORT.md` section 13). |
+| 7: hardware bring-up | Bench work done 2026-10-06 (`HW_REPORT.md` section 13); a few items stay open, listed below. |
 
-**The real drivers run on the real instruments** (probe tool 63 of 63; sweeps from 50 Hz to 20 MHz), but only through a headless script so far, not yet from the GUI, and small signals on a DC offset are still being worked on. Simulation mode (`--sim`) needs no hardware.
+**The app runs on the real instruments, from the GUI.** Measured on the bench with the UPO1054 and UTG932E:
 
-`pytest` is green: 223 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
+| What | Result |
+|---|---|
+| Through sweep (both probes on the generator), 50 Hz to 20 MHz | gain within 0.05 dB, phase within 0.3° |
+| RC low-pass, 1 kΩ / 100 nF | follows the model built from the capacitor's measured loss within 0.11° to 100 kHz; correct down to −47 dB |
+| Time for 114 points, 50 Hz to 20 MHz | about 115 s (Sine fit), 53 s (Fast preview) |
+| Scope channels | CH1 / CH2 and CH3 / CH4 |
+| Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
+
+Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); pauses of about 4 s in Fast preview between 0.7 and 3.5 MHz, which come from the scope; a scope that freezes while still on USB could not be provoked; LAN, Linux and through calibration are untested or not built.
+
+Simulation mode (`--sim`) needs no hardware.
+
+`pytest` is green: 261 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
 
 ## Run it
 
@@ -40,7 +52,9 @@ Supported: UNI-T UPO1000 family scopes (developed on a UPO1054) and UTG900E fami
 
 - **Connect:** leave both resource fields in Connections empty and the app finds the one supported generator and scope by `*IDN?`. Or use Discover and pick them.
 - **Front panel:** the scope's keys are locked while a sweep, skew check or re-measure runs, and released afterwards. If they are ever left locked: `python -m bodeplot.tools.probe --unlock`.
-- **If the scope stops answering:** the app switches the generator off, stops the sweep, keeps the points measured so far and disconnects. Switch the scope off and on, then connect again. The app never asks for administrator rights.
+- **If the scope stops answering:** the app switches the generator off, stops the sweep, keeps the points measured so far and disconnects. If the scope has gone from USB it says to check the cable; otherwise switch the scope off and on, then connect again. The app never asks for administrator rights.
+- **Scope settings** are read before a sweep, skew check or re-measure and put back afterwards. The generator is left with its output off; its other settings are not restored.
+- **Mode:** the toolbar's Mode box switches between Instruments and Simulation while disconnected; File > Settings sets which one the app starts in.
 - **Step tables:** the scope's timebase and V/div steps are shipped as data for the UPO1054 with firmware `1. 01. 0047`. Another model or firmware gets the same tables and one warning.
 - **Setting:** `scope_min_gap_ms` in `settings.json` (default 100) is the pause after every timebase or V/div change.
 
@@ -55,8 +69,15 @@ Supported: UNI-T UPO1000 family scopes (developed on a UPO1054) and UTG900E fami
 | `--unlock` | release the scope's front-panel lock and exit |
 | `--walk-tables` | measure this scope's own step tables. Prints a warning first: the UPO1054 froze once during such a walk and needed a power cycle. Paced (`--gap-ms`, default 250). |
 
-## What works (simulation)
+## What works
 
+Everything below runs in simulation; on the real instruments all of it does except the "Scope built-in" method.
+
+- **Methods** (Measurement > Method):
+  - *Sine fit*: one single-shot capture per point, both channels from the same record. The accurate one.
+  - *Fast preview (rough phase)*: reads the scope while it keeps running. About twice as fast with the same gain, but the two channels are different acquisitions, so the phase scatters (about 0.4° below 100 kHz, several degrees above 5 MHz). Every point is flagged `PREVIEW`, and no skew check is asked for.
+  - *Scope built-in*: simulation only. The real scope's own measurements were tested and are ten times coarser (`HW_REPORT.md` 13.26).
+- **Vertical unit:** dB, volts at the DUT, or percent of the input.
 - **Sweep:** logarithmic or linear, 50 Hz to 20 MHz, ascending or descending; live gain and phase plots with linked axes, crosshair readout, phase unwrap, flagged points drawn as red crosses with their flags in the tooltip.
 - **View:** the plots follow the curves while a sweep runs. If you pan or zoom, they stay where you put them; **Fit view** (or a double-click on either plot) snaps back to the curves, and a new sweep is followed again from its first point.
 - **Look:** dark theme. Every colour lives in `src/bodeplot/gui/theme.py`. Exported images keep a white background for printing. All panels are shown at start-up, even if one was closed last time.
@@ -75,9 +96,11 @@ Supported: UNI-T UPO1000 family scopes (developed on a UPO1054) and UTG900E fami
 The UPO1054's two channels can sit a whole number of 2 ns samples apart in time and stay that way (`HW_REPORT.md` section 12.11). That is invisible at 1 kHz and up to 43 degrees at 20 MHz, and no command undoes it. So the app measures it and corrects for it:
 
 1. Press **Skew check** and put the reference probe and the DUT probe on the same node (the generator output).
-2. The app measures the delay between the channels at 10 MHz and 20 MHz (or at the top of the sweep and half of it).
-3. The delay is snapped to the known states (−1.85, +0.15, +2.15, +4.15 ns) when it is within 0.3 ns of one; otherwise you get a warning and the measured value is used. A gain mismatch above 0.3 dB also warns.
+2. The app measures the delay between the channels at 10 MHz and 20 MHz, whatever the sweep range.
+3. The measured delay is what is applied. The known states (−1.85, +0.15, +2.15, +4.15 ns) are only named for information, and on CH1 / CH2 a delay more than 0.3 ns from all of them gives a warning. A gain mismatch above 0.3 dB also warns.
 4. Every point is then corrected: `phase_corr = phase − 360·f·Δt`.
+
+Do the check with both probes on the generator output, **not** through the DUT: with a DUT in between it would measure the DUT's phase. Then move the DUT probe and sweep.
 
 The check belongs to one session. The app asks for it again after connecting, after any driver resync, and when you press **Front panel was used**. A sweep run without a valid check is not corrected and every point carries the `SKEW_UNCHECKED` flag. The delay and the time of the check are written into the sweep metadata, the CSV header and the Touchstone comments.
 

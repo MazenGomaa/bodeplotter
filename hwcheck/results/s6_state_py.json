@@ -48,7 +48,7 @@
       "dbg_wave.py": "c7e5e3603563",
       "dbg_wave2.py": "01e9853157fd",
       "iolayer.py": "9a72e933ae3a",
-      "m7_previewskew.py": "0c972a9531b4",
+      "m7_previewskew.py": "0ee49809fb9a",
       "m7_repeat.py": "4480a8fdc713",
       "m7_restore.py": "7050708385d0",
       "m7_sweep.py": "0e35bef5e74e",
@@ -65,6 +65,7 @@
       "s6_capbench.py": "3cf22e3bd96c",
       "s6_lock.py": "d864c44fbb0b",
       "s6_overdrive.py": "cfe7c4e166ca",
+      "s7_builtin.py": "c99f7dc0150a",
       "s7_capspeed.py": "bd411edc468a",
       "s7_dcoffset.py": "9da4c6b4759a",
       "s7_dcsource.py": "771a51aa35d6",
@@ -78,7 +79,7 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "ae9e19c",
+    "git_commit": "64df6df",
     "git_dirty": []
   }
 }
