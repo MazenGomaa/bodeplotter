@@ -125,6 +125,8 @@ class EngineWorker(QObject):
                 from ..drivers import connect as real
                 self.session = real.open_session(req.backend, req.source_resource, req.digitizer_resource,
                                                  scope_min_gap_s=req.scope_min_gap_ms / 1000.0)
+                from ..logging_setup import log_path
+                self.session.capture_dir = log_path().parent / "captures"   # rejected captures
                 self._say("info", "Connected: %s | %s" % (self.session.source_idn,
                                                           self.session.digitizer_idn))
                 for w in self.session.take_warnings():

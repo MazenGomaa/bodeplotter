@@ -64,6 +64,8 @@ def main():
     print("generator: %s\nscope:     %s   (connected in %.1f s)" % (
         session.source_idn, session.digitizer_idn, out["connect_s"]))
     out["generator_idn"], out["scope_idn"] = session.source_idn, session.digitizer_idn
+    from pathlib import Path
+    session.capture_dir = Path(RESULTS) / "m7" / "captures"      # raw waveforms of rejected captures
     try:
         for w in session.take_warnings():
             print("WARNING:", w)

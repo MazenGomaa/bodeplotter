@@ -179,3 +179,71 @@ def test_clipping_start_recovers(make_session, no_sleep):
     assert res.meta["error"] is None
     assert all(not (p.flags & Flag.CLIPPED) for p in res.points)
     assert res.points[0].gain_db == pytest.approx(0.0, abs=0.1)
+
+
+# ---------------------------------------------------------------------- rejected captures
+def _stale_records(session, bad_calls, other_hz=62.7):
+    """Make the given acquisitions (1-based) return a sine of another frequency on both
+    channels: what the bench showed once at 78.62 Hz (HW_REPORT 13.9)."""
+    dig = session.digitizer
+    real, n = dig.acquire, [0]
+
+    def acquire(chans, timeout_s):
+        waves = real(chans, timeout_s)
+        n[0] += 1
+        if n[0] in bad_calls:
+            for w in waves.values():
+                w.volts = 0.5 * np.sin(2 * np.pi * other_hz * w.t)
+        return waves
+
+    dig.acquire = acquire
+    return n
+
+
+def test_a_capture_that_does_not_hold_the_stimulus_is_kept_and_taken_again(make_session, no_sleep, tmp_path):
+    from bodeplot.sweep import core
+    session = make_session(SimulatedDUT.rc_lpf())
+    session.capture_dir = tmp_path / "captures"
+    logs = []
+    n = _stale_records(session, {2})
+    runner = _runner(session, SweepConfig(start_hz=78.62, stop_hz=786.2, points_per_decade=2), no_sleep,
+                     Callbacks(log=logs.append))
+    result = runner.run()
+    assert result.meta["error"] is None and n[0] >= 4
+    rc = 1e3 * 100e-9
+    for p in result.points:                                 # no point carries the stale record
+        assert Flag.REF_SUSPECT not in p.flags
+        assert p.vref_amp == pytest.approx(0.5, rel=0.05)
+        assert p.gain_db == pytest.approx(-10 * math.log10(1 + (2 * math.pi * p.freq_hz * rc) ** 2), abs=0.2)
+    assert sum(p.retries for p in result.points) >= 1
+    files = list((tmp_path / "captures").glob("badcapture_*.npz"))
+    assert len(files) == 1
+    d = np.load(files[0])
+    assert d["ref_volts"].size == d["dut_volts"].size > 100 and float(d["snr_ref_db"]) < 6.0
+    assert float(np.ptp(d["ref_volts"])) == pytest.approx(1.0, rel=0.05)      # the raw record itself
+    warn = [e.text for e in logs if e.level == "warn" and "Bad capture" in e.text]
+    assert len(warn) == 1 and "taken again" in warn[0] and str(files[0]) in warn[0]
+
+
+def test_a_reference_that_stays_wrong_is_flagged_after_the_retries(make_session, no_sleep, tmp_path):
+    session = make_session(SimulatedDUT.through())
+    session.capture_dir = tmp_path / "captures"
+    _stale_records(session, set(range(1, 100)))
+    runner = _runner(session, SweepConfig(start_hz=1000.0, stop_hz=10000.0, points_per_decade=1), no_sleep)
+    result = runner.run()
+    assert result.meta["error"] is None and len(result.points) == 2
+    for p in result.points:
+        assert Flag.REF_SUSPECT in p.flags and Flag.LOW_SNR in p.flags
+    assert len(list((tmp_path / "captures").glob("*.npz"))) == 2 * (MeasureSettings().bad_capture_retries + 1)
+
+
+def test_rejected_captures_are_not_kept_without_a_folder_and_are_limited(make_session, no_sleep, tmp_path):
+    from bodeplot.sweep import core
+    session = make_session(SimulatedDUT.through())
+    waves = session.digitizer.acquire([1, 2], 5.0)
+    info = dict(freq_hz=1e3, waves=waves, ref_channel=1, dut_channel=2, snr_ref_db=-20.0, snr_dut_db=-20.0,
+                ref_amp=0.02, dut_amp=0.02, vdiv={1: 0.02, 2: 0.02}, timebase=1e-3, will_retry=True)
+    assert "Raw waveforms" not in core.save_bad_capture(session, info)       # no folder: log line only
+    session.capture_dir = tmp_path
+    session.captures_saved = core.MAX_SAVED_CAPTURES
+    assert "Raw waveforms" not in core.save_bad_capture(session, info) and not list(tmp_path.glob("*.npz"))

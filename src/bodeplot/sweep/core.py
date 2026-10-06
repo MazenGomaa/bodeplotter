@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from pathlib import Path
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable
@@ -46,6 +47,9 @@ class Session:
     # Set by the watchdog when an instrument stops answering: the connection is finished
     # and the engine closes it (SPEC.md section 13).
     dead_reason: str | None = None
+    # Where the raw waveforms of a rejected capture go (see save_bad_capture). None: not kept.
+    capture_dir: Path | None = None
+    captures_saved: int = 0
 
     @classmethod
     def simulated_session(cls, dut: SimulatedDUT | None = None, **kw) -> "Session":
@@ -145,6 +149,39 @@ class Session:
         return self.skew.delay_s if self.skew_valid() else None
 
 
+# ---------------------------------------------------------------------- rejected captures
+MAX_SAVED_CAPTURES = 50         # per connection: a dead reference must not fill the disk
+
+
+def save_bad_capture(session: Session, info: dict) -> str:
+    """Called by the meter for a capture whose reference fit is not the stimulus. Writes
+    both raw waveforms to session.capture_dir as .npz and returns the line for the log."""
+    text = ("Bad capture at %g Hz: reference %.4g V, SNR %.0f dB; %s." % (
+        info["freq_hz"], info["ref_amp"], info["snr_ref_db"],
+        "taken again" if info["will_retry"] else "no retries left, point flagged REF_SUSPECT"))
+    folder = session.capture_dir
+    if folder is None or session.captures_saved >= MAX_SAVED_CAPTURES:
+        return text
+    try:
+        import numpy as np
+        folder.mkdir(parents=True, exist_ok=True)
+        session.captures_saved += 1
+        path = folder / ("badcapture_%s_%03d_%gHz.npz" % (
+            time.strftime("%Y%m%d_%H%M%S"), session.captures_saved, info["freq_hz"]))
+        ref, dut = info["waves"][info["ref_channel"]], info["waves"][info["dut_channel"]]
+        np.savez_compressed(
+            path, freq_hz=info["freq_hz"], timebase=info["timebase"],
+            ref_volts=ref.volts, ref_dt=ref.dt, ref_t0=ref.t0, ref_clipped=ref.clipped,
+            dut_volts=dut.volts, dut_dt=dut.dt, dut_t0=dut.t0, dut_clipped=dut.clipped,
+            vdiv_ref=info["vdiv"].get(info["ref_channel"], 0.0), vdiv_dut=info["vdiv"].get(info["dut_channel"], 0.0),
+            snr_ref_db=info["snr_ref_db"], snr_dut_db=info["snr_dut_db"],
+            ref_amp=info["ref_amp"], dut_amp=info["dut_amp"])
+        return text + " Raw waveforms: %s" % path
+    except Exception as e:                          # never let the diagnosis break the sweep
+        log.warning("could not save the rejected capture: %s", e)
+        return text
+
+
 # ---------------------------------------------------------------------- skew check
 def skew_check_frequencies(session: Session, sweep: SweepConfig | None = None) -> tuple[float, float]:
     """10 MHz and 20 MHz whenever the instruments reach them, whatever the sweep range.
@@ -166,7 +203,13 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
     switched off in a finally block. Does not store the result: see Session.accept_skew."""
     src, dig = session.source, session.digitizer
     freqs = skew_check_frequencies(session, sweep)
-    meter = DualChannelScopeMeter(dig, scope_cfg, should_stop, sleep)
+    def bad(info):
+        text = save_bad_capture(session, info)
+        log.warning(text)
+        if on_log:
+            on_log(LogEntry("warn", text, _now_iso()))
+
+    meter = DualChannelScopeMeter(dig, scope_cfg, should_stop, sleep, on_bad_capture=bad)
     settings = MeasureSettings(**{**meas.__dict__, "averages": SKEW_CAPTURES})
     from ..models import Method
     settings.method = Method.SINEFIT
@@ -325,8 +368,9 @@ class SweepRunner:
         src, st = self.session.source, self.stim
         self.last_command = "configure_sine"
         src.configure_sine(st.gen_channel, first_freq, st.amp_vpp, st.offset_v, st.load)
-        meter = DualChannelScopeMeter(self.session.digitizer, self.scope_cfg, self._should_stop,
-                                      self._interruptible_sleep)
+        meter = DualChannelScopeMeter(
+            self.session.digitizer, self.scope_cfg, self._should_stop, self._interruptible_sleep,
+            on_bad_capture=lambda info: self._log("warn", save_bad_capture(self.session, info)))
         self.last_command = "configure scope"
         meter.prepare(st.amp_vpp, st.offset_v)
         self.last_command = "output on"

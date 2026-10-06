@@ -25,6 +25,7 @@ class Flag(enum.Flag):
     REMEASURED = enum.auto()
     BUILTIN = enum.auto()
     SKEW_UNCHECKED = enum.auto()
+    REF_SUSPECT = enum.auto()       # the reference capture did not hold the stimulus, even after retries
 
     def names(self) -> list[str]:
         return [f.name for f in Flag if f is not Flag.NONE and f in self]
@@ -93,6 +94,11 @@ class MeasureSettings:
     acquire_timeout_s: float = 5.0
     vdiv_settle_ms: float = 20.0
     low_snr_db: float = 20.0
+    # A reference fit below this SNR is not a noisy capture but a wrong one (bench,
+    # 2026-10-06: both channels read 0.021 V instead of 0.496 V, SNR -28 dB, on the first
+    # point after a timebase change). Such a capture is kept on disk and taken again.
+    bad_ref_snr_db: float = 6.0
+    bad_capture_retries: int = 2
 
 
 @dataclass

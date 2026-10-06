@@ -67,9 +67,11 @@ class DualChannelScopeMeter(ResponseMeter):
 
     def __init__(self, digitizer: Digitizer, cfg: ScopeConfig,
                  should_stop: Callable[[], bool] = lambda: False,
-                 sleep: Callable[[float], None] = time.sleep):
+                 sleep: Callable[[float], None] = time.sleep,
+                 on_bad_capture: Callable[[dict], None] | None = None):
         self.dig, self.cfg = digitizer, cfg
         self.should_stop, self.sleep = should_stop, sleep
+        self.on_bad_capture = on_bad_capture    # gets the raw waveforms of a capture that is retried
         c = digitizer.caps
         self.caps = MeterCaps(True, c.min_hz, c.max_hz or c.bandwidth_hz)
 
@@ -213,9 +215,32 @@ class DualChannelScopeMeter(ResponseMeter):
                     except AcquireTimeout:
                         retries += 1
                         continue
-                w_ref, w_dut = waves[ref_ch], waves[dut_ch]
-                f_ref = sinefit.fit3(w_ref.volts, w_ref.dt, freq_hz, w_ref.t0)
-                f_dut = sinefit.fit3(w_dut.volts, w_dut.dt, freq_hz, w_dut.t0)
+                bad_left = max(0, int(settings.bad_capture_retries))
+                while True:
+                    w_ref, w_dut = waves[ref_ch], waves[dut_ch]
+                    f_ref = sinefit.fit3(w_ref.volts, w_ref.dt, freq_hz, w_ref.t0)
+                    f_dut = sinefit.fit3(w_dut.volts, w_dut.dt, freq_hz, w_dut.t0)
+                    if f_ref.snr_db >= settings.bad_ref_snr_db:
+                        break
+                    # The reference does not hold a sine at this frequency: the record is
+                    # stale or the generator has not switched yet. Keep it, then take another.
+                    if self.on_bad_capture is not None:
+                        self.on_bad_capture(dict(
+                            freq_hz=freq_hz, waves=waves, ref_channel=ref_ch, dut_channel=dut_ch,
+                            snr_ref_db=f_ref.snr_db, snr_dut_db=f_dut.snr_db, ref_amp=f_ref.amp,
+                            dut_amp=f_dut.amp, vdiv=dict(state.vdiv), timebase=tb,
+                            will_retry=bad_left > 0))
+                    if bad_left <= 0 or self.should_stop():
+                        flags |= Flag.REF_SUSPECT
+                        break
+                    bad_left -= 1
+                    retries += 1
+                    self.sleep(max(settings.settle_ms / 1000.0, settings.settle_cycles / freq_hz))
+                    try:
+                        waves = self._acquire(settings)
+                    except AcquireTimeout:
+                        flags |= Flag.REF_SUSPECT
+                        break
                 if f_ref.amp <= 0:
                     continue
                 hs.append(sinefit.transfer(f_ref, f_dut))
