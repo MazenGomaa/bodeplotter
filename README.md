@@ -15,7 +15,7 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | 4: GUI | Done. |
 | 5: persistence and export | Done. |
 | 6: real drivers and probe tool | Done 2026-10-06, tested against simulated instruments only. |
-| 7: hardware bring-up | Bench work done 2026-10-06 (`HW_REPORT.md` section 13); a few items stay open, listed below. |
+| 7: hardware bring-up | Done 2026-10-06, accepted by the user from the GUI (`HW_REPORT.md` section 13). A few items stay open, listed below. |
 
 **The app runs on the real instruments, from the GUI.** Measured on the bench with the UPO1054 and UTG932E:
 

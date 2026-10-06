@@ -1191,3 +1191,9 @@ Both probes on the generator output, CH1 / CH2, 5 Vpp (user confirmed the wiring
 - **Quality in the changed range (0.7 to 3.5 MHz) is the same**: gain sd 0.007 dB (before 0.008), phase sd 0.57 deg (before 0.59), over 126 and 105 points.
 - Still unexplained: what the scope is busy with at those two timebases. The user's report of a gain drop near the end of a preview sweep (13.24) was not seen in these 6 sweeps either.
 - **Dropped by the user**: the scope's web interface and LAN ("not an option most of the time").
+
+### 13.28 Acceptance by the user: Milestone 7 done (2026-10-06, night)
+
+After the last changes (measured skew value, no skew pop-up on connect, Fast preview off 200 / 500 ns/div) the user restarted the app and ran, from the GUI on the real instruments: connect, skew check with both probes on the generator, then one Sine fit sweep and one Fast preview sweep of their RC filter. Report: "both sweeps look right". No data file or screenshot of this run. The user asked for Milestone 7 to be marked done.
+
+Open after Milestone 7 (also in SPEC.md section 17): the trigger of the +2.15 ns alignment state (13.25); what the running scope is busy with at 200 / 500 ns/div (13.24, avoided since 13.27); one unreproduced report of a gain drop in a Fast preview sweep (13.24); a scope frozen but still on USB; Linux; through calibration. Dropped by the user: LAN and the web interface, restoring the generator's settings.

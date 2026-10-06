@@ -715,7 +715,7 @@ All tests run against mock drivers, with no hardware and no display needed. Use 
 4. **GUI:** live plots, waveform view, status log, pause/resume/abort, re-measure, wrap/unwrap, sim mode.
 5. **Persistence & export:** presets, settings, CSV (with loader), PNG/SVG/PDF, Touchstone.
 6. **Real drivers + probe tool: DONE 2026-10-06** (user's GO of that day, with conditions). `drivers/uni_t_upo1000.py`, `drivers/uni_t_utg900e.py`, `drivers/transport.py`, `drivers/step_tables.py`, `drivers/connect.py`, `tools/probe.py`; every command cites its manual page and carries a verified flag. Tested against simulated SCPI instruments (`tests/fakes.py`), not yet run on the real instruments: that is Milestone 7, step 1. Bench checks done in this milestone with `hwcheck/` scripts: rail codes and division count, `:SYSTem:LOCK` (`HW_REPORT.md` 12.14). Stopped for the user's review before Milestone 7.
-7. **Hardware bring-up (with the user):**
+7. **Hardware bring-up (with the user): DONE 2026-10-06**, accepted by the user from the GUI (`HW_REPORT.md` section 13; 13.28 is the acceptance). Probe tool 63 of 63; the RC low-pass agrees with a model built from the capacitor's measured loss within 0.11° to 100 kHz; full range in about 115 s for 114 points (1.04 s per point), 53 s in Fast preview. What stays open is in section 17.
    1. Run the probe tool and fix the failing commands.
    2. Then measure a known RC LPF (e.g. 1 kΩ + 100 nF → fc ≈ 1.59 kHz) and compare with the mock and with theory.
    3. Then sweep the full 50 Hz–20 MHz range and record the per-point timing.
