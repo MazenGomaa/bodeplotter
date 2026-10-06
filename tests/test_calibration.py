@@ -432,3 +432,27 @@ def test_a_resync_during_a_calibrated_sweep_is_reported(make_session, no_sleep):
     res = runner.run()
     assert res.meta["error"] is None and session.cal is None
     assert any("through calibration used may no longer be right" in t for t in logs)
+
+
+# ------------------------------------------------------------------ found by the branch review
+def test_a_sweep_wholly_outside_the_calibration_does_not_claim_it(make_session, no_sleep):
+    """Review I1: the log and the meta said 'applied' although no point was corrected."""
+    session = _tilted(make_session, SimulatedDUT.through(), 78)
+    session.accept_cal(_calibrate(session, no_sleep))
+    logs = []
+    res = _sweep(session, no_sleep, 22e6, 30e6, 10, logs=logs).run()
+    assert res.points and all(p.flags & Flag.SKEW_UNCHECKED and not p.flags & Flag.CALIBRATED for p in res.points)
+    assert res.meta["cal"] is None and res.meta["cal_covered"] is False
+    assert not any("applied" in t for _, t in logs)
+    assert any("does not reach this sweep" in t and "50 Hz to 20 MHz" in t for lvl, t in logs if lvl == "warn")
+    assert any("No valid channel skew check" in t for _, t in logs)           # as without a calibration
+
+
+def test_meta_says_whether_the_calibration_covered_the_sweep(make_session, no_sleep):
+    session = _tilted(make_session, SimulatedDUT.through(), 79)
+    session.accept_cal(_calibrate(session, no_sleep))
+    assert _sweep(session, no_sleep, 1e5, 1e6, 3).run().meta["cal_covered"] is True
+    part = _sweep(session, no_sleep, 5e6, 30e6, 10).run()
+    assert part.meta["cal"] is not None and part.meta["cal_covered"] is False
+    session.invalidate_cal()
+    assert _sweep(session, no_sleep, 1e5, 1e6, 3).run().meta["cal_covered"] is False

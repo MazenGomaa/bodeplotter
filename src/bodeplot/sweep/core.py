@@ -514,7 +514,7 @@ class SweepRunner:
         return point
 
     def _meta(self, started: str, delay_s: float | None, aborted: bool, error: str | None,
-              cal: ThroughCal | None = None) -> dict:
+              cal: ThroughCal | None = None, covered: bool = False) -> dict:
         s = self.session
         return {
             "app_version": __version__, "started": started, "finished": _now_iso(),
@@ -525,6 +525,8 @@ class SweepRunner:
             "skew_text": skew.describe(s.skew if delay_s is not None else None),
             # the calibration itself: a saved result documents what was divided out
             "cal": cal.to_meta() if cal is not None else None,
+            # False with a calibration: part of the sweep lies outside it (skew correction or none there)
+            "cal_covered": bool(cal is not None and covered),
         }
 
     def _measure_one(self, meter: ResponseMeter, state: MeterState, f: float,
@@ -573,9 +575,15 @@ class SweepRunner:
             p = self.make_plan()
             for w in p.warnings:
                 self._log("warn", w)
+            if cal is not None and not any(calibration.response_at(cal, f) is not None for f in p.freqs_hz):
+                # no point of this sweep lies inside it: the result must not claim a calibration
+                self._log("warn", "The through calibration covers %s only and does not reach this sweep; "
+                                  "it is not used." % calibration.range_text(cal))
+                cal = None
             if cal is not None:
                 covered = calibration.covers(cal, min(p.freqs_hz), max(p.freqs_hz))
-                self._log("info", "Through calibration of %s applied." % cal.checked_at[11:16])
+                self._log("info", "Through calibration of %s applied%s." % (
+                    cal.checked_at[11:16], "" if covered else " inside " + calibration.range_text(cal)))
                 if not covered:
                     self._log("warn", "The through calibration covers %s only. Outside it %s." % (
                         calibration.range_text(cal),
@@ -637,7 +645,7 @@ class SweepRunner:
             self._log("warn", level)
         points.sort(key=lambda q: q.freq_hz)
         result = SweepResult(config, points, self._meta(started, None if covered else delay_s,
-                                                        self._abort.is_set(), error, cal))
+                                                        self._abort.is_set(), error, cal, covered))
         if error:
             self._log("error", error)
             self._set_state(EngineState.ERROR)

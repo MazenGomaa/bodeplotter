@@ -55,7 +55,7 @@ Part of the design spec. Overview and the index of all sections: `docs/SPEC.md`.
 All exports include metadata: app version, timestamp, instrument IDNs, and the full config snapshot.
 
 - **CSV**
-  - Metadata as `# key: value` header lines, then the columns: `freq_hz, gain_db, phase_deg, phase_unwrapped_deg, h_re, h_im, vref_amp_v, vdut_amp_v, vdiv_ref, vdiv_dut, timebase_s, n_avg, snr_ref_db, snr_dut_db, skew_corr_deg, flags, cal_gain_db, cal_phase_deg`. The header carries the skew check (Δt, measured Δt, snapped, gain mismatch, check time) or `skew: not checked`. The header also carries `cal: applied | none` and, when applied, `cal_checked_at`, `cal_range_hz`, `cal_points`, `cal_max_gain_db`; the calibration itself (frequencies and complex values) is in `meta_json` under `cal`.
+  - Metadata as `# key: value` header lines, then the columns: `freq_hz, gain_db, phase_deg, phase_unwrapped_deg, h_re, h_im, vref_amp_v, vdut_amp_v, vdiv_ref, vdiv_dut, timebase_s, n_avg, snr_ref_db, snr_dut_db, skew_corr_deg, flags, cal_gain_db, cal_phase_deg`. The header carries the skew check (Δt, measured Δt, snapped, gain mismatch, check time) or `skew: not checked`. The header also carries `cal: applied | applied in part | none` (in part: some points lie outside the calibrated range; `meta_json` then has `cal_covered: false`) and, when applied, `cal_checked_at`, `cal_range_hz`, `cal_points`, `cal_max_gain_db`; the calibration itself (frequencies and complex values) is in `meta_json` under `cal`.
   - Must round-trip: a loader exists in v1, because v2 overlay needs it.
 - **PNG / SVG / PDF** (matplotlib):
   - Gain and phase subplots matching the current view: wrap state, axis type, flagged markers.

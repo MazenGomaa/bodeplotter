@@ -515,11 +515,24 @@ def test_a_resync_during_a_sweep_invalidates_the_skew_check():
     session.close()
 
 
+def test_watchdog_during_a_calibration_switches_off_and_leaves_nothing():
+    """Review focus 3: the scope stops answering while the calibration runs."""
+    session, fgen, fscope, clock = fake_bench()
+    fscope.die_after_data_reads = 2 * 4 + 1          # dies during the fifth capture
+    with pytest.raises(DriverError, match="Power-cycle the scope"):
+        run_through_cal(session, StimulusConfig(), ScopeConfig(), MeasureSettings(), sleep=clock.sleep)
+    assert session.dead_reason and session.cal is None
+    assert not fgen.ch[1]["output"] and not fgen.ch[2]["output"]
+    session.close()
+
+
 def test_through_calibration_then_sweep_with_the_real_drivers():
     session, fgen, fscope, clock = fake_bench(delay=2.15e-9)
     cal = run_through_cal(session, StimulusConfig(), ScopeConfig(), MeasureSettings(), sleep=clock.sleep)
     assert cal.acceptable and cal.freqs_hz[0] == 50.0 and cal.freqs_hz[-1] == 20e6
     assert calibration.fitted_delay_s(cal) == pytest.approx(2.15e-9, abs=0.05e-9)
+    # the delay is in the stored response: 15.5 degrees at 20 MHz (pins the correction itself)
+    assert math.degrees(math.atan2(cal.h[-1].imag, cal.h[-1].real)) == pytest.approx(360 * 20e6 * 2.15e-9, abs=0.5)
     assert not fgen.ch[1]["output"] and not fgen.ch[2]["output"] and not fscope.lock
     assert fscope.sweep == "AUTO" and fscope.mode == "run"
     session.accept_cal(cal)

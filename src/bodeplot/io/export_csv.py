@@ -29,8 +29,10 @@ def skew_header(meta: dict) -> list[tuple[str, str]]:
     """The skew lines shared by the CSV header and the Touchstone comments."""
     sk = meta.get("skew")
     if not sk:
-        if meta.get("cal"):
-            return [("skew", "not used (the through calibration was applied)")]
+        if ThroughCal.from_meta(meta.get("cal")) is not None:
+            if meta.get("cal_covered", True):
+                return [("skew", "not used (the through calibration was applied)")]
+            return [("skew", "not checked (points outside the calibrated range are NOT corrected for channel skew)")]
         return [("skew", "not checked (phase is NOT corrected for channel skew)")]
     return [("skew", "checked"),
             ("skew_delay_ns", "%.4f" % (sk["delay_s"] * 1e9)),
@@ -46,7 +48,7 @@ def cal_header(meta: dict) -> list[tuple[str, str]]:
     cal = ThroughCal.from_meta(meta.get("cal"))
     if cal is None:
         return [("cal", "none")]
-    return [("cal", "applied"),
+    return [("cal", "applied" if meta.get("cal_covered", True) else "applied in part"),
             ("cal_checked_at", cal.checked_at),
             ("cal_range_hz", "%g, %g" % (cal.freqs_hz[0], cal.freqs_hz[-1])),
             ("cal_points", str(len(cal.freqs_hz))),

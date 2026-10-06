@@ -110,6 +110,22 @@ def test_csv_round_trip_with_a_calibration(tmp_path, cal_result):
     assert cal == ThroughCal.from_meta(cal_result.meta["cal"])
 
 
+def test_a_partly_covered_sweep_does_not_say_the_skew_was_not_needed(tmp_path, make_session, no_sleep):
+    """Review I2: with points beyond the calibration and no skew check, the header claimed
+    'skew: not used (the through calibration was applied)'."""
+    session = make_session(SimulatedDUT.through(), seed=53, skew_state=2, checked=False)
+    session.accept_cal(run_through_cal(session, StimulusConfig(), ScopeConfig(), MeasureSettings(), sleep=no_sleep))
+    part = SweepRunner(session, SweepConfig(SweepType.LOG, 5e6, 30e6, 10), StimulusConfig(), ScopeConfig(),
+                       MeasureSettings(), sleep=no_sleep).run()
+    lines = export_csv.write_csv(tmp_path / "p.csv", part).read_text(encoding="utf-8").splitlines()
+    assert "# cal: applied in part" in lines and "# cal: applied" not in lines
+    assert "# skew: not checked (points outside the calibrated range are NOT corrected for channel skew)" in lines
+    text = export_touchstone.write_touchstone(tmp_path / "p.s2p", part).read_text(encoding="utf-8")
+    assert "! cal: applied in part" in text
+    # a header line alone (no meta_json) is not a calibration
+    assert export_csv.skew_header({"cal": "none"})[0][1].startswith("not checked (phase is NOT")
+
+
 def test_csv_without_a_calibration_says_none(tmp_path, result):
     text = export_csv.write_csv(tmp_path / "n.csv", result).read_text(encoding="utf-8")
     assert "# cal: none" in text and "# cal_points" not in text and "# skew: checked" in text
