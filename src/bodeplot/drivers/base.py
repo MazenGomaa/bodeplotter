@@ -97,6 +97,9 @@ class Digitizer(ABC):
     # Incremented on connect and on every driver resync. A channel skew check is only
     # valid for the epoch it was taken in (SPEC.md section 8.6).
     alignment_epoch: int = 0
+    # Called (no arguments) as soon as a transfer fails while the driver tries to recover
+    # the link, so the owner can switch the stimulus off before the recovery has finished.
+    on_link_trouble = None
 
     @abstractmethod
     def open(self, resource: str, backend: str) -> None: ...

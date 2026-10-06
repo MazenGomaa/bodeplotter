@@ -1083,3 +1083,9 @@ Model: `Zc = (D - j) / (2 pi f Cs)`, `H = Zc / (R + Zc)`, R taken as exactly 100
 - What is left (up to +0.11 deg and -0.17 dB at 100 kHz) is within what the resistor's tolerance, the breadboard contacts and the interpolation can give; not separated.
 - The capacitance also falls with frequency (105.7 nF at 100 Hz to 102.6 nF at 100 kHz), so one corner frequency does not describe this part over the whole sweep.
 - No capacitor was swapped; the ceramic and mica parts the user has were not needed.
+
+### 13.19 Probe swap on CH3 / CH4; generator off earlier when the scope stops taking commands (2026-10-06, evening)
+
+- **The CH3 / CH4 gain difference follows the probes.** The user swapped the two probe BNCs between CH3 and CH4 (tips still on generator CH1) and repeated the through sweep: the fall to about 99.0 % at 20 MHz (13.14) became a rise (user's report; no screenshot or data file). So it is the two probes, each compensated against the channel it was on before, and not a difference between the channels' own responses. Re-compensating the probes on the channels they are used on is the remedy; not done.
+- **Generator off as soon as the scope fails a transfer during a resync** (user decision). Reason: with the cable pulled every write fails at once and the whole resync took 2.6 s (13.15), but on a scope that is frozen and still on the bus every write waits for its 1.5 s timeout over up to eight rounds, an estimated 15 to 35 s with the generator on (from the code, not measured). Now the first failed transfer inside the resync switches the outputs off (`Digitizer.on_link_trouble`, `Session._link_trouble`); if the scope then answers again the output is switched back on and the point is measured again (`core.measure_with_output`). Run against the simulated transport only; a real frozen scope cannot be provoked.
+- **Dropped by the user**: restoring the generator's settings after a sweep. The output is switched off and that is enough.

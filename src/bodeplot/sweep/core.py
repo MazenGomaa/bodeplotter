@@ -50,6 +50,9 @@ class Session:
     # Where the raw waveforms of a rejected capture go (see save_bad_capture). None: not kept.
     capture_dir: Path | None = None
     captures_saved: int = 0
+    # The generator was switched off because the scope stopped taking commands while it
+    # was being resynchronised (see _link_trouble). Read and cleared by take_output_cut().
+    output_cut: bool = False
 
     @classmethod
     def simulated_session(cls, dut: SimulatedDUT | None = None, **kw) -> "Session":
@@ -69,6 +72,20 @@ class Session:
             self.close()
             raise
         self.invalidate_skew("Connected: the channel skew must be checked once per session.")
+        self.digitizer.on_link_trouble = self._link_trouble
+
+    def _link_trouble(self) -> None:
+        """The scope failed a transfer during a resync. On a frozen scope the rest of the
+        resync is timeouts (estimated 15 to 35 s), so the generator goes off now and not
+        when the resync has failed (HW_REPORT.md 13.15)."""
+        if not self.output_cut:
+            log.warning("the scope is not taking commands: generator outputs switched off")
+        self.output_cut = True
+        self.source.safe_off()
+
+    def take_output_cut(self) -> bool:
+        cut, self.output_cut = self.output_cut, False
+        return cut
 
     def take_warnings(self) -> list[str]:
         """Driver warnings meant for the user (e.g. unknown scope firmware), each once."""
@@ -95,6 +112,7 @@ class Session:
     def begin_measurement(self) -> None:
         """Before a sweep, skew check or re-measure: lock the front panel and remember
         the scope's settings for end_measurement(). Never raises."""
+        self.output_cut = False
         self.lock_panel(True)
         try:
             self.digitizer.save_setup()
@@ -182,6 +200,26 @@ def save_bad_capture(session: Session, info: dict) -> str:
         return text
 
 
+def measure_with_output(session: Session, gen_channel: int, measure: Callable, settle: Callable[[], None],
+                        warn: Callable[[str], None]):
+    """Run measure(). If the generator was switched off underneath it (Session._link_trouble)
+    and the scope came back, switch the output on again and measure once more."""
+    try:
+        out = measure()
+    except InstrumentUnresponsive:
+        raise
+    except DriverError:                     # e.g. no usable capture: the stimulus was gone
+        if not session.output_cut:
+            raise
+    if session.take_output_cut():
+        warn("The scope stopped taking commands for a moment and the generator was switched "
+             "off; it answers again, so the output is back on and the point is measured again.")
+        session.source.set_output(gen_channel, True)
+        settle()
+        out = measure()
+    return out
+
+
 # ---------------------------------------------------------------------- skew check
 def skew_check_frequencies(session: Session, sweep: SweepConfig | None = None) -> tuple[float, float]:
     """10 MHz and 20 MHz whenever the instruments reach them, whatever the sweep range.
@@ -228,8 +266,11 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
             if should_stop():
                 raise DriverError("skew check cancelled")
             src.set_frequency(stim.gen_channel, f)
-            sleep(max(meas.settle_ms / 1000.0, meas.settle_cycles / f))
-            point, _ = meter.measure(f, settings, state)
+            settle = lambda: sleep(max(meas.settle_ms / 1000.0, meas.settle_cycles / f))
+            settle()
+            point, _ = measure_with_output(
+                session, stim.gen_channel, lambda: meter.measure(f, settings, state), settle,
+                lambda text: on_log and on_log(LogEntry("warn", text, _now_iso())))
             hs.append(point.h)
             if on_log:
                 on_log(LogEntry("info", "Skew check at %g MHz: phase %+.2f deg, gain %+.3f dB"
@@ -356,9 +397,12 @@ class SweepRunner:
         src, st = self.session.source, self.stim
         self.last_command = "set_frequency %g" % f
         src.set_frequency(st.gen_channel, f)
-        self._interruptible_sleep(max(self.meas.settle_ms / 1000.0, self.meas.settle_cycles / f))
+        settle = lambda: self._interruptible_sleep(max(self.meas.settle_ms / 1000.0, self.meas.settle_cycles / f))
+        settle()
         self.last_command = "measure %g Hz" % f
-        point, pair = meter.measure(f, self.meas, state)
+        point, pair = measure_with_output(self.session, st.gen_channel,
+                                          lambda: meter.measure(f, self.meas, state), settle,
+                                          lambda text: self._log("warn", text))
         point = self._apply_skew(point, delay_s)
         self.cb.point(point)
         if pair is not None:

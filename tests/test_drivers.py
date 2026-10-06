@@ -301,6 +301,37 @@ def test_watchdog_stops_the_sweep_keeps_partial_data_and_switches_the_generator_
     assert session.dead_reason and not session.skew_valid()
     assert ":CHANnel1:OUTPut OFF" in fgen.sent()[-4:]                # generator switched off
     assert not fgen.ch[1]["output"] and not fgen.ch[2]["output"]
+    # off as soon as the scope fails a transfer in the resync, not when the resync has failed
+    t_on = max(t for t, c in fgen.log if c == ":CHANnel1:OUTPut ON")
+    t_off = min(t for t, c in fgen.log if c == ":CHANnel1:OUTPut OFF" and t > t_on)
+    assert clock.now() - t_off > 1.0
+    session.close()
+
+
+def test_generator_comes_back_on_when_the_scope_recovers_from_a_failed_transfer():
+    clock = FakeClock()
+    fgen = FakeGen(clock)
+    fscope = FakeScope(clock, gen=fgen)
+    session = Session(UniTUTG900E(lambda r, b: fgen, sleep=clock.sleep, clock=clock.now),
+                      UniTUPO1000(lambda r, b: fscope, sleep=clock.sleep, clock=clock.now))
+    session.open("FAKE::GEN", "FAKE::SCOPE", "py")
+    logs, seen = [], []
+
+    def on_point(p):
+        seen.append(p)
+        if len(seen) == 2:
+            fscope.fail_writes = 2                    # the failing command, then the resync's first write
+    from bodeplot.models import Flag
+    from bodeplot.sweep.core import Callbacks
+    runner = SweepRunner(session, SweepConfig(start_hz=1e3, stop_hz=1e5, points_per_decade=5),
+                         StimulusConfig(), ScopeConfig(), MeasureSettings(),
+                         Callbacks(point=on_point, log=logs.append), sleep=clock.sleep)
+    result = runner.run()
+    assert result.meta["error"] is None and len(result.points) == 11
+    assert any("generator was switched off" in entry.text for entry in logs)
+    assert [c for c in fgen.sent() if c == ":CHANnel1:OUTPut ON"] == [":CHANnel1:OUTPut ON"] * 2
+    assert all(abs(p.gain_db) < 0.1 and not p.flags & Flag.REF_SUSPECT for p in result.points)
+    assert not fgen.ch[1]["output"]
     session.close()
 
 

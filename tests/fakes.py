@@ -170,6 +170,7 @@ class FakeScope(Transport):
         # faults
         self.dead = False
         self.unplugged = False          # with dead: gone from the bus, not just silent
+        self.fail_writes = 0            # this many writes time out, then the scope is fine again
         self.die_after_data_reads: int | None = None    # stop answering after this many waveform reads
         self.empty_next = 0             # 'busy': this many ordinary replies come back empty
         self.empty_blocks = 0           # this many :WAVeform:DATA? replies carry no block
@@ -187,6 +188,9 @@ class FakeScope(Transport):
     def write(self, cmd: str) -> None:
         self.clock.sleep(IO_TIME)
         if self.dead:
+            raise TransportError("write %r: [Errno 10060] Operation timed out" % cmd)
+        if self.fail_writes > 0:
+            self.fail_writes -= 1
             raise TransportError("write %r: [Errno 10060] Operation timed out" % cmd)
         self.log.append((self.clock.now(), cmd))
         is_query = "?" in cmd

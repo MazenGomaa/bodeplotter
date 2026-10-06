@@ -291,6 +291,7 @@ class UniTUPO1000(Digitizer):
                 self.t.write(":TRIGger:SWEep AUTO")                  # U1K p.36
             except TransportError as e:
                 log.warning("scope resync: sweep AUTO not accepted (%s)", e)
+                self._link_trouble()
             self._sleep(run_wait if run_wait is not None else max(0.5, 30 * (self.tb or 0.0)))
             self._clear()
             ok = self._sentinel_rounds()
@@ -306,6 +307,15 @@ class UniTUPO1000(Digitizer):
             raise InstrumentUnresponsive("the scope does not answer after a resync", "*IDN?",
                                          self._dead_advice)
         log.info("scope resync ok")
+
+    def _link_trouble(self) -> None:
+        """A transfer failed during the resync: the scope may be frozen, and the rest of
+        the resync can then take tens of seconds of timeouts. Tell the owner now."""
+        if self.on_link_trouble is not None:
+            try:
+                self.on_link_trouble()
+            except Exception as e:              # must not break the recovery
+                log.warning("link-trouble handler failed: %s", e)
 
     def _clear(self) -> None:
         try:
@@ -335,6 +345,7 @@ class UniTUPO1000(Digitizer):
                     good = 0
             except TransportError:
                 good = 0
+                self._link_trouble()
                 self._clear()                   # a failed transfer needs a clear
             if good >= 3:
                 return True
