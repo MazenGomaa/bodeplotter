@@ -50,6 +50,10 @@ AMP = opt("--amp", 1, float, [5.0])[0]
 SENTINEL = "--sentinel" in argv
 if SENTINEL:
     argv.remove("--sentinel")
+# --driver: call the driver's acquire_running and print where a slow call spent its time
+DRIVER = "--driver" in argv
+if DRIVER:
+    argv.remove("--driver")
 N = int(argv[0]) if argv else 200
 FREQS = [1852237.46, 2000000.0, 2159550.32, 2331828.80, 2517850.82, 2718712.78, 2935598.54, 3169786.38]
 out = {"n": N, "channels": [REF, DUT], "amp_vpp": AMP, "reads": []}
@@ -74,6 +78,45 @@ def main():
         print("timebase %g s/div" % state.timebase)
         scope.free_run()
         time.sleep(0.5)
+        if DRIVER:
+            # the driver's own acquire_running, with every status poll and channel read timed;
+            # the trace of a slow call is printed
+            trace = []
+            for fn in ("status", "_fetch_channel", "_sentinel", "resync"):
+                def wrap(inner=getattr(scope, fn), fn=fn):
+                    def w(*a, **kw):
+                        t = time.perf_counter()
+                        try:
+                            r = inner(*a, **kw)
+                            trace.append((round(t - t0, 3), fn, r if fn == "status" else "ok",
+                                          round(time.perf_counter() - t, 3)))
+                            return r
+                        except Exception as e:
+                            trace.append((round(t - t0, 3), fn, type(e).__name__, round(time.perf_counter() - t, 3)))
+                            raise
+                    return w
+                setattr(scope, fn, wrap())
+            slow = 0
+            for k in range(N):
+                f = FREQS[k % len(FREQS)]
+                gen.set_frequency(stim.gen_channel, f)
+                time.sleep(max(meas.settle_ms / 1000.0, meas.settle_cycles / f))
+                trace.clear()
+                t0 = time.perf_counter()
+                scope.acquire_running([REF, DUT], 5.0)
+                dt = time.perf_counter() - t0
+                if dt > 0.5:
+                    slow += 1
+                    print("   read %3d took %.2f s:" % (k, dt), flush=True)
+                    last = None
+                    for e in trace:                      # runs of the same status poll are folded
+                        key = (e[1], e[2])
+                        if key != last or e[1] != "status":
+                            print("      t=%.3f  %-14s %-10s %.3f s" % e, flush=True)
+                        last = key
+                    out["reads"].append(dict(k=k, f=f, seconds=dt, trace=list(trace)))
+            print("slow reads: %d of %d; scope counters %s" % (slow, N, dict(scope.stats)))
+            return
         for k in range(N):
             f = FREQS[k % len(FREQS)]
             gen.set_frequency(stim.gen_channel, f)
