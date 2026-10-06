@@ -65,6 +65,8 @@ class PointResult:
     flags: Flag
     duration_s: float
     skew_corr_deg: float = 0.0  # phase removed by the skew correction (§8.6); raw = phase_deg + this
+    cal_gain_db: float = 0.0    # gain removed by the through calibration (§8.7); raw = gain_db + this
+    cal_phase_deg: float = 0.0  # phase removed by it; raw = phase_deg + this
 
 @dataclass
 class SkewCheck:                # result of the §8.6 wizard
@@ -86,6 +88,8 @@ class SweepResult:
     meta: dict                  # app version, timestamps, instrument IDNs, aborted flag,
                                 # channel delay τ + check frequency/time, or "not checked" (§8.6)
 ```
+
+Added in v2 (milestone A1, 2026-10-06): `Flag.CALIBRATED` (last member; a quiet flag, it marks no fault), the two `cal_*` fields of `PointResult` above, and the dataclass `ThroughCal` (frequencies, complex `h` without skew correction, time, `alignment_epoch`, channels, probe settings, coupling, bandwidth limit, stimulus amplitude, warnings, `acceptable`); see §8.7 in `docs/spec/skew.md`. `SweepResult.meta["cal"]` holds the calibration that was applied, or `None`.
 
 ---
 
@@ -189,3 +193,9 @@ All tests run against mock drivers, with no hardware and no display needed. Use 
 | Skew | Off-grid delay (e.g. +1.0 ns) and a 0.5 dB gain mismatch | not snapped, measured value used, both warnings raised |
 | Skew | Simulated resync / reconnect / "front panel used" | check invalidated, re-check requested |
 | Skew | Sweep without a check | every point flagged `SKEW_UNCHECKED`; CSV and Touchstone say "not checked" |
+| Calibration | Interpolation: at a point, between points, outside the range, across ±180° | exact at a point; a pure delay exact between points; `None` outside |
+| Calibration | Mock with 0.2 dB tilt and +2.15 ns; through sweep after calibration | within 0.02 dB and 0.1° |
+| Calibration | RC low-pass with the tilt present | gain within 0.05 dB, phase within 1° of theory |
+| Calibration | Reconnect, resync, front panel, other channel, probe, coupling, bandwidth limit | dropped, or kept and not used |
+| Calibration | Sweep beyond the calibrated range | skew correction there, one warning |
+| Calibration | Calibration through a filter | refused |

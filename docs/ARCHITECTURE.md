@@ -10,7 +10,7 @@ One measurement goes down this chain; each layer talks to the one below it.
 
 1. **GUI** (`gui/main_window.py` and the panels) builds the config dataclasses in `models.py` (`SweepConfig`, `StimulusConfig`, `ScopeConfig`, `MeasureSettings`) and talks only to `SweepEngine`. It never touches an instrument.
 2. **`sweep/engine.py`**: `SweepEngine` owns a QThread with an `EngineWorker`. Requests go in as queued signals, results come back as signals; pause / resume / abort are called directly on the worker (flags only). It holds the one `Session` and drops it when the watchdog marks it dead.
-3. **`sweep/core.py`** (no Qt, so it is what the tests and `hwcheck/m7_*.py` drive): `Session` = one source + one digitizer + the skew check that belongs to that connection; `SweepRunner` walks the plan from `sweep/plan.py`, reports through `Callbacks`, applies the skew correction and guarantees `safe_off` and the scope restore on every exit path.
+3. **`sweep/core.py`** (no Qt, so it is what the tests and `hwcheck/m7_*.py` drive): `Session` = one source + one digitizer + the skew check and the through calibration that belong to that connection; `SweepRunner` walks the plan from `sweep/plan.py`, reports through `Callbacks`, applies the through calibration or the skew correction (the pure decisions of the calibration are in `sweep/calibration.py`) and guarantees `safe_off` and the scope restore on every exit path.
 4. **`measure/meters.py`**: `DualChannelScopeMeter` does one frequency point: timebase from the step table, auto-range (`sweep/autorange.py` holds the pure decisions), capture, then `measure/sinefit.py` or the scope's built-in measurement. It returns a `PointResult` with `Flag`s.
 5. **Drivers** (`drivers/base.py`: `SignalSource`, `Digitizer`, `Waveform`, caps). `drivers/registry.py` maps an `*IDN?` string to a driver class; `drivers/connect.py` scans, picks and opens a real `Session`. `drivers/mock.py` implements the same interfaces with a `SimulatedDUT` (this is Simulation mode).
 6. **`drivers/transport.py`**: the real drivers speak SCPI through a `Transport`. `VisaTransport` is the only place a VISA resource is opened (`drivers/visa_util.py` holds the `BODEPLOT_NO_HARDWARE` guard). `drivers/scpi.py` has the command descriptions, reply validators and the driver error types (`InstrumentUnresponsive` is what triggers the watchdog).
@@ -84,11 +84,12 @@ Not a clean stack, and known: `drivers/connect.py` imports `sweep/core.py` (it r
 
 | Concern | Where |
 |---|---|
-| Generator off on every exit path | `sweep/core.py`: the `finally` blocks of `SweepRunner.run`, `remeasure`, `run_skew_check`; `Session.close` |
+| Generator off on every exit path | `sweep/core.py`: the `finally` blocks of `SweepRunner.run`, `remeasure`, `run_skew_check`, `run_through_cal`; `Session.close` |
 | Scope settings saved and restored, panel lock | `Session.begin_measurement` / `end_measurement` in `sweep/core.py`; `save_setup` / `restore_setup` / `lock_panel` in `drivers/uni_t_upo1000.py` |
 | Watchdog (instrument stops answering) | raised as `InstrumentUnresponsive` (`drivers/scpi.py`) by the drivers; handled in `sweep/core.py` (`Session.mark_dead`, `watchdog_message`); the engine closes the session (`EngineWorker._drop_if_dead`) |
 | Generator off while the scope is being resynchronised | `Digitizer.on_link_trouble`, `Session._link_trouble`, `measure_with_output` in `sweep/core.py` |
 | Skew check: validity per connection | `Session.skew_valid` and `alignment_epoch` in `sweep/core.py`; the maths in `measure/skew.py`; the wizard in `gui/dialogs.py` |
+| Through calibration: measuring, validity, applying | `run_through_cal`, `Session.cal_for` and `SweepRunner._correct` in `sweep/core.py`; the maths and the plausibility rules in `sweep/calibration.py`; `CalDialog` in `gui/dialogs.py`; the status text in `gui/main_window.py` (`cal_in_use`) |
 | Auto-range | decisions in `sweep/autorange.py`, the loop in `measure/meters.py` |
 | Step tables, pacing after range changes | `drivers/step_tables.py`; `scope_min_gap_ms` in `io/settings.py`, applied in `drivers/uni_t_upo1000.py` |
 | Single-shot capture, stale-record check, resync | `drivers/uni_t_upo1000.py` (`acquire`, `acquire_running`) |

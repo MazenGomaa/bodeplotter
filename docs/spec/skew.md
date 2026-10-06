@@ -21,7 +21,7 @@ This replaces the plain "same-node check" of the first draft of this section. Co
 7. **Gain mismatch** = mean of the two `gain_i`, always reported; warn if its magnitude exceeds 0.3 dB (probe compensation or a bad connection).
 8. Show: Δt applied, Δt measured, snapped or not, the two per-frequency values, gain mismatch, warnings. The user accepts or repeats.
 
-**Correction.** For every measured point: `phase_corr = phase − 360°·f·Δt`, wrapped to (−180°, 180°]. Equivalently `H_corr = H·e^{−j·2π·f·Δt}`; the stored `PointResult.h` is the corrected one, and `PointResult.skew_corr_deg` keeps the amount removed so the raw phase can be recovered. Gain is not corrected in v1; the frequency-dependent calibration of §15 stays in v2.
+**Correction.** For every measured point: `phase_corr = phase − 360°·f·Δt`, wrapped to (−180°, 180°]. Equivalently `H_corr = H·e^{−j·2π·f·Δt}`; the stored `PointResult.h` is the corrected one, and `PointResult.skew_corr_deg` keeps the amount removed so the raw phase can be recovered. The skew check corrects the phase only. The through calibration of §8.7 corrects gain and phase at every frequency; where one applies, it is used in place of this correction.
 
 **Validity: once per session.** A check belongs to one connection. The app marks the check as needed (red "UNCHECKED" in the status bar and a line in the status log; no pop-up, user decision 2026-10-06, the pop-up on every connect was a nuisance):
 - after connect or reconnect,

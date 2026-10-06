@@ -4,13 +4,13 @@ What is done, what is next, and the decisions that are not obvious from the code
 
 ## Start here
 
-**v1 is done and accepted. The work in hand is v2, milestone A1: through calibration.**
+**v1 is done and accepted. v2, milestone A1 (through calibration) is built and tested against the simulators; its bench acceptance is the open step.**
 
-1. Design (approved by the user on 2026-10-06): `docs/superpowers/specs/2026-10-06-through-calibration-design.md`.
-2. Implementation plan (2026-10-06): `docs/superpowers/plans/2026-10-06-through-calibration.md`. It lists six places where it departs from the design; the user chose the "Native" execution (one session, test-first, a commit per task). Check `git log` and the plan's checkboxes for how far it got.
-3. It ends with a bench acceptance that needs the user at the bench (design section 10; plan Task 10): calibrate, through sweep (target 0.02 dB and 0.1 deg), the RC low-pass, reconnect. **Ask what is wired before every bench run**, commit before it, and never cut a bench script's output short.
+1. Built on 2026-10-06 on branch `a1-through-calibration` (cut from `docs-split`; neither is merged into `main` yet), test-first, one commit per task. `pytest`: 345 passed. Design: `docs/superpowers/specs/2026-10-06-through-calibration-design.md`. Plan: `docs/superpowers/plans/2026-10-06-through-calibration.md` (Tasks 1 to 9 done; Task 10 is the bench).
+2. Six departures from the design, listed at the top of the plan and taken as accepted (the user read them and said to start): top frequency limited to 40 % of the scope bandwidth (20 MHz); 58 points, not 57; the phase is interpolated after one fitted delay is taken out (a straight line over log f misses a delay); the extra field `ThroughCal.acceptable`; the image footer names the calibration; Skew check and Calibrate are both in the File menu.
+3. **Open: the bench acceptance (plan Task 10, design section 10).** Headless part: `hwcheck/m8_throughcal.py` (calibrate, then a through sweep against the targets 0.02 dB and 0.1 deg). GUI part, by the user: calibrate, through sweep, RC low-pass (compare with `hwcheck/m8_rc_compare.py`), reconnect. Results go into a new history file in `docs/hw/` (section 14) and into the facts sheet of `HW_REPORT.md`. **Ask what is wired before every bench run**, commit before it, and never cut a bench script's output short.
 4. Bench, as the user described it at the start of the session of 2026-10-06 (v2): scope CH1 and CH2 both on generator CH1, the app closed. That was one statement at one moment: ASK again before a run. Probes are 10X; they are trimmed for other channels than the ones they sit on (0.1 to 0.2 dB tilt), which is exactly what the calibration is meant to remove.
-5. After A1: `docs/spec/roadmap.md` sections 15 and 16. Do not start A2 or anything later without the user.
+5. After A1: the final review of the branch and the merge (the user decides), then `docs/spec/roadmap.md` sections 15 and 16. Do not start A2 or anything later without the user.
 
 The documents were split on 2026-10-06 at the user's request (`docs/spec/`, `docs/hw/`, `docs/ARCHITECTURE.md`, this file); `tests/test_docs.py` guards the split.
 
@@ -71,6 +71,7 @@ The hardware findings of that day are in `HW_REPORT.md` ("Measured and settled o
 - Screenshots of the sim GUI: `docs/screenshots/` (offscreen renders; regenerate with a script that sets `QT_QPA_PLATFORM=offscreen` and `QT_QPA_FONTDIR=C:\Windows\Fonts`).
 - I/O layer for the bench: `hwcheck/iolayer.py`, test suite `hwcheck/t0b_iolayer.py` (last hardware run 55/55 on `@py`). The app drivers are a port of it.
 - Real drivers: `drivers/uni_t_upo1000.py` (`UniTUPO1000`), `drivers/uni_t_utg900e.py`, on `drivers/transport.py` (`VisaTransport`; tests inject `tests/fakes.py`), with `drivers/scpi.py`, `drivers/step_tables.py`, `drivers/connect.py`. Probe tool: `python -m bodeplot.tools.probe`. Watchdog and panel lock live in `sweep/core.py` (`Session.mark_dead`, `end_measurement`), the engine drops a dead session (`_drop_if_dead`).
+- Through calibration (v2, A1): `sweep/calibration.py` (pure: frequencies, interpolation, plausibility, `matches` / `covers`), `core.run_through_cal`, `Session.cal` / `accept_cal` / `cal_for`, `SweepRunner._correct`, engine `run_cal` / `accept_cal` / `discard_cal` / `cal_measured`, `CalDialog` and `cal_report` in `gui/dialogs.py`, `MainWindow.cal_in_use`; mock tilt `MockScope.dut_gain_tilt_db_at_20mhz`; tests in `tests/test_calibration.py` and in `test_io.py`, `test_gui.py`, `test_drivers.py`.
 - Auto-range: clipped captures estimate the amplitude from the share of samples on the rails (`autorange.clipped_vpp_estimate`); `Waveform.rail_fraction`, `DigitizerCaps.data_vertical_divs`.
 
 Older memory notes for this project are under `~/.claude/projects/C--Users-mazen-Desktop-bodeplotter-docs/memory/` (sessions used to be started in `docs/`).

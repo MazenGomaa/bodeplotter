@@ -27,9 +27,9 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | Scope channels | CH1 / CH2 and CH3 / CH4 |
 | Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
 
-**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, designed and approved, not built yet; then a connection spec for other transports, trace overlay, auto markers), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
+**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, built on 2026-10-06; then a connection spec for other transports, trace overlay, auto markers), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
 
-Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; through calibration is not built. LAN is not supported.
+Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; LAN is not supported.
 
 Simulation mode (`--sim`) needs no hardware.
 
@@ -88,6 +88,7 @@ Everything below runs in simulation; on the real instruments all of it does exce
 - **Per point:** timebase from the scope's real step table, auto-range on both channels, averaging as a complex mean, sine fit at the generator frequency or the scope's built-in measurement.
 - **Control:** pause, resume, abort (partial result kept, generator switched off on every exit path), re-measure a single point by clicking it.
 - **Channel skew check and correction** (see below).
+- **Through calibration** (see below): removes the gain and phase difference between the two probes and channels at every frequency.
 - **Waveform view** of the last capture with the fitted sines, and a status log table.
 - **Presets and settings** as JSON in the user config folder; old or damaged files load with defaults.
 - **Export:** CSV (with a loader that round-trips), PNG, SVG, PDF, Touchstone `.s2p`.
@@ -107,6 +108,18 @@ Do the check with both probes on the generator output, **not** through the DUT: 
 The check belongs to one session. After connecting, after any driver resync, and when you press **Front panel was used**, the status bar shows the skew as UNCHECKED; the app asks for the check when you start a Sine fit sweep without one. A sweep run without a valid check is not corrected and every point carries the `SKEW_UNCHECKED` flag. The delay and the time of the check are written into the sweep metadata, the CSV header and the Touchstone comments.
 
 The simulated scope picks one of the four skew states at random each time it is opened or resynchronised, so this path is exercised in simulation too.
+
+## Through calibration
+
+The skew check removes one thing, the delay between the two scope channels. The two measurement paths also differ in gain, and both differences change with frequency and with which probe sits on which channel (0.1 to 0.2 dB up to 20 MHz on the bench). The calibration measures all of it once and divides it out.
+
+1. Press **Calibrate** and put the reference probe and the DUT probe on the same node (the generator output), both at the same probe setting.
+2. The app sweeps the full range of the instruments (50 Hz to 20 MHz, 58 points, about 1 minute) with Sine fit and shows the range, the largest gain deviation and the delay it found.
+3. Accept. The status bar shows `cal: HH:MM, 50 Hz to 20 MHz`.
+
+Later sweeps with the same channels, probe settings, coupling and bandwidth limit are divided by it; their points carry the `CALIBRATED` flag, and the CSV holds what was removed (`cal_gain_db`, `cal_phase_deg`), so the raw measurement can be recovered. With a calibration that covers the sweep, no skew check is needed. Outside the calibrated range the skew check is used as before.
+
+The calibration belongs to one connection and is not saved: a reconnect, a resync or **Front panel was used** drops it. It is refused when it does not look like a through connection (more than 1 dB anywhere, or a reference far below the generator setting). It does not correct the small gain differences between the scope's V/div steps (up to about 0.09 dB).
 
 ## Instrument rules that matter
 
