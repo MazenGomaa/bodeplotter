@@ -8,9 +8,9 @@
   ":SYSTem:LOCK?": "0",
   ":TRIGger:SWEep?": "AUTO",
   ":TRIGger:STATus?": "AUTO",
-  ":TIMebase:SCALe?": "5.000000e-03",
-  ":CHANnel1:SCALe?": "1.000000e-01",
-  ":CHANnel2:SCALe?": "1.000000e-01",
+  ":TIMebase:SCALe?": "2.000000e-06",
+  ":CHANnel1:SCALe?": "2.000000e-02",
+  ":CHANnel2:SCALe?": "2.000000e-02",
   ":CHANnel1:PROBe?": "1.000000e+00",
   ":CHANnel2:PROBe?": "1.000000e+00",
   ":SYSTem:ERRor?": "0,\"No error\"",
@@ -48,6 +48,7 @@
       "dbg_wave.py": "c7e5e3603563",
       "dbg_wave2.py": "01e9853157fd",
       "iolayer.py": "9a72e933ae3a",
+      "m7_previewskew.py": "0c972a9531b4",
       "m7_repeat.py": "4480a8fdc713",
       "m7_restore.py": "7050708385d0",
       "m7_sweep.py": "0e35bef5e74e",
@@ -77,9 +78,7 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "b8e7576",
-    "git_dirty": [
-      " M hwcheck/results/s6_state_py.json"
-    ]
+    "git_commit": "ae9e19c",
+    "git_dirty": []
   }
 }

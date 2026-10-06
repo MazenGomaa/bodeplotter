@@ -1,0 +1,302 @@
+{
+  "rounds": 10,
+  "channels": [
+    1,
+    2
+  ],
+  "method": "preview",
+  "log": [
+    {
+      "label": "at the start",
+      "measured_ns": 0.09252443511686022,
+      "per_freq_ns": [
+        0.09903102519890264,
+        0.08601784503481777
+      ],
+      "gain_db": 0.16900351110371062,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 1",
+      "points": 61,
+      "error": null,
+      "seconds": 25.77512679999927,
+      "empty_blocks": 0,
+      "resyncs": 0,
+      "stale_records": 2
+    },
+    {
+      "label": "after sweep 1 (0 empty, 0 resync)",
+      "measured_ns": 0.07938565990188615,
+      "per_freq_ns": [
+        0.08930389887907307,
+        0.06946742092469922
+      ],
+      "gain_db": 0.1799185119623163,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 2",
+      "points": 61,
+      "error": null,
+      "seconds": 29.42168369999854,
+      "empty_blocks": 2,
+      "resyncs": 0,
+      "stale_records": 1
+    },
+    {
+      "label": "after sweep 2 (2 empty, 0 resync)",
+      "measured_ns": 0.08475460644252837,
+      "per_freq_ns": [
+        0.08802081868456851,
+        0.08148839420048823
+      ],
+      "gain_db": 0.17975915748384436,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 3",
+      "points": 61,
+      "error": null,
+      "seconds": 25.02090789999056,
+      "empty_blocks": 0,
+      "resyncs": 0,
+      "stale_records": 0
+    },
+    {
+      "label": "after sweep 3 (0 empty, 0 resync)",
+      "measured_ns": 0.0815402286497244,
+      "per_freq_ns": [
+        0.09067602990304045,
+        0.07240442739640836
+      ],
+      "gain_db": 0.18093526964083256,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 4",
+      "points": 61,
+      "error": null,
+      "seconds": 24.988548399996944,
+      "empty_blocks": 0,
+      "resyncs": 0,
+      "stale_records": 0
+    },
+    {
+      "label": "after sweep 4 (0 empty, 0 resync)",
+      "measured_ns": 0.08254128264564345,
+      "per_freq_ns": [
+        0.08474625784054306,
+        0.08033630745074384
+      ],
+      "gain_db": 0.16568583478640725,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 5",
+      "points": 61,
+      "error": null,
+      "seconds": 33.36012230000051,
+      "empty_blocks": 4,
+      "resyncs": 0,
+      "stale_records": 1
+    },
+    {
+      "label": "after sweep 5 (4 empty, 0 resync)",
+      "measured_ns": 0.09273225514919786,
+      "per_freq_ns": [
+        0.1087608887423882,
+        0.0767036215560075
+      ],
+      "gain_db": 0.17030524284806697,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 6",
+      "points": 61,
+      "error": null,
+      "seconds": 25.416278499993496,
+      "empty_blocks": 0,
+      "resyncs": 0,
+      "stale_records": 1
+    },
+    {
+      "label": "after sweep 6 (0 empty, 0 resync)",
+      "measured_ns": 0.07897376580138275,
+      "per_freq_ns": [
+        0.0892213827221114,
+        0.06872614888065412
+      ],
+      "gain_db": 0.17811831222799906,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 7",
+      "points": 61,
+      "error": null,
+      "seconds": 29.259399699993082,
+      "empty_blocks": 2,
+      "resyncs": 0,
+      "stale_records": 1
+    },
+    {
+      "label": "after sweep 7 (2 empty, 0 resync)",
+      "measured_ns": 0.08290699754101993,
+      "per_freq_ns": [
+        0.08646950030757798,
+        0.07934449477446187
+      ],
+      "gain_db": 0.17973463034902157,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 8",
+      "points": 61,
+      "error": null,
+      "seconds": 25.52228259999538,
+      "empty_blocks": 0,
+      "resyncs": 0,
+      "stale_records": 1
+    },
+    {
+      "label": "after sweep 8 (0 empty, 0 resync)",
+      "measured_ns": 0.08970906496291395,
+      "per_freq_ns": [
+        0.10251996435662863,
+        0.07689816556919923
+      ],
+      "gain_db": 0.17662800750932178,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 9",
+      "points": 61,
+      "error": null,
+      "seconds": 25.754697700001998,
+      "empty_blocks": 0,
+      "resyncs": 0,
+      "stale_records": 2
+    },
+    {
+      "label": "after sweep 9 (0 empty, 0 resync)",
+      "measured_ns": 0.08532751638313894,
+      "per_freq_ns": [
+        0.08719054624623679,
+        0.08346448652004108
+      ],
+      "gain_db": 0.16521092026551643,
+      "epoch": 1,
+      "warnings": []
+    },
+    {
+      "label": "sweep 10",
+      "points": 61,
+      "error": null,
+      "seconds": 25.494509600001038,
+      "empty_blocks": 0,
+      "resyncs": 0,
+      "stale_records": 1
+    },
+    {
+      "label": "after sweep 10 (0 empty, 0 resync)",
+      "measured_ns": 0.07979332839897946,
+      "per_freq_ns": [
+        0.08567363692317852,
+        0.07391301987478038
+      ],
+      "gain_db": 0.17532955126606334,
+      "epoch": 1,
+      "warnings": []
+    }
+  ],
+  "scope_stats": {
+    "queries": 10542,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 8,
+    "rearms": 0,
+    "stale_records": 10
+  },
+  "_identity": {
+    "script": "m7_previewskew.py",
+    "sha256": "0c972a9531b40f93595de43a7d013eb28d47b7d84edbb0c7cab260290434f0b0",
+    "modules": {
+      "a7_phase_lead.py": "da897892c9d3",
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg7_empty.py": "ee0d6e0f5056",
+      "dbg7_genoffset_neg.py": "168d0244165d",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "m7_repeat.py": "4480a8fdc713",
+      "m7_restore.py": "7050708385d0",
+      "m7_sweep.py": "0e35bef5e74e",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "s7_capspeed.py": "bd411edc468a",
+      "s7_dcoffset.py": "9da4c6b4759a",
+      "s7_dcsource.py": "771a51aa35d6",
+      "s7_gendc.py": "d47960b9fe2e",
+      "s7_genoffset.py": "59938843324f",
+      "s7_rangephase.py": "7b4e85f31478",
+      "s7_smallsig.py": "03c100e7276e",
+      "s7_stream.py": "e900517ecf06",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "ae9e19c",
+    "git_dirty": [
+      " M hwcheck/results/s6_state_py.json"
+    ]
+  }
+}

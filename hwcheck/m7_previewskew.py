@@ -36,7 +36,9 @@ if "--ch" in argv:
     REF, DUT = int(argv[i + 1]), int(argv[i + 2])
     del argv[i:i + 3]
 METHOD = Method.SINEFIT if "--single" in argv else Method.PREVIEW
-argv = [a for a in argv if a != "--single"]
+# --resync: no sweeps; a driver resync while the scope is running, then the skew check
+RESYNC = "--resync" in argv
+argv = [a for a in argv if a not in ("--single", "--resync")]
 ROUNDS = int(argv[0]) if argv else 10
 out = {"rounds": ROUNDS, "channels": [REF, DUT], "method": METHOD.value, "log": []}
 
@@ -64,6 +66,14 @@ def main():
         if abs(first) > 6 or any("Gain mismatch" in w for w in out["log"][0]["warnings"]):
             raise SystemExit("STOP: this does not look like a through connection on CH%d / CH%d" % (REF, DUT))
         for n in range(1, ROUNDS + 1):
+            if RESYNC:
+                # what the first version of Fast preview did after an empty reply: a resync
+                # (device clear: the USB session is closed and reopened) while the scope runs
+                scope.free_run()
+                time.sleep(0.5)
+                scope.resync()
+                check("after resync %d while running" % n)
+                continue
             before = dict(scope.stats)
             t0 = time.perf_counter()
             res = SweepRunner(session, SweepConfig(start_hz=2e5, stop_hz=2e7, points_per_decade=30), stim, cfg,
