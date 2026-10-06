@@ -474,8 +474,8 @@ class UniTUPO1000(Digitizer):
     def restore_setup(self) -> list[str]:
         """Put back what save_setup() remembered. Every setting is tried; the ones that
         could not be restored are returned (and logged), nothing is raised for them.
-        Untested on hardware for a scope probe ratio other than 1X: offset and trigger
-        level are then sent as they were read."""
+        Probe ratio other than 1X (bench, HW_REPORT.md 13.12): SCALe and the trigger level
+        take input-referred volts and report probe-scaled ones; OFFSet is not scaled."""
         saved, self._saved = self._saved, None
         bad: list[str] = []
         if saved is None:
@@ -511,7 +511,15 @@ class UniTUPO1000(Digitizer):
         put(":TRIGger:MODE", t["mode"], V_TRIGMODE, t["mode"])                                 # U1K p.36
         put(":TRIGger:SOURce", t["src"], V_SRC, t["src"])                                      # U1K p.38
         put(":TRIGger:EDGE:SLOPe", t["slope"], V_SLOPE, t["slope"])                            # U1K p.39
-        put(":TRIGger:LEVel", scpi.plain_decimal(t["level"]), scpi.v_float, t["level"], tol_abs=1.0)   # U1K p.37
+        # the level is sent input-referred and read back probe-scaled, for the source's ratio
+        ratio, step = 1.0, abs(t["level"]) * 0.05 + 1e-9
+        if t["src"].upper().startswith("CHAN"):
+            try:
+                ratio = self.query(f":{t['src']}:PROBe?", scpi.v_float) or 1.0                 # U1K p.14
+                step = self.query(f":{t['src']}:SCALe?", scpi.v_float) / self.CODES_PER_DIV    # U1K p.14
+            except DriverError as e:
+                bad.append(":TRIGger:LEVel: %s" % e)
+        put(":TRIGger:LEVel", scpi.plain_decimal(t["level"] / ratio), scpi.v_float, t["level"], tol_abs=step)  # U1K p.37
         for b in bad:
             log.warning("scope setting not restored: %s", b)
         return bad

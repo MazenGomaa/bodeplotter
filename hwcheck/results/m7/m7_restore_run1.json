@@ -1,0 +1,293 @@
+{
+  "cases": [
+    {
+      "label": "CASE 1: CH2 switched off (50 mV/div, offset 20 mV), CH1 500 mV/div, 1 ms/div",
+      "before": {
+        ":CHANnel1:DISPlay?": "1",
+        ":CHANnel1:PROBe?": "1.000000e+00",
+        ":CHANnel1:VERNier?": "0",
+        ":CHANnel1:SCALe?": "5.000000e-01",
+        ":CHANnel1:OFFSet?": "0.000000e+00",
+        ":CHANnel1:COUPling?": "DC",
+        ":CHANnel1:BWLimit?": "FULL",
+        ":CHANnel2:DISPlay?": "0",
+        ":CHANnel2:PROBe?": "1.000000e+00",
+        ":CHANnel2:VERNier?": "0",
+        ":CHANnel2:SCALe?": "5.000000e-02",
+        ":CHANnel2:OFFSet?": "2.000000e-02",
+        ":CHANnel2:COUPling?": "DC",
+        ":CHANnel2:BWLimit?": "FULL",
+        ":TIMebase:SCALe?": "1.000000e-03",
+        ":TRIGger:MODE?": "EDGE",
+        ":TRIGger:SOURce?": "CHANnel1",
+        ":TRIGger:EDGE:SLOPe?": "POSitive",
+        ":TRIGger:LEVel?": "0.000000e+00"
+      },
+      "after": {
+        ":CHANnel1:DISPlay?": "1",
+        ":CHANnel1:PROBe?": "1.000000e+00",
+        ":CHANnel1:VERNier?": "0",
+        ":CHANnel1:SCALe?": "5.000000e-01",
+        ":CHANnel1:OFFSet?": "0.000000e+00",
+        ":CHANnel1:COUPling?": "DC",
+        ":CHANnel1:BWLimit?": "FULL",
+        ":CHANnel2:DISPlay?": "0",
+        ":CHANnel2:PROBe?": "1.000000e+00",
+        ":CHANnel2:VERNier?": "0",
+        ":CHANnel2:SCALe?": "5.000000e-02",
+        ":CHANnel2:OFFSet?": "2.000000e-02",
+        ":CHANnel2:COUPling?": "DC",
+        ":CHANnel2:BWLimit?": "FULL",
+        ":TIMebase:SCALe?": "1.000000e-03",
+        ":TRIGger:MODE?": "EDGE",
+        ":TRIGger:SOURce?": "CHANnel1",
+        ":TRIGger:EDGE:SLOPe?": "POSitive",
+        ":TRIGger:LEVel?": "0.000000e+00"
+      },
+      "not_restored": {},
+      "sweep": {
+        "error": null,
+        "points": [
+          [
+            1000.0,
+            -1.58,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            3162.2776601683795,
+            -7.337,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            10000.0,
+            -16.505,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            31622.776601683792,
+            -26.349,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            100000.0,
+            -36.368,
+            "SKEW_UNCHECKED"
+          ]
+        ],
+        "log": [
+          [
+            "warn",
+            "No valid channel skew check: phase is NOT corrected and every point is flagged SKEW_UNCHECKED. Connected: the channel skew must be checked once per session."
+          ]
+        ]
+      }
+    },
+    {
+      "label": "CASE 2: CH1 at probe 10X, AC, 20 MHz limit, offset and trigger level not zero",
+      "before": {
+        ":CHANnel1:DISPlay?": "1",
+        ":CHANnel1:PROBe?": "1.000000e+01",
+        ":CHANnel1:VERNier?": "0",
+        ":CHANnel1:SCALe?": "5.000000e-01",
+        ":CHANnel1:OFFSet?": "9.999999e-02",
+        ":CHANnel1:COUPling?": "AC",
+        ":CHANnel1:BWLimit?": "20M",
+        ":CHANnel2:DISPlay?": "1",
+        ":CHANnel2:PROBe?": "1.000000e+00",
+        ":CHANnel2:VERNier?": "0",
+        ":CHANnel2:SCALe?": "5.000000e-02",
+        ":CHANnel2:OFFSet?": "2.000000e-02",
+        ":CHANnel2:COUPling?": "DC",
+        ":CHANnel2:BWLimit?": "FULL",
+        ":TIMebase:SCALe?": "1.000000e-03",
+        ":TRIGger:MODE?": "EDGE",
+        ":TRIGger:SOURce?": "CHANnel1",
+        ":TRIGger:EDGE:SLOPe?": "NEGative",
+        ":TRIGger:LEVel?": "2.000000e+00"
+      },
+      "after": {
+        ":CHANnel1:DISPlay?": "1",
+        ":CHANnel1:PROBe?": "1.000000e+01",
+        ":CHANnel1:VERNier?": "0",
+        ":CHANnel1:SCALe?": "5.000000e-01",
+        ":CHANnel1:OFFSet?": "9.999999e-02",
+        ":CHANnel1:COUPling?": "AC",
+        ":CHANnel1:BWLimit?": "20M",
+        ":CHANnel2:DISPlay?": "1",
+        ":CHANnel2:PROBe?": "1.000000e+00",
+        ":CHANnel2:VERNier?": "0",
+        ":CHANnel2:SCALe?": "5.000000e-02",
+        ":CHANnel2:OFFSet?": "2.000000e-02",
+        ":CHANnel2:COUPling?": "DC",
+        ":CHANnel2:BWLimit?": "FULL",
+        ":TIMebase:SCALe?": "1.000000e-03",
+        ":TRIGger:MODE?": "EDGE",
+        ":TRIGger:SOURce?": "CHANnel1",
+        ":TRIGger:EDGE:SLOPe?": "NEGative",
+        ":TRIGger:LEVel?": "2.400000e+00"
+      },
+      "not_restored": {
+        ":TRIGger:LEVel?": [
+          "2.000000e+00",
+          "2.400000e+00"
+        ]
+      },
+      "sweep": {
+        "error": null,
+        "points": [
+          [
+            1000.0,
+            -1.59,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            3162.2776601683795,
+            -7.356,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            10000.0,
+            -16.51,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            31622.776601683792,
+            -26.367,
+            "SKEW_UNCHECKED"
+          ],
+          [
+            100000.0,
+            -36.271,
+            "LOW_SNR|SKEW_UNCHECKED"
+          ]
+        ],
+        "log": [
+          [
+            "warn",
+            "No valid channel skew check: phase is NOT corrected and every point is flagged SKEW_UNCHECKED. Connected: the channel skew must be checked once per session."
+          ]
+        ]
+      }
+    }
+  ],
+  "start_state": {
+    ":CHANnel1:DISPlay?": "1",
+    ":CHANnel1:PROBe?": "1.000000e+00",
+    ":CHANnel1:VERNier?": "0",
+    ":CHANnel1:SCALe?": "2.000000e-02",
+    ":CHANnel1:OFFSet?": "0.000000e+00",
+    ":CHANnel1:COUPling?": "DC",
+    ":CHANnel1:BWLimit?": "FULL",
+    ":CHANnel2:DISPlay?": "1",
+    ":CHANnel2:PROBe?": "1.000000e+00",
+    ":CHANnel2:VERNier?": "0",
+    ":CHANnel2:SCALe?": "1.000000e-03",
+    ":CHANnel2:OFFSet?": "0.000000e+00",
+    ":CHANnel2:COUPling?": "DC",
+    ":CHANnel2:BWLimit?": "FULL",
+    ":TIMebase:SCALe?": "2.500000e-08",
+    ":TRIGger:MODE?": "EDGE",
+    ":TRIGger:SOURce?": "CHANnel1",
+    ":TRIGger:EDGE:SLOPe?": "POSitive",
+    ":TRIGger:LEVel?": "0.000000e+00"
+  },
+  "end_state": {
+    ":CHANnel1:DISPlay?": "1",
+    ":CHANnel1:PROBe?": "1.000000e+00",
+    ":CHANnel1:VERNier?": "0",
+    ":CHANnel1:SCALe?": "2.000000e-02",
+    ":CHANnel1:OFFSet?": "0.000000e+00",
+    ":CHANnel1:COUPling?": "DC",
+    ":CHANnel1:BWLimit?": "FULL",
+    ":CHANnel2:DISPlay?": "1",
+    ":CHANnel2:PROBe?": "1.000000e+00",
+    ":CHANnel2:VERNier?": "0",
+    ":CHANnel2:SCALe?": "1.000000e-03",
+    ":CHANnel2:OFFSet?": "0.000000e+00",
+    ":CHANnel2:COUPling?": "DC",
+    ":CHANnel2:BWLimit?": "FULL",
+    ":TIMebase:SCALe?": "2.500000e-08",
+    ":TRIGger:MODE?": "EDGE",
+    ":TRIGger:SOURce?": "CHANnel1",
+    ":TRIGger:EDGE:SLOPe?": "POSitive",
+    ":TRIGger:LEVel?": "0.000000e+00"
+  },
+  "end_differs_from_start": {},
+  "outputs_at_end": [
+    false,
+    false
+  ],
+  "panel_locked_at_end": "0",
+  "sweep_mode_at_end": "AUTO",
+  "scope_stats": {
+    "queries": 989,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0,
+    "rearms": 0
+  },
+  "_identity": {
+    "script": "m7_restore.py",
+    "sha256": "7050708385d032e831cf9133fa11ffe1e567e6bc11e5ff374d2a049a63abde1f",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg7_genoffset_neg.py": "168d0244165d",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "m7_sweep.py": "a25e678e0d92",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "s7_dcoffset.py": "9da4c6b4759a",
+      "s7_dcsource.py": "771a51aa35d6",
+      "s7_gendc.py": "d47960b9fe2e",
+      "s7_genoffset.py": "59938843324f",
+      "s7_smallsig.py": "03c100e7276e",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "c45dfc6",
+    "git_dirty": []
+  }
+}

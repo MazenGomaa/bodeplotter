@@ -297,7 +297,8 @@ class FakeScope(Transport):
         table = self.TB_STEPS if what == "timebase" else self.V_STEPS
         cur = self.timebase if what == "timebase" else self.ch[ch]["scale"]
         if cmd.endswith("?"):
-            return self._text(self._num(cur))
+            # V/div is stored input-referred and reported probe-scaled (HW_REPORT S2)
+            return self._text(self._num(cur if what == "timebase" else cur * self.ch[ch]["probe"]))
         arg = cmd.split()[-1]
         i = min(range(len(table)), key=lambda k: abs(table[k] - cur))
         if arg == "UP":
@@ -380,6 +381,8 @@ class FakeScope(Transport):
             return None
         if q:
             v = self.trig[key]
+            if key == "level":          # stored input-referred, reported probe-scaled (HW_REPORT 13.12)
+                v = v * self.ch[int(self.trig["src"][-1])]["probe"]
             return self._text(v if isinstance(v, str) else self._num(v))
         if key == "level":
             v = _plain(arg)

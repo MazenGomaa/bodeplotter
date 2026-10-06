@@ -121,6 +121,7 @@ def test_minimum_gap_after_timebase_and_vdiv_changes(gap):
     fake = FakeScope(clock)
     drv = UniTUPO1000(lambda r, b: fake, min_gap_s=gap, sleep=clock.sleep, clock=clock.now)
     drv.open("FAKE::SCOPE", "py")
+    drv.configure_channel(1, "DC", 10.0, False, 0.0)        # as the app does: scope ratio 1X first
     for v in (0.05, 0.02, 0.5):
         drv.set_vdiv(1, v)
     for tb in (1e-3, 2.5e-8, 1e-5):
@@ -663,6 +664,7 @@ def test_500_microvolt_step_is_never_used_on_the_real_scope():
     drv, fake, _ = opened_scope()
     assert 5e-4 in drv.tables.vdiv and 5e-4 not in drv.caps.vdiv_steps
     assert min(drv.caps.vdiv_steps) == 1e-3
+    drv.configure_channel(1, "DC", 10.0, False, 0.0)
     assert drv.set_vdiv(1, 0.0005) == 0.001                         # even when asked for it
     assert not any(c == ":CHANnel1:SCALe 0.0005" for c in fake.sent())
 
