@@ -323,3 +323,19 @@ def test_non_sim_connect_failure_is_reported(qtbot, tmp_path, monkeypatch):
     assert "instrument access is disabled" in blocker.args[0]
     assert not w.info.connected
     w.close()
+
+
+def test_sim_flag_is_for_this_run_only(qtbot, tmp_path, monkeypatch):
+    """The user started 'run.bat' after a '--sim' run and still got the simulation."""
+    from bodeplot.io.settings import load_settings
+    monkeypatch.setenv("BODEPLOT_CONFIG_DIR", str(tmp_path / "cfg"))
+    w = MainWindow(simulate=True, settings=AppSettings(simulate=False))
+    w.interactive = False
+    qtbot.addWidget(w)
+    assert w.settings.simulate                      # this run is simulated
+    w.close()
+    assert load_settings().simulate is False        # the next plain start is not
+    w2 = MainWindow()
+    qtbot.addWidget(w2)
+    assert not w2.settings.simulate
+    w2.close()

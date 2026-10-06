@@ -34,7 +34,11 @@ class MainWindow(QMainWindow):
                  sim_seed: int | None = None):
         super().__init__()
         self.settings = settings or load_settings()
+        # '--sim' is for this run only. It used to be saved with the settings, so a later
+        # start without the flag still came up in simulation (found by the user, 2026-10-06).
+        self._stored_simulate: bool | None = None
         if simulate is not None:
+            self._stored_simulate = self.settings.simulate
             self.settings.simulate = simulate
         self.sim_seed = sim_seed
         self.interactive = True         # tests switch this off: no modal dialogs
@@ -301,7 +305,18 @@ class MainWindow(QMainWindow):
         s.unwrap_phase = self.plot.unwrap()
         s.window_geometry = bytes(self.saveGeometry().toBase64()).decode("ascii")
         s.window_state = bytes(self.saveState().toBase64()).decode("ascii")
-        save_settings(s)
+        self._save_settings()
+
+    def _save_settings(self) -> None:
+        s = self.settings
+        if self._stored_simulate is None:
+            save_settings(s)
+            return
+        this_run, s.simulate = s.simulate, self._stored_simulate
+        try:
+            save_settings(s)
+        finally:
+            s.simulate = this_run
 
     # ------------------------------------------------------------------ helpers
     def configs(self) -> Configs:
@@ -370,6 +385,7 @@ class MainWindow(QMainWindow):
         d = ConnectionsDialog(self.settings, self, connected=self.info.connected)
         if d.exec():
             d.apply_to(self.settings)
+            self._stored_simulate = None        # the user chose: this is now the stored value
             save_settings(self.settings)
             self._update_actions()
 
@@ -377,7 +393,7 @@ class MainWindow(QMainWindow):
         d = SimSettingsDialog(self.settings.sim, self)
         if d.exec():
             self.settings.sim = d.result_sim
-            save_settings(self.settings)
+            self._save_settings()
 
     # ------------------------------------------------------------------ skew
     def skew_freqs_hint(self) -> tuple[float, float]:
