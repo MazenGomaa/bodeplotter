@@ -30,6 +30,12 @@ def snap(delay_s: float, states=KNOWN_STATES_S, tol_s: float = SNAP_TOL_S) -> tu
     return delay_s, False
 
 
+def near_state(delay_s: float) -> float | None:
+    """The known state this delay belongs to, or None if it is not within SNAP_TOL_S of one."""
+    state, near = snap(delay_s)
+    return state if near else None
+
+
 def delay_from_h(h: complex, freq_hz: float) -> float:
     """delta-t in seconds from a same-node transfer H at freq_hz. Unambiguous for
     |delta-t| < 1/(2 f): 25 ns at 20 MHz, far more than the known states."""
@@ -60,9 +66,15 @@ def snaps(ref_channel: int, dut_channel: int) -> bool:
 
 def evaluate(freqs_hz, hs, alignment_epoch: int = 0, now: datetime | None = None,
              snap_states: bool = True) -> SkewCheck:
-    """Turn same-node transfer measurements into a SkewCheck: mean delay, snapping,
-    gain mismatch and the warnings of SPEC.md 8.6. With snap_states False the measured
-    delay is applied as it is, with no warning."""
+    """Turn same-node transfer measurements into a SkewCheck: mean delay, gain mismatch
+    and the warnings of SPEC.md 8.6.
+
+    The measured delay is what is applied, always (user decision 2026-10-06). It used to be
+    replaced by the nearest known state, but the delay of a state depends on which probe
+    sits on which channel: the same CH1 / CH2 pair read +0.15 ns and later +0.08 ns in one
+    evening, and the snap then over-corrected by 0.4 deg at 20 MHz (HW_REPORT.md 13.14,
+    13.25). The states now only serve the warning for a delay that fits none of them;
+    snap_states False (another channel pair) leaves that warning out."""
     freqs = [float(f) for f in freqs_hz]
     if not freqs or len(freqs) != len(hs):
         raise ValueError("need one H per check frequency")
@@ -70,23 +82,23 @@ def evaluate(freqs_hz, hs, alignment_epoch: int = 0, now: datetime | None = None
     gains = [20.0 * math.log10(abs(h)) if abs(h) > 0 else float("-inf") for h in hs]
     measured = sum(delays) / len(delays)
     gain = sum(gains) / len(gains)
-    applied, snapped = snap(measured) if snap_states else (measured, False)
+    near = near_state(measured) is not None
     warnings: list[str] = []
     if len(delays) > 1 and max(delays) - min(delays) > CONSISTENCY_TOL_S:
         warnings.append(
             "The two check frequencies disagree by %.2f ns (%s); the offset is not a pure delay."
             % ((max(delays) - min(delays)) * 1e9,
                ", ".join("%.2f ns at %g MHz" % (d * 1e9, f / 1e6) for d, f in zip(delays, freqs))))
-    if snap_states and not snapped:
+    if snap_states and not near:
         warnings.append(
             "Measured delay %.2f ns is more than %.1f ns from every known state (%s ns); "
-            "using the measured value." % (measured * 1e9, SNAP_TOL_S * 1e9,
+            "it is used as measured." % (measured * 1e9, SNAP_TOL_S * 1e9,
                                            ", ".join("%+.2f" % (s * 1e9) for s in KNOWN_STATES_S)))
     if not math.isfinite(gain) or abs(gain) > GAIN_WARN_DB:
         warnings.append("Gain mismatch between the channels is %+.2f dB (limit %.1f dB): check probe "
                         "compensation, probe settings and the connection." % (gain, GAIN_WARN_DB))
     when = (now or datetime.now(timezone.utc)).astimezone().isoformat(timespec="seconds")
-    return SkewCheck(delay_s=applied, measured_s=measured, snapped=snapped, gain_db=gain,
+    return SkewCheck(delay_s=measured, measured_s=measured, snapped=False, gain_db=gain,
                      freqs_hz=freqs, per_freq_delay_s=delays, per_freq_gain_db=gains,
                      warnings=warnings, checked_at=when, alignment_epoch=alignment_epoch)
 
@@ -94,6 +106,8 @@ def evaluate(freqs_hz, hs, alignment_epoch: int = 0, now: datetime | None = None
 def describe(check: SkewCheck | None) -> str:
     if check is None:
         return "skew: not checked"
-    return "skew: %+.2f ns (%s, measured %+.2f ns, gain mismatch %+.2f dB, checked %s)" % (
-        check.delay_s * 1e9, "snapped" if check.snapped else "not snapped",
-        check.measured_s * 1e9, check.gain_db, check.checked_at)
+    # 'snapped' is only true in results saved before 2026-10-06
+    return "skew: %+.2f ns (%s, gain mismatch %+.2f dB, checked %s)" % (
+        check.delay_s * 1e9,
+        "snapped, measured %+.2f ns" % (check.measured_s * 1e9) if check.snapped else "measured",
+        check.gain_db, check.checked_at)

@@ -45,7 +45,8 @@ def test_csv_round_trip(tmp_path, result):
     assert back.config == json.loads(json.dumps(result.config))
     assert back.meta["source_idn"] == result.meta["source_idn"]
     assert back.meta["skew"]["delay_s"] == result.meta["skew"]["delay_s"]
-    assert export_csv.skew_from_meta(back.meta).snapped is True
+    back_skew = export_csv.skew_from_meta(back.meta)
+    assert back_skew.snapped is False and back_skew.delay_s == back_skew.measured_s   # measured, never snapped
 
 
 def test_csv_header_columns_and_skew_lines(tmp_path, result, unchecked_result):
@@ -53,7 +54,7 @@ def test_csv_header_columns_and_skew_lines(tmp_path, result, unchecked_result):
     lines = text.splitlines()
     assert lines[0] == "# bodeplot_csv: 1"
     assert "# skew: checked" in lines
-    assert "# skew_delay_ns: 2.1500" in lines and "# skew_snapped: yes" in lines
+    assert any(l.startswith("# skew_delay_ns: 2.1") for l in lines) and "# skew_snapped: no" in lines
     assert any(l.startswith("# skew_checked_at: 20") for l in lines)
     assert any(l.startswith("# app_version:") for l in lines)
     header = next(l for l in lines if not l.startswith("#"))

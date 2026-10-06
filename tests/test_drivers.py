@@ -499,7 +499,7 @@ def test_restore_reports_what_it_could_not_put_back_and_does_not_raise():
 def test_skew_check_with_the_real_driver_finds_each_state(state):
     session, fgen, fscope, clock = fake_bench(delay=state)
     check = run_skew_check(session, StimulusConfig(), ScopeConfig(), MeasureSettings(), sleep=clock.sleep)
-    assert check.snapped and check.delay_s == pytest.approx(state, abs=1e-12)
+    assert check.delay_s == check.measured_s and check.delay_s == pytest.approx(state, abs=0.05e-9)
     assert not fgen.ch[1]["output"] and not fscope.lock
     session.close()
 

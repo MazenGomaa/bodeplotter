@@ -61,7 +61,7 @@ def test_window_starts_in_simulation_and_connects(win, qtbot):
 def test_skew_check_then_sweep_then_export(win, qtbot, tmp_path):
     _connect(win, qtbot)
     check = _skew_check(win, qtbot)
-    assert check.snapped and "snapped to a known state" in skew_report(check)
+    assert not check.snapped and "the measured value" in skew_report(check)
     assert win.skew_status[0] == "good" and "ns" in win.skew_status[1]
     _short_sweep(win)
     with qtbot.waitSignal(win.engine.finished, timeout=30000):

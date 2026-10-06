@@ -49,12 +49,13 @@ def test_evaluate_warnings():
     def h(delay_ns, f, gain_db=0.0):
         return 10 ** (gain_db / 20) * cmath.exp(2j * math.pi * f * delay_ns * 1e-9)
     ok = skew.evaluate([10e6, 20e6], [h(2.1, 10e6), h(2.2, 20e6)])
-    assert ok.snapped and ok.delay_s == 2.15e-9 and ok.warnings == []
+    assert not ok.snapped and ok.delay_s == pytest.approx(2.15e-9) and ok.delay_s == ok.measured_s
+    assert ok.warnings == [] and skew.near_state(ok.delay_s) == 2.15e-9
     off = skew.evaluate([10e6, 20e6], [h(1.0, 10e6), h(1.0, 20e6)])
     assert not off.snapped and off.delay_s == pytest.approx(1.0e-9)
     assert len(off.warnings) == 1 and "known state" in off.warnings[0]
     gain = skew.evaluate([10e6, 20e6], [h(0.15, 10e6, 0.5), h(0.15, 20e6, 0.5)])
-    assert gain.snapped and gain.gain_db == pytest.approx(0.5)
+    assert gain.gain_db == pytest.approx(0.5)
     assert len(gain.warnings) == 1 and "Gain mismatch" in gain.warnings[0]
     incons = skew.evaluate([10e6, 20e6], [h(0.0, 10e6), h(0.6, 20e6)])
     assert any("disagree" in w for w in incons.warnings)
@@ -65,8 +66,8 @@ def test_evaluate_warnings():
 def test_wizard_finds_each_injected_state(make_session, no_sleep, state):
     session = make_session(seed=20 + state, skew_state=state, checked=False)
     check = _check(session, no_sleep)
-    assert check.snapped
-    assert check.delay_s == SKEW_STATES_S[state]
+    assert check.delay_s == check.measured_s                      # the measured value is applied
+    assert skew.near_state(check.delay_s) == SKEW_STATES_S[state]
     assert check.measured_s == pytest.approx(SKEW_STATES_S[state], abs=0.1e-9)
     assert check.freqs_hz == [10e6, 20e6]
     assert abs(check.gain_db) < 0.1 and check.warnings == []
@@ -90,11 +91,11 @@ def test_corrected_phase_within_half_a_degree_at_20_mhz(make_session, no_sleep, 
     top = res.points[-1]
     assert top.freq_hz == 20e6
     assert abs(top.phase_deg) < 0.5                                # within 0.5 deg at 20 MHz
-    assert top.skew_corr_deg == pytest.approx(injected_deg, abs=1e-6)
+    assert top.skew_corr_deg == pytest.approx(injected_deg, abs=0.5)
     assert all(abs(p.phase_deg) < 0.5 for p in res.points)
     assert all(not (p.flags & Flag.SKEW_UNCHECKED) for p in res.points)
-    assert res.meta["skew"]["delay_s"] == SKEW_STATES_S[state]
-    assert res.meta["skew_applied_s"] == SKEW_STATES_S[state]
+    assert res.meta["skew"]["delay_s"] == pytest.approx(SKEW_STATES_S[state], abs=0.05e-9)
+    assert res.meta["skew_applied_s"] == res.meta["skew"]["delay_s"]
 
 
 def test_correction_does_not_disturb_a_real_dut(make_session, no_sleep):
@@ -141,7 +142,7 @@ def test_only_ref_ch1_dut_ch2_snaps(make_session, no_sleep, ref, dut):
     assert not check.snapped and check.delay_s == check.measured_s
     assert not any("known state" in w for w in check.warnings)
     default = _check(session, no_sleep)                            # CH1 / CH2 still snaps
-    assert default.snapped and default.delay_s == SKEW_STATES_S[1]
+    assert default.delay_s == default.measured_s                   # CH1 / CH2 as well: never a snapped value
 
 
 def test_check_frequencies_do_not_follow_the_sweep_range(make_session, no_sleep):
@@ -152,7 +153,7 @@ def test_check_frequencies_do_not_follow_the_sweep_range(make_session, no_sleep)
     assert skew_check_frequencies(session, sweep) == (10e6, 20e6)
     check = _check(session, no_sleep, sweep)
     assert check.freqs_hz == [10e6, 20e6]
-    assert check.snapped and check.delay_s == SKEW_STATES_S[2]
+    assert skew.near_state(check.delay_s) == SKEW_STATES_S[2]
 
 
 def test_check_is_per_session_and_invalidated(make_session, no_sleep):

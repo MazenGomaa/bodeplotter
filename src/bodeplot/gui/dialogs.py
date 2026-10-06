@@ -349,9 +349,11 @@ class ImageExportDialog(QDialog):
 
 # ---------------------------------------------------------------------- skew wizard
 def skew_report(check: SkewCheck) -> str:
+    state = skew.near_state(check.measured_s)
     lines = ["Delay applied (DUT − reference):  %+.2f ns   (%s)" % (
-        check.delay_s * 1e9, "snapped to a known state" if check.snapped else "measured value, not snapped"),
-        "Delay measured:  %+.2f ns" % (check.measured_s * 1e9)]
+        check.delay_s * 1e9, "snapped to a known state" if check.snapped else "the measured value"),
+        "Delay measured:  %+.2f ns%s" % (check.measured_s * 1e9,
+                                         "" if state is None else "   (scope state %+.2f ns)" % (state * 1e9))]
     for f, d, g in zip(check.freqs_hz, check.per_freq_delay_s, check.per_freq_gain_db):
         lines.append("   at %g MHz:  %+.2f ns  (%+.2f°),  gain %+.3f dB"
                      % (f / 1e6, d * 1e9, 360.0 * f * d, g))

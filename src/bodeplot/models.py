@@ -129,7 +129,7 @@ class PointResult:
 @dataclass
 class SkewCheck:
     """Result of the channel skew wizard (SPEC.md section 8.6)."""
-    delay_s: float              # delta-t applied: snapped state, or the measured value
+    delay_s: float              # delta-t applied: the measured value (a snapped state in old results)
     measured_s: float
     snapped: bool
     gain_db: float              # gain mismatch DUT/ref
