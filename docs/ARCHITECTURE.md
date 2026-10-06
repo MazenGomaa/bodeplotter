@@ -62,6 +62,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `measure/sinefit.py` | sine fit, SNR, `gain_phase`, `unwrap_deg` | - |
 | `measure/skew.py` | channel skew: delay from H, correction, evaluation, texts | `models.py` |
 | `sweep/autorange.py` | pure V/div and timebase decisions | - |
+| `sweep/calibration.py` | through calibration, the pure part: frequencies, interpolation, plausibility, validity against the scope settings | `models.py`, `sweep/plan.py`, `units.py` |
 | `sweep/core.py` | `Session`, `run_skew_check`, `SweepRunner`, watchdog message, bad-capture files | `__init__.py`, `drivers/base.py`, `drivers/mock.py`, `drivers/scpi.py`, `measure/meters.py`, `measure/sinefit.py`, `measure/skew.py`, `models.py`, `sweep/plan.py` |
 | `sweep/engine.py` | `SweepEngine` / `EngineWorker`: the QThread around `core.py` | `drivers/base.py`, `drivers/connect.py`, `drivers/mock.py`, `logging_setup.py`, `measure/meters.py`, `measure/skew.py`, `models.py`, `sweep/core.py` |
 | `sweep/plan.py` | frequency list and range checks | `models.py`, `units.py` |

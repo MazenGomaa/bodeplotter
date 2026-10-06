@@ -6,7 +6,8 @@ import math
 
 import pytest
 
-from bodeplot.models import Flag, PointResult, ThroughCal
+from bodeplot.models import Flag, PointResult, ScopeConfig, ThroughCal
+from bodeplot.sweep import calibration
 
 
 def make_cal(freqs, hs, **kw):
@@ -51,3 +52,124 @@ def test_through_cal_goes_through_json_and_back():
     assert back == cal and back.probe_atten == {1: 10.0, 2: 10.0}
     assert ThroughCal.from_meta(None) is None and ThroughCal.from_meta({"freqs_hz": [1.0]}) is None
     assert ThroughCal.from_meta("applied") is None
+
+
+# ------------------------------------------------------------------ pure functions
+def test_frequencies_cover_the_instruments_at_ten_per_decade():
+    f = calibration.frequencies(1e-6, 30e6, 20.0, 50e6, 50e6)      # the mock pair and the real pair
+    assert f[0] == 50.0 and f[-1] == 20e6 and len(f) == 58 and f == sorted(f)
+    f = calibration.frequencies(1e-6, 5e6, 100.0, 50e6, 50e6)      # a narrower pair
+    assert f[0] == 100.0 and f[-1] == 5e6
+    with pytest.raises(ValueError):
+        calibration.frequencies(1e6, 2e6, 5e6, 50e6, 50e6)
+
+
+def test_response_is_exact_at_a_point_and_within_a_tenth_of_a_percent():
+    cal = make_cal([100.0, 1e3, 1e4], [_h(0.0, 0.0), _h(0.1, 1.0), _h(0.2, 2.0)])
+    assert calibration.response_at(cal, 1e3) == cal.h[1]
+    assert calibration.response_at(cal, 1e3 * 1.0009) == cal.h[1]
+    assert calibration.response_at(cal, 1e4 * 1.0009) == cal.h[2]  # just beyond the last point
+
+
+def test_no_extrapolation():
+    cal = make_cal([100.0, 1e3, 1e4], [_h(0.0, 0.0), _h(0.1, 1.0), _h(0.2, 2.0)])
+    for f in (99.0, 1e4 * 1.002, 0.0, -5.0):
+        assert calibration.response_at(cal, f) is None
+        assert calibration.correct(1 + 0j, cal, f) is None
+    assert calibration.covers(cal, 100.0, 1e4) and calibration.covers(cal, 100.0 * 0.9995, 1e4 * 1.0005)
+    assert not calibration.covers(cal, 50.0, 1e4) and not calibration.covers(cal, 100.0, 2e4)
+
+
+def test_gain_is_interpolated_linearly_in_db_over_log_frequency():
+    cal = make_cal([1e3, 1e4], [_h(0.0, 0.0), _h(0.2, 0.0)])
+    h = calibration.response_at(cal, 10 ** 3.5)
+    assert 20 * math.log10(abs(h)) == pytest.approx(0.1, abs=1e-9)
+    assert math.degrees(cmath.phase(h)) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_a_pure_delay_is_interpolated_exactly():
+    dt = 2.15e-9
+    freqs = [1e6, 2e6, 5e6, 1e7, 2e7]
+    cal = make_cal(freqs, [cmath.exp(2j * math.pi * f * dt) for f in freqs])
+    assert calibration.fitted_delay_s(cal) == pytest.approx(dt, rel=1e-9)
+    for f in (1.5e6, 3e6, 7e6, 1.5e7):
+        h = calibration.response_at(cal, f)
+        assert abs(h) == pytest.approx(1.0, abs=1e-12)
+        assert math.degrees(cmath.phase(h)) == pytest.approx(360 * f * dt, abs=1e-6)
+
+
+def test_phase_is_unwrapped_before_interpolating():
+    cal = make_cal([1e6, 2e6], [_h(0.0, 170.0), _h(0.0, -170.0)])  # 170 and 190 degrees
+    deg = math.degrees(cmath.phase(calibration.response_at(cal, 1.4e6)))
+    assert abs(deg) > 150.0             # near +-180, not near 0 as the wrapped values would give
+
+
+def test_correct_divides_and_reports_what_was_removed():
+    cal = make_cal([1e3, 1e4], [_h(0.2, 10.0), _h(0.2, 10.0)])
+    h, db, deg = calibration.correct(_h(-3.0, -35.0), cal, 1e3)
+    assert 20 * math.log10(abs(h)) == pytest.approx(-3.2) and math.degrees(cmath.phase(h)) == pytest.approx(-45.0)
+    assert db == pytest.approx(0.2) and deg == pytest.approx(10.0)
+    assert calibration.max_gain_db(cal) == pytest.approx(0.2)
+
+
+def test_a_dead_calibration_point_gives_no_correction():
+    cal = make_cal([1e3, 1e4], [0j, 0j])
+    assert calibration.correct(1 + 0j, cal, 1e3) is None
+    assert calibration.correct(1 + 0j, cal, 3e3) is None
+
+
+def test_matches_compares_channels_probes_coupling_and_bandwidth_limit():
+    cal = make_cal([1e3], [1 + 0j])
+    assert calibration.matches(cal, ScopeConfig())
+    assert not calibration.matches(None, ScopeConfig())
+    assert not calibration.matches(cal, ScopeConfig(ref_channel=2, dut_channel=1))
+    assert not calibration.matches(cal, ScopeConfig(dut_channel=3, probe_atten={1: 10.0, 3: 10.0}))
+    assert not calibration.matches(cal, ScopeConfig(probe_atten={1: 10.0, 2: 1.0}))
+    assert not calibration.matches(cal, ScopeConfig(coupling="AC"))
+    assert not calibration.matches(cal, ScopeConfig(bw_limit=True))
+    # settings that do not change the measurement paths do not matter
+    assert calibration.matches(cal, ScopeConfig(target_cycles=8.0, probe_atten={1: 10.0, 2: 10.0, 3: 1.0}))
+
+
+def test_texts():
+    cal = make_cal([50.0, 20e6], [1 + 0j, 1 + 0j])
+    assert calibration.range_text(cal) == "50 Hz to 20 MHz"
+    assert calibration.describe(cal) == "cal: 21:15, 50 Hz to 20 MHz"
+    assert calibration.describe(None) == "cal: none"
+
+
+def test_evaluate_a_good_through():
+    pts = [_point(f, 0.05, 0.2) for f in (20e6, 50.0, 1e3)]         # any order in
+    cal = calibration.evaluate(pts, ScopeConfig(), 1.0, alignment_epoch=7)
+    assert cal.freqs_hz == [50.0, 1e3, 20e6] and cal.alignment_epoch == 7
+    assert cal.acceptable and cal.warnings == []
+    assert (cal.ref_channel, cal.dut_channel, cal.coupling, cal.bw_limit, cal.amp_vpp) == (1, 2, "DC", False, 1.0)
+    assert cal.probe_atten == {1: 10.0, 2: 10.0} and cal.checked_at.startswith("20")
+    assert cal.h[0] == pts[1].h
+
+
+def test_evaluate_warns_about_a_gain_mismatch_but_accepts_it():
+    cal = calibration.evaluate([_point(1e3, 0.0), _point(1e6, 0.5)], ScopeConfig(), 1.0)
+    assert cal.acceptable and len(cal.warnings) == 1
+    assert "Gain mismatch" in cal.warnings[0] and "1 MHz" in cal.warnings[0]
+
+
+@pytest.mark.parametrize("points, expect", [
+    ([_point(1e3, 0.0), _point(1e5, -3.0)], calibration.NOT_A_THROUGH),                 # a filter
+    ([_point(1e3, 0.0, vref=0.1)], calibration.NOT_A_THROUGH),                          # 0.2 Vpp of 1 Vpp
+    ([_point(1e3, float("-inf"))], calibration.NOT_A_THROUGH),                          # dead DUT channel
+    ([_point(1e3), _point(2e3, flags=Flag.CLIPPED)], "CLIPPED at 2 kHz"),
+    ([_point(1e3, flags=Flag.REF_SUSPECT | Flag.LOW_SNR)], "REF_SUSPECT at 1 kHz"),
+    ([_point(1e3, flags=Flag.BELOW_FLOOR)], "BELOW_FLOOR at 1 kHz"),
+    ([_point(1e3, flags=Flag.AUTORANGE_FAILED)], "AUTORANGE_FAILED at 1 kHz")])
+def test_evaluate_refuses(points, expect):
+    cal = calibration.evaluate(points, ScopeConfig(), 1.0)
+    assert not cal.acceptable and any(expect in w for w in cal.warnings)
+
+
+def test_evaluate_does_not_list_every_bad_point():
+    pts = [_point(1e3 * (i + 1), flags=Flag.CLIPPED) for i in range(20)]
+    cal = calibration.evaluate(pts, ScopeConfig(), 1.0)
+    assert not cal.acceptable and len(cal.warnings) <= 7 and "more" in cal.warnings[-1]
+    with pytest.raises(ValueError):
+        calibration.evaluate([], ScopeConfig(), 1.0)
