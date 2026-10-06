@@ -1058,3 +1058,28 @@ App at commit `b6dcf64`, started with `--debug`, reference CH3 / DUT CH4, full-r
 - **The walk ran to the end and the scope did not freeze.** One run; the two freezes (0b, and the unpaced `build_tables()` of 2026-10-06) are still unexplained, so this shows that a paced walk can pass, not that it always does.
 - **The walked tables are identical to the shipped ones**: timebase 23 steps, 1 ns to 20 ms/div with 25 ns in place of 20 ns; V/div 15 steps, 500 uV to 20 V. The tool wrote them to `%LOCALAPPDATA%\bodeplot\step_tables.json`.
 - Afterwards (`s6_state.py`): timebase 5 ms/div and CH1 100 mV/div put back, panel unlocked, sweep AUTO, no error, generator outputs off.
+
+### 13.18 The RC phase lead is the capacitor's own loss (2026-10-06, evening)
+
+The 100 nF of the test low-pass is a film capacitor (user). The user measured it out of circuit on an LCR meter, series mode (model of the meter not recorded):
+
+| Test frequency | Cs | D |
+|---|---|---|
+| 100 Hz | 105.72 nF | 0.001 |
+| 1 kHz | 105.42 nF | 0.003 |
+| 10 kHz | 104.36 nF | 0.009 |
+| 100 kHz | 102.62 nF | 0.028 |
+
+Model: `Zc = (D - j) / (2 pi f Cs)`, `H = Zc / (R + Zc)`, R taken as exactly 1000 ohm (not measured), Cs and log D interpolated over log f between the test frequencies. Compared with the bench values of 13.12 (mean over the V/div steps):
+
+| Frequency | D used | Model phase | Measured phase | Lead over the ideal RC: model / measured | Measured minus model |
+|---|---|---|---|---|---|
+| 5 kHz | 0.0065 | -72.75 deg | -72.78 deg | +0.39 / +0.36 deg | -0.03 deg, -0.05 dB |
+| 20 kHz | 0.0127 | -84.90 deg | -84.81 deg | +0.77 / +0.86 deg | +0.09 deg, -0.10 dB |
+| 50 kHz | 0.0199 | -87.09 deg | -87.04 deg | +1.17 / +1.22 deg | +0.05 deg, -0.07 dB |
+| 100 kHz | 0.0280 | -87.51 deg | -87.40 deg | +1.62 / +1.73 deg | +0.11 deg, -0.17 dB |
+
+- **The capacitor's measured loss explains the phase lead to within 0.11 deg**; only the 100 kHz point uses a D that was measured at that frequency, the other three are interpolated. The app measured the circuit correctly; the "ideal RC" was the wrong reference.
+- What is left (up to +0.11 deg and -0.17 dB at 100 kHz) is within what the resistor's tolerance, the breadboard contacts and the interpolation can give; not separated.
+- The capacitance also falls with frequency (105.7 nF at 100 Hz to 102.6 nF at 100 kHz), so one corner frequency does not describe this part over the whole sweep.
+- No capacitor was swapped; the ceramic and mica parts the user has were not needed.
