@@ -12,9 +12,9 @@ from bodeplot.drivers.scpi import BlockedCommand, InstrumentUnresponsive, plain_
 from bodeplot.drivers.uni_t_upo1000 import UniTUPO1000
 from bodeplot.drivers.uni_t_utg900e import UniTUTG900E
 from bodeplot.measure import sinefit
-from bodeplot.models import MeasureSettings, ScopeConfig, StimulusConfig, SweepConfig
-from bodeplot.sweep import autorange
-from bodeplot.sweep.core import Session, SweepRunner, run_skew_check
+from bodeplot.models import Flag, MeasureSettings, ScopeConfig, StimulusConfig, SweepConfig
+from bodeplot.sweep import autorange, calibration
+from bodeplot.sweep.core import Session, SweepRunner, run_skew_check, run_through_cal
 from fakes import FakeClock, FakeGen, FakeScope
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "bodeplot"
@@ -512,6 +512,31 @@ def test_a_resync_during_a_sweep_invalidates_the_skew_check():
     fscope.empty_blocks = 1
     session.digitizer.acquire([1, 2], 5.0)
     assert not session.skew_valid() and "resynchronised" in session.recheck_reason
+    session.close()
+
+
+def test_through_calibration_then_sweep_with_the_real_drivers():
+    session, fgen, fscope, clock = fake_bench(delay=2.15e-9)
+    cal = run_through_cal(session, StimulusConfig(), ScopeConfig(), MeasureSettings(), sleep=clock.sleep)
+    assert cal.acceptable and cal.freqs_hz[0] == 50.0 and cal.freqs_hz[-1] == 20e6
+    assert calibration.fitted_delay_s(cal) == pytest.approx(2.15e-9, abs=0.05e-9)
+    assert not fgen.ch[1]["output"] and not fgen.ch[2]["output"] and not fscope.lock
+    assert fscope.sweep == "AUTO" and fscope.mode == "run"
+    session.accept_cal(cal)
+    rc = 1e3 * 100e-9
+    fscope.h = lambda f: 1.0 / (1.0 + 2j * math.pi * f * rc)         # the DUT probe moves to the filter
+    result = SweepRunner(session, SweepConfig(start_hz=100.0, stop_hz=1e7, points_per_decade=3),
+                         StimulusConfig(), ScopeConfig(), MeasureSettings(), sleep=clock.sleep).run()
+    assert result.meta["error"] is None and all(p.flags & Flag.CALIBRATED for p in result.points)
+    for p in result.points:
+        if p.gain_db < -40:
+            continue                                                 # into the noise: not this test
+        h = 1.0 / (1.0 + 2j * math.pi * p.freq_hz * rc)
+        assert p.gain_db == pytest.approx(20 * math.log10(abs(h)), abs=0.15)
+        assert p.phase_deg == pytest.approx(math.degrees(math.atan2(h.imag, h.real)), abs=1.0)
+    assert not fgen.ch[1]["output"] and not fgen.ch[2]["output"] and not fscope.lock
+    assert fscope.sweep == "AUTO" and fscope.mode == "run"
+    assert fscope.forbidden == []                                    # never ':RUN'
     session.close()
 
 

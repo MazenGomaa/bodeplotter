@@ -502,7 +502,19 @@ class SweepRunner:
         point.gain_db, point.phase_deg = sinefit.gain_phase(point.h)
         return point
 
-    def _meta(self, started: str, delay_s: float | None, aborted: bool, error: str | None) -> dict:
+    def _correct(self, point: PointResult, cal: ThroughCal | None, delay_s: float | None) -> PointResult:
+        """The through calibration where it covers the frequency (it holds the delay, so no
+        skew correction on top); elsewhere the skew correction as before."""
+        out = calibration.correct(point.h, cal, point.freq_hz) if cal is not None else None
+        if out is None:
+            return self._apply_skew(point, delay_s)
+        point.h, point.cal_gain_db, point.cal_phase_deg = out
+        point.gain_db, point.phase_deg = sinefit.gain_phase(point.h)
+        point.flags |= Flag.CALIBRATED
+        return point
+
+    def _meta(self, started: str, delay_s: float | None, aborted: bool, error: str | None,
+              cal: ThroughCal | None = None) -> dict:
         s = self.session
         return {
             "app_version": __version__, "started": started, "finished": _now_iso(),
@@ -511,10 +523,12 @@ class SweepRunner:
             "skew": s.skew.to_meta() if (delay_s is not None and s.skew is not None) else None,
             "skew_applied_s": delay_s,
             "skew_text": skew.describe(s.skew if delay_s is not None else None),
+            # the calibration itself: a saved result documents what was divided out
+            "cal": cal.to_meta() if cal is not None else None,
         }
 
     def _measure_one(self, meter: ResponseMeter, state: MeterState, f: float,
-                     delay_s: float | None) -> PointResult:
+                     delay_s: float | None, cal: ThroughCal | None = None) -> PointResult:
         src, st = self.session.source, self.stim
         self.last_command = "set_frequency %g" % f
         src.set_frequency(st.gen_channel, f)
@@ -524,7 +538,7 @@ class SweepRunner:
         point, pair = measure_with_output(self.session, st.gen_channel,
                                           lambda: meter.measure(f, self.meas, state), settle,
                                           lambda text: self._log("warn", text))
-        point = self._apply_skew(point, delay_s)
+        point = self._correct(point, cal, delay_s)
         self.cb.point(point)
         if pair is not None:
             self.cb.waveform(pair)
@@ -548,7 +562,10 @@ class SweepRunner:
         started = _now_iso()
         points: list[PointResult] = []
         error: str | None = None
+        # decided once per sweep: the calibration first, the skew delay where it does not reach
+        cal = self.session.cal_for(self.scope_cfg)
         delay_s = self.session.skew_delay()
+        covered = False
         config = config_snapshot(self.sweep, self.stim, self.scope_cfg, self.meas)
         p = None
         try:
@@ -556,8 +573,18 @@ class SweepRunner:
             p = self.make_plan()
             for w in p.warnings:
                 self._log("warn", w)
+            if cal is not None:
+                covered = calibration.covers(cal, min(p.freqs_hz), max(p.freqs_hz))
+                self._log("info", "Through calibration of %s applied." % cal.checked_at[11:16])
+                if not covered:
+                    self._log("warn", "The through calibration covers %s only. Outside it %s." % (
+                        calibration.range_text(cal),
+                        "the skew correction of %+.2f ns is used" % (delay_s * 1e9) if delay_s is not None
+                        else "the phase is NOT corrected and the points are flagged SKEW_UNCHECKED"))
             if self.meas.method is Method.PREVIEW:
                 self._log("info", PREVIEW_NOTE)
+            elif cal is not None:
+                pass                                    # said above
             elif delay_s is None:
                 self._log("warn", "No valid channel skew check: phase is NOT corrected and every "
                                   "point is flagged SKEW_UNCHECKED. " + (self.session.recheck_reason or ""))
@@ -572,7 +599,7 @@ class SweepRunner:
                 if self._abort.is_set():
                     break
                 try:
-                    points.append(self._measure_one(meter, state, f, delay_s))
+                    points.append(self._measure_one(meter, state, f, delay_s, cal))
                 except MeasureCancelled:
                     break                               # aborted mid-point: not an error
                 self.cb.progress(i + 1, n)
@@ -599,14 +626,18 @@ class SweepRunner:
             if self.session.dead_reason is None:
                 self.session.end_measurement()
         # an epoch change during the sweep means the correction may be stale
-        if delay_s is not None and not self.session.skew_valid() and self.session.dead_reason is None:
+        if delay_s is not None and not covered and not self.session.skew_valid() and self.session.dead_reason is None:
             self._log("warn", "The scope was resynchronised during the sweep; the skew correction "
                               "used may no longer be right. Re-check the skew.")
+        if cal is not None and self.session.dead_reason is None and self.session.cal_for(self.scope_cfg) is None:
+            self._log("warn", "The scope was resynchronised during the sweep; the through calibration used "
+                              "may no longer be right. Calibrate again.")
         level = reference_level_warning(points, self.stim.amp_vpp)
         if level:
             self._log("warn", level)
         points.sort(key=lambda q: q.freq_hz)
-        result = SweepResult(config, points, self._meta(started, delay_s, self._abort.is_set(), error))
+        result = SweepResult(config, points, self._meta(started, None if covered else delay_s,
+                                                        self._abort.is_set(), error, cal))
         if error:
             self._log("error", error)
             self._set_state(EngineState.ERROR)
@@ -618,11 +649,12 @@ class SweepRunner:
     def remeasure(self, result: SweepResult, freq_hz: float) -> PointResult:
         """Re-measure one point with the full per-point procedure and replace it."""
         delay_s = self.session.skew_delay()
+        cal = self.session.cal_for(self.scope_cfg)
         try:
             self._set_state(EngineState.RUNNING)
             self.session.begin_measurement()
             meter, state = self._start(freq_hz)
-            point = self._measure_one(meter, state, freq_hz, delay_s)
+            point = self._measure_one(meter, state, freq_hz, delay_s, cal)
             point.flags |= Flag.REMEASURED
         except MeasureCancelled:
             self._set_state(EngineState.DONE)

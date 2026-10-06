@@ -9,10 +9,11 @@ import pytest
 from bodeplot.drivers.base import DriverError
 from bodeplot.drivers.mock import SimulatedDUT
 from bodeplot.measure.meters import MeasureCancelled
-from bodeplot.models import (Flag, MeasureSettings, PointResult, ScopeConfig, StimulusConfig, SweepConfig,
+from bodeplot.models import (Flag, MeasureSettings, Method, PointResult, ScopeConfig, StimulusConfig, SweepConfig,
                              SweepType, ThroughCal)
 from bodeplot.sweep import calibration
-from bodeplot.sweep.core import SweepRunner, run_through_cal, through_cal_frequencies
+from bodeplot.sweep.core import (Callbacks, SweepRunner, run_skew_check, run_through_cal,
+                                 through_cal_frequencies)
 
 
 def make_cal(freqs, hs, **kw):
@@ -302,3 +303,132 @@ def test_validity(make_session, no_sleep):
     session.accept_cal(_calibrate(session, no_sleep))
     session.mark_dead("gone")
     assert session.cal is None
+
+
+# ------------------------------------------------------------------ applying it
+def _sweep(session, no_sleep, lo=50.0, hi=20e6, ppd=20, meas=None, scope=None, logs=None):
+    cb = Callbacks(log=lambda e: logs.append((e.level, e.text))) if logs is not None else None
+    return SweepRunner(session, SweepConfig(SweepType.LOG, lo, hi, ppd), StimulusConfig(),
+                       scope or ScopeConfig(), meas or MeasureSettings(), cb, sleep=no_sleep)
+
+
+def _tilted(make_session, dut, seed, checked=False):
+    session = make_session(dut, seed=seed, skew_state=2, checked=checked)       # +2.15 ns
+    session.digitizer.dut_gain_tilt_db_at_20mhz = 0.2
+    return session
+
+
+def test_through_sweep_reads_zero_after_calibration(make_session, no_sleep):
+    """Design, success criterion 1. Four averages keep the simulator's noise (0.013 dB and
+    0.08 deg between two single sweeps) well inside the limits; 20 points per decade puts
+    every second point between two calibration points."""
+    meas = MeasureSettings(averages=4)
+    session = _tilted(make_session, SimulatedDUT.through(), 70)
+    session.accept_cal(_calibrate(session, no_sleep, meas=meas))
+    logs = []
+    res = _sweep(session, no_sleep, meas=meas, logs=logs).run()
+    assert res.meta["error"] is None and len(res.points) > 100
+    assert max(abs(p.gain_db) for p in res.points) < 0.02
+    assert max(abs(p.phase_deg) for p in res.points) < 0.1
+    assert all(p.flags & Flag.CALIBRATED and not p.flags & Flag.SKEW_UNCHECKED for p in res.points)
+    top = res.points[-1]
+    assert top.cal_gain_db == pytest.approx(0.2, abs=0.03)
+    assert top.cal_phase_deg == pytest.approx(360 * 20e6 * 2.15e-9, abs=0.3)   # 15.5 deg: the delay is in it
+    assert top.skew_corr_deg == 0.0
+    assert any("Through calibration of" in t and "applied" in t for _, t in logs)
+    assert not any("skew" in t.lower() for _, t in logs)
+    assert len(res.meta["cal"]["freqs_hz"]) == 58 and res.meta["skew"] is None
+    assert res.meta["skew_applied_s"] is None
+
+
+def test_rc_low_pass_is_right_with_the_tilt_present(make_session, no_sleep):
+    r, c = 1e3, 100e-9
+    fc = 1 / (2 * math.pi * r * c)
+    session = _tilted(make_session, SimulatedDUT.rc_lpf(r, c), 71)
+    session.accept_cal(_calibrate(session, no_sleep))
+    res = _sweep(session, no_sleep).run()
+    by = lambda f: min(res.points, key=lambda p: abs(math.log(p.freq_hz / f)))
+    for f in (100.0, fc, 1e4):                                    # further down the DUT signal is small
+        p = by(f)
+        h = 1 / (1 + 1j * p.freq_hz / fc)
+        assert p.gain_db == pytest.approx(20 * math.log10(abs(h)), abs=0.05)
+        assert p.phase_deg == pytest.approx(math.degrees(cmath.phase(h)), abs=1.0)
+
+
+def test_without_a_calibration_nothing_changes(make_session, no_sleep):
+    session = make_session(SimulatedDUT.rc_lpf(), seed=72, skew_state=2)        # skew checked
+    res = _sweep(session, no_sleep, 1e3, 1e6, 3).run()
+    assert res.meta["cal"] is None and res.meta["skew"] is not None
+    assert all(p.cal_gain_db == 0.0 and p.cal_phase_deg == 0.0 and not p.flags & Flag.CALIBRATED
+               for p in res.points)
+    assert all(p.skew_corr_deg != 0.0 for p in res.points)
+
+
+def test_beyond_the_range_the_skew_check_is_used(make_session, no_sleep):
+    session = _tilted(make_session, SimulatedDUT.through(), 73)
+    session.accept_cal(_calibrate(session, no_sleep))
+    session.accept_skew(run_skew_check(session, StimulusConfig(), ScopeConfig(), MeasureSettings(),
+                                       sleep=no_sleep))
+    logs = []
+    res = _sweep(session, no_sleep, 5e6, 30e6, 10, logs=logs).run()             # the mock reaches 30 MHz
+    inside = [p for p in res.points if p.freq_hz <= 20e6 * 1.001]
+    outside = [p for p in res.points if p.freq_hz > 20e6 * 1.001]
+    assert inside and outside
+    assert all(p.flags & Flag.CALIBRATED for p in inside)
+    assert all(not p.flags & Flag.CALIBRATED and not p.flags & Flag.SKEW_UNCHECKED and p.skew_corr_deg != 0.0
+               and abs(p.phase_deg) < 0.5 for p in outside)
+    warns = [t for lvl, t in logs if lvl == "warn" and "covers" in t]
+    assert len(warns) == 1 and "50 Hz to 20 MHz" in warns[0] and "skew correction" in warns[0]
+    assert res.meta["cal"] is not None and res.meta["skew"] is not None
+
+
+def test_beyond_the_range_without_a_skew_check_is_flagged(make_session, no_sleep):
+    session = _tilted(make_session, SimulatedDUT.through(), 74)
+    session.accept_cal(_calibrate(session, no_sleep))
+    logs = []
+    res = _sweep(session, no_sleep, 5e6, 30e6, 10, logs=logs).run()
+    outside = [p for p in res.points if p.freq_hz > 20e6 * 1.001]
+    assert outside and all(p.flags & Flag.SKEW_UNCHECKED for p in outside)
+    assert all(not p.flags & Flag.SKEW_UNCHECKED for p in res.points if p.flags & Flag.CALIBRATED)
+    assert any("covers" in t and "SKEW_UNCHECKED" in t for lvl, t in logs if lvl == "warn")
+
+
+def test_a_calibration_for_other_settings_is_not_applied(make_session, no_sleep):
+    session = _tilted(make_session, SimulatedDUT.through(), 75)
+    session.accept_cal(_calibrate(session, no_sleep))
+    res = _sweep(session, no_sleep, 1e5, 1e6, 3, scope=ScopeConfig(coupling="AC")).run()
+    assert res.meta["cal"] is None and all(p.flags & Flag.SKEW_UNCHECKED for p in res.points)
+    res = _sweep(session, no_sleep, 1e5, 1e6, 3).run()                           # back to DC: used again
+    assert all(p.flags & Flag.CALIBRATED for p in res.points)
+
+
+def test_fast_preview_and_remeasure_use_the_calibration(make_session, no_sleep):
+    session = _tilted(make_session, SimulatedDUT.through(), 76)
+    session.accept_cal(_calibrate(session, no_sleep))
+    res = _sweep(session, no_sleep, 1e5, 1e6, 3, meas=MeasureSettings(method=Method.PREVIEW)).run()
+    assert all(p.flags & Flag.PREVIEW and p.flags & Flag.CALIBRATED for p in res.points)
+    runner = _sweep(session, no_sleep, 1e5, 1e6, 3)
+    res = runner.run()
+    again = runner.remeasure(res, res.points[1].freq_hz)
+    assert again.flags & Flag.CALIBRATED and again.flags & Flag.REMEASURED
+    assert abs(again.gain_db) < 0.05
+    session.invalidate_cal()                                         # the rule at the time of the re-measure
+    again = runner.remeasure(res, res.points[1].freq_hz)
+    assert not again.flags & Flag.CALIBRATED and again.flags & Flag.SKEW_UNCHECKED
+
+
+def test_a_resync_during_a_calibrated_sweep_is_reported(make_session, no_sleep):
+    session = _tilted(make_session, SimulatedDUT.through(), 77)
+    session.accept_cal(_calibrate(session, no_sleep))
+    logs, done = [], []
+
+    def on_point(p):
+        if not done:
+            done.append(1)
+            session.digitizer.simulate_resync()
+    runner = SweepRunner(session, SweepConfig(SweepType.LOG, 1e5, 1e6, 3), StimulusConfig(), ScopeConfig(),
+                         MeasureSettings(), Callbacks(point=on_point, log=lambda e: logs.append(e.text)),
+                         sleep=no_sleep)
+    res = runner.run()
+    assert res.meta["error"] is None and session.cal is None
+    assert any("through calibration used may no longer be right" in t for t in logs)
