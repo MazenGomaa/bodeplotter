@@ -118,7 +118,21 @@ def main():
         out["negative_via_levels"] = via_levels
         step(g, "HIGH 0.5, LOW -0.5 (back to offset 0)", f"{C}:BASE:HIGH 0.5", f"{C}:BASE:LOW -0.5")
 
-        if via_levels:
+        # Second run ('trick' on the command line), after the first showed that NO negative
+        # argument is taken (OFFSet and LOW alike) while HIGH moves the top only: widen the
+        # amplitude at offset 0, then pull the top down. Wanted: offset -d, amplitude A.
+        trick = "trick" in sys.argv
+        if trick:
+            print("C. negative offset by AMPLitude A + 2d, then HIGH A/2 - d")
+            for a_vpp, d in ((1.0, 0.1), (1.0, 0.3), (1.0, 0.5), (0.2, 0.05)):
+                step(g, "reset: OFFSet 0, AMPLitude %g" % a_vpp, f"{C}:BASE:OFFSet 0",
+                     f"{C}:BASE:AMPLitude {num(a_vpp)}")
+                s = step(g, "A %g, d %g: AMPLitude %g, HIGH %g" % (a_vpp, d, a_vpp + 2 * d, a_vpp / 2 - d),
+                         f"{C}:BASE:AMPLitude {num(a_vpp + 2 * d)}", f"{C}:BASE:HIGH {num(a_vpp / 2 - d)}")
+                out.setdefault("trick", []).append(dict(a_vpp=a_vpp, d=d, state=s))
+            step(g, "reset: OFFSet 0, AMPLitude 1", f"{C}:BASE:AMPLitude 1", f"{C}:BASE:OFFSet 0")
+            step(g, "reset again: HIGH 0.5", f"{C}:BASE:HIGH 0.5")
+        if via_levels or trick:
             sc.tb_steps = [1e-9, 2e-9, 5e-9, 10e-9, 25e-9, 50e-9] + [m * 10.0 ** e for e in range(-7, -2)
                                                                      for m in (1, 2, 5)] + [0.01, 0.02]
             sc.vdiv_steps = [m * 10.0 ** e for e in range(-4, 2) for m in (1, 2, 5)][2:-2]
@@ -130,10 +144,12 @@ def main():
             print("B. generator CH1 output ON, 1 Vpp, 1 kHz")
             g.output(1, True)
             time.sleep(0.8)
-            for label, cmds in (("offset 0", (f"{C}:BASE:HIGH 0.5", f"{C}:BASE:LOW -0.5")),
-                                ("offset -0.1 by LOW -0.6, HIGH 0.4", (f"{C}:BASE:LOW -0.6", f"{C}:BASE:HIGH 0.4")),
-                                ("offset -0.3 by LOW -0.8, HIGH 0.2", (f"{C}:BASE:LOW -0.8", f"{C}:BASE:HIGH 0.2")),
-                                ("offset 0", (f"{C}:BASE:HIGH 0.5", f"{C}:BASE:LOW -0.5"))):
+            zero = (f"{C}:BASE:AMPLitude 1", f"{C}:BASE:OFFSet 0", f"{C}:BASE:HIGH 0.5")
+            for label, cmds in (("offset 0", zero),
+                                ("offset -0.1: AMPLitude 1.2, HIGH 0.4", (f"{C}:BASE:AMPLitude 1.2", f"{C}:BASE:HIGH 0.4")),
+                                ("offset 0", zero),
+                                ("offset -0.3: AMPLitude 1.6, HIGH 0.2", (f"{C}:BASE:AMPLitude 1.6", f"{C}:BASE:HIGH 0.2")),
+                                ("offset 0", zero)):
                 for cmd in cmds:
                     g.write(cmd)
                     time.sleep(0.3)
