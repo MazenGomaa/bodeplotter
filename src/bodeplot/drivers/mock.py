@@ -4,7 +4,8 @@ MockSource feeds MockScope. MockScope synthesises both channels:
   ref = stimulus x source-impedance divider
   dut = H(jw) x ref
 then adds noise, an 8-bit ADC with clipping, trigger jitter, a first-order
-50 MHz roll-off, and the UPO1054's channel skew fault (section 8.6).
+50 MHz roll-off, the UPO1054's channel skew fault (section 8.6) and an optional gain
+tilt of the DUT channel (section 8.7).
 """
 from __future__ import annotations
 
@@ -179,6 +180,7 @@ class MockScope(Digitizer):
         self.skew_s = 0.0
         self.extra_delay_s = 0.0                # test hook: off-grid delay on the DUT channel
         self.dut_gain_error_db = 0.0            # test hook: channel gain mismatch
+        self.dut_gain_tilt_db_at_20mhz = 0.0    # test hook: gain error growing with log f above 1 kHz
         self.same_node = False                  # skew wizard in sim: DUT probe on the ref node
         self.timebase = 1e-3
         self.trigger = (ref_channel, 0.0)
@@ -283,6 +285,15 @@ class MockScope(Digitizer):
             h *= 1.0 / (1.0 + 1j * f / 20e6)
         return h
 
+    def _dut_gain_error(self, f: float) -> float:
+        """Gain error of the DUT channel as a factor: the constant part plus the tilt (what
+        a probe trimmed for another input does, HW_REPORT.md 13.19). It belongs to the
+        channel, so the 'same node' mode keeps it."""
+        tilt = 0.0
+        if f > 1e3:
+            tilt = self.dut_gain_tilt_db_at_20mhz * math.log10(f / 1e3) / math.log10(20e6 / 1e3)
+        return 10 ** ((self.dut_gain_error_db + tilt) / 20.0)
+
     def _node_phasors(self) -> tuple[complex, complex, float, float]:
         """(ref, dut) phasors at the probe tips in volts peak, and their DC levels."""
         src = self.source
@@ -295,7 +306,7 @@ class MockScope(Digitizer):
         ref = (src.amp_vpp / 2.0) * div
         h = 1.0 if self.same_node else self.dut.h(src.freq_hz)
         dc_gain = 1.0 if self.same_node else abs(self.dut.h(1e-9))
-        dut = ref * h * 10 ** (self.dut_gain_error_db / 20.0)
+        dut = ref * h * self._dut_gain_error(src.freq_hz)
         return complex(ref), complex(dut), src.offset_v * div, src.offset_v * div * dc_gain
 
     def acquire_running(self, chans, timeout_s) -> dict[int, Waveform]:

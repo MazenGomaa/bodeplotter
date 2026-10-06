@@ -6,8 +6,11 @@ import math
 
 import pytest
 
-from bodeplot.models import Flag, PointResult, ScopeConfig, ThroughCal
+from bodeplot.drivers.mock import SimulatedDUT
+from bodeplot.models import (Flag, MeasureSettings, PointResult, ScopeConfig, StimulusConfig, SweepConfig,
+                             SweepType, ThroughCal)
 from bodeplot.sweep import calibration
+from bodeplot.sweep.core import SweepRunner
 
 
 def make_cal(freqs, hs, **kw):
@@ -173,3 +176,16 @@ def test_evaluate_does_not_list_every_bad_point():
     assert not cal.acceptable and len(cal.warnings) <= 7 and "more" in cal.warnings[-1]
     with pytest.raises(ValueError):
         calibration.evaluate([], ScopeConfig(), 1.0)
+
+
+# ------------------------------------------------------------------ simulated paths
+def test_mock_dut_channel_can_tilt_with_frequency(make_session, no_sleep):
+    session = make_session(SimulatedDUT.through(), seed=60, checked=False, skew_enabled=False)
+    session.digitizer.dut_gain_tilt_db_at_20mhz = 0.2
+    res = SweepRunner(session, SweepConfig(SweepType.LOG, 100.0, 20e6, 2), StimulusConfig(), ScopeConfig(),
+                      MeasureSettings(), sleep=no_sleep).run()
+    assert res.points[0].freq_hz == 100.0 and res.points[-1].freq_hz == 20e6
+    for p in res.points:                                          # flat to 1 kHz, then linear in log f
+        expect = 0.2 * math.log10(p.freq_hz / 1e3) / math.log10(20e6 / 1e3) if p.freq_hz > 1e3 else 0.0
+        assert p.gain_db == pytest.approx(expect, abs=0.02), p.freq_hz
+    assert res.points[-1].gain_db == pytest.approx(0.2, abs=0.02)
