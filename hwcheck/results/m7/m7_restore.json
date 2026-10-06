@@ -50,12 +50,12 @@
         "points": [
           [
             1000.0,
-            -1.58,
+            -1.59,
             "SKEW_UNCHECKED"
           ],
           [
             3162.2776601683795,
-            -7.337,
+            -7.34,
             "SKEW_UNCHECKED"
           ],
           [
@@ -65,13 +65,13 @@
           ],
           [
             31622.776601683792,
-            -26.349,
+            -26.348,
             "SKEW_UNCHECKED"
           ],
           [
             100000.0,
-            -36.368,
-            "SKEW_UNCHECKED"
+            -36.181,
+            "LOW_SNR|SKEW_UNCHECKED"
           ]
         ],
         "log": [
@@ -124,25 +124,20 @@
         ":TRIGger:MODE?": "EDGE",
         ":TRIGger:SOURce?": "CHANnel1",
         ":TRIGger:EDGE:SLOPe?": "NEGative",
-        ":TRIGger:LEVel?": "2.400000e+00"
+        ":TRIGger:LEVel?": "2.000000e+00"
       },
-      "not_restored": {
-        ":TRIGger:LEVel?": [
-          "2.000000e+00",
-          "2.400000e+00"
-        ]
-      },
+      "not_restored": {},
       "sweep": {
         "error": null,
         "points": [
           [
             1000.0,
-            -1.59,
+            -1.581,
             "SKEW_UNCHECKED"
           ],
           [
             3162.2776601683795,
-            -7.356,
+            -7.334,
             "SKEW_UNCHECKED"
           ],
           [
@@ -157,8 +152,8 @@
           ],
           [
             100000.0,
-            -36.271,
-            "LOW_SNR|SKEW_UNCHECKED"
+            -36.28,
+            "SKEW_UNCHECKED"
           ]
         ],
         "log": [
@@ -220,7 +215,7 @@
   "panel_locked_at_end": "0",
   "sweep_mode_at_end": "AUTO",
   "scope_stats": {
-    "queries": 989,
+    "queries": 990,
     "empty_retries": 0,
     "reply_errors": 0,
     "out_of_step": 0,
@@ -287,7 +282,7 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "c45dfc6",
+    "git_commit": "9949f3f",
     "git_dirty": []
   }
 }
