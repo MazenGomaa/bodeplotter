@@ -1008,3 +1008,13 @@ So DC coupling with the offset handling works with at least +/-100 mV of DC at t
 - With the through sweeps of 13.5 (both probes on one node: phase within 0.2 deg to 20 MHz) this leaves the circuit itself: the capacitor's loss, its series resistance, and the breadboard contacts and ground lead. Telling those apart needs another capacitor or an LCR meter, so a person at the bench.
 
 **Image export follows the vertical unit**: PNG, SVG and PDF now draw the upper plot in dB, Vpp or percent of the input, whichever the Vertical box shows (`ImageOptions.unit`).
+
+### 13.13 First bench session with the user present: skew wizard and through sweep from the GUI (2026-10-06, evening)
+
+Both probes on generator CH1, both 10X. App started with `run.bat`, Mode = Instruments, commit `168dd4d`. Values are read from the user's two screenshots; no data file was exported.
+
+- **Skew wizard in the GUI on the real instruments: works.** 10 MHz: +0.13 ns (+0.48 deg), gain -0.013 dB. 20 MHz: +0.15 ns (+1.07 deg), gain -0.024 dB. Measured +0.14 ns, snapped to the +0.15 ns state, gain mismatch -0.019 dB, correction at 20 MHz -1.08 deg. Same state as the headless check (+0.148 / +0.151 ns).
+- **Through sweep from the GUI after accepting the check**: 114 points, 50 Hz to 20 MHz, 20 per decade, 5 Vpp, 100 mV/div on both channels, 114 s, no retries, no flags. Output 99.6 to 100.1 % of the input (within about 0.04 dB); phase within about 0.3 deg of zero over the whole range (last five points, 12.7 to 20 MHz: +0.01 to +0.26 deg, gain -0.011 to -0.026 dB).
+- **Fault found and fixed**: the wizard's intro text named 0.5 MHz and 1 MHz (it still followed the sweep range) while the check ran at 10 and 20 MHz. Text only; fixed in `MainWindow.skew_freqs_hint` (commit `919814c`).
+- **One enumeration miss**: the first `s6_state.py` of the session found no VISA resource at all (`list_resources` empty) although Windows and libusb showed both devices; the same script worked a few seconds later. Not reproduced, cause unknown.
+- The app's log file holds no per-command lines for this run, so the command sequence was not reviewed.
