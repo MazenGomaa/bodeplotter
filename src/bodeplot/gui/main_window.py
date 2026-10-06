@@ -300,6 +300,7 @@ class MainWindow(QMainWindow):
         if s.last_preset and s.last_preset in presets.list_presets():
             self.preset_box.setCurrentText(s.last_preset)
         self.plot.set_unwrap(s.unwrap_phase)
+        self.plot.set_unit(s.vertical_unit)
         self.act_unwrap.setChecked(s.unwrap_phase)
         try:
             if s.window_geometry:
@@ -319,6 +320,7 @@ class MainWindow(QMainWindow):
         s.last_config = self.config.preset().to_dict()
         s.last_preset = self.preset_box.currentText()
         s.unwrap_phase = self.plot.unwrap()
+        s.vertical_unit = self.plot.unit()
         s.window_geometry = bytes(self.saveGeometry().toBase64()).decode("ascii")
         s.window_state = bytes(self.saveState().toBase64()).decode("ascii")
         self._save_settings()

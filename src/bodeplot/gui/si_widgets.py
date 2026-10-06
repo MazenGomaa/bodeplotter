@@ -65,12 +65,34 @@ class SiAxis(pg.AxisItem):
     def __init__(self, orientation: str, **kw):
         super().__init__(orientation, **kw)
         self.enableAutoSIPrefix(False)
+        self._plain_ticks = False
+
+    def tickValues(self, minVal, maxVal, size):
+        """A log axis normally labels the decades only. Zoomed in to less than two decade
+        lines there was one label or none (found by the user, 2026-10-06), so in that case
+        the ticks are round frequencies (1-2-5 steps) and every one is labelled."""
+        self._plain_ticks = False
+        lo, hi = min(minVal, maxVal), max(minVal, maxVal)
+        if self.logMode and hi > lo and math.floor(hi) - math.ceil(lo) + 1 < 2:
+            try:
+                f0, f1 = 10.0 ** lo, 10.0 ** hi
+                raw = (f1 - f0) / max(2, int(size // 90))
+                mag = 10.0 ** math.floor(math.log10(raw))
+                step = next(m * mag for m in (1, 2, 5, 10) if m * mag >= raw * (1 - 1e-9))
+                k0, k1 = math.ceil(f0 / step - 1e-9), math.floor(f1 / step + 1e-9)
+                vals = [k * step for k in range(k0, k1 + 1) if k * step > 0]
+            except (OverflowError, ValueError, StopIteration):
+                vals = []
+            if 2 <= len(vals) <= 50:
+                self._plain_ticks = True
+                return [(step, [math.log10(v) for v in vals])]
+        return super().tickValues(minVal, maxVal, size)
 
     def tickStrings(self, values, scale, spacing):
         out = []
         for v in values:
             x = 10 ** v if self.logMode else v * scale
-            if self.logMode and abs(v - round(v)) > 1e-6:
+            if self.logMode and not self._plain_ticks and abs(v - round(v)) > 1e-6:
                 out.append("")              # minor log ticks stay unlabelled
                 continue
             num, prefix = split_si(float(x), 4)

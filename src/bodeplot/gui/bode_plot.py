@@ -10,7 +10,8 @@ import math
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMenu, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QVBoxLayout,
+                               QWidget)
 
 from ..measure.sinefit import unwrap_deg
 from ..models import Flag, PointResult
@@ -19,6 +20,10 @@ from . import theme
 from .si_widgets import SiAxis
 
 QUIET = Flag.REMEASURED | Flag.BUILTIN          # flags that do not mark a point as suspect
+# Vertical unit of the upper plot: key -> (box text, axis label, axis unit, smallest span shown)
+UNITS = {"db": ("dB", "Gain", "dB", 1.0),
+         "v": ("Voltage", "Output", "Vpp", 0.0),
+         "pct": ("% of input", "Output / input", "%", 1.0)}
 COLORS = theme.SERIES                    # fixed order; a trace beyond the last slot is drawn muted
 
 
@@ -44,8 +49,15 @@ class BodePlot(QWidget):
         self.readout.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.fit_btn = QPushButton("Fit view")
         self.fit_btn.setToolTip("Zoom both plots to the measured curves (also: double-click a plot)")
+        self.unit_box = QComboBox()
+        for key, (text, *_rest) in UNITS.items():
+            self.unit_box.addItem(text, key)
+        self.unit_box.setToolTip("Vertical scale of the upper plot: gain in dB, the DUT output voltage "
+                                 "(peak to peak, at the probe tip), or the output as a percentage of the input")
         top.addWidget(self.unwrap_box)
         top.addWidget(self.fit_btn)
+        top.addWidget(QLabel(" Vertical"))
+        top.addWidget(self.unit_box)
         top.addStretch(1)
         top.addWidget(self.readout)
         lay.addLayout(top)
@@ -84,7 +96,40 @@ class BodePlot(QWidget):
             p.scene().sigMouseClicked.connect(self._scene_clicked)
         self.fit_btn.clicked.connect(self.fit_view)
         self.unwrap_box.toggled.connect(self.refresh)
+        self.unit_box.currentIndexChanged.connect(lambda _i: self._unit_changed())
         self.set_log_x(True)
+
+    # ---- vertical unit
+    def unit(self) -> str:
+        return self.unit_box.currentData()
+
+    def set_unit(self, key: str) -> None:
+        i = self.unit_box.findData(key)
+        if i >= 0:
+            self.unit_box.setCurrentIndex(i)
+
+    def _unit_changed(self) -> None:
+        _text, label, unit, _span = UNITS[self.unit()]
+        axis = self.gain_plot.getAxis("left")
+        axis.enableAutoSIPrefix(self.unit() == "v")     # volts read as mV, uV; dB and % stay plain
+        self.gain_plot.setLabel("left", label, units=unit)
+        self.follow = True                              # another unit is another scale: fit it
+        self.refresh()
+
+    def value(self, p: PointResult) -> float:
+        """What the upper plot shows for a point, in the selected unit."""
+        if self.unit() == "v":
+            return 2.0 * p.vdut_amp
+        if self.unit() == "pct":
+            return 100.0 * abs(p.h)
+        return p.gain_db
+
+    def value_text(self, p: PointResult) -> str:
+        if self.unit() == "v":
+            return "output %s" % fmt_si(2.0 * p.vdut_amp, "Vpp", 4)
+        if self.unit() == "pct":
+            return "output %.4g %% of input" % (100.0 * abs(p.h))
+        return "gain %.3f dB" % p.gain_db
 
     # ---- view
     def _moved_by_user(self, *_):
@@ -107,7 +152,7 @@ class BodePlot(QWidget):
             if self.unwrap():
                 ph = unwrap_deg(ph)
             fs += [p.freq_hz for p in pts]
-            gs += [p.gain_db for p in pts]
+            gs += [self.value(p) for p in pts]
             ps += [float(v) for v in ph if math.isfinite(v)]
         if not fs:
             return None
@@ -120,8 +165,9 @@ class BodePlot(QWidget):
                 lo, hi = mid - min_span / 2, mid + min_span / 2
             d = (hi - lo) * pad
             return lo - d, hi + d
+        g_span = UNITS[self.unit()][3] or max(1e-9, 0.05 * max(abs(v) for v in gs))
         return (span(x, 0.03, 0.2 if self.log_x else max(1e-9, abs(float(x[0])) * 0.01)),
-                span(gs, 0.08, 1.0), span(ps or [0.0], 0.08, 5.0))
+                span(gs, 0.08, g_span), span(ps or [0.0], 0.08, 5.0))
 
     def fit_view(self) -> None:
         """Zoom both plots to the curves, and follow new points from now on."""
@@ -148,6 +194,10 @@ class BodePlot(QWidget):
     def set_has_phase(self, has: bool) -> None:
         self.has_phase = has
         self.phase_plot.setVisible(has)
+        # the frequency label sits under the lower plot; without it the upper one carries it
+        self.gain_plot.showLabel("bottom", not has)
+        if not has:
+            self.gain_plot.setLabel("bottom", "Frequency", units="Hz")
         self.unwrap_box.setVisible(has)
 
     def unwrap(self) -> bool:
@@ -205,14 +255,14 @@ class BodePlot(QWidget):
     def _tip(self, x, y, data) -> str:
         p: PointResult = data
         flags = ", ".join(p.flags.names()) or "none"
-        return "%s\ngain %.3f dB\nphase %.2f deg\nflags: %s" % (_fmt_hz(p.freq_hz), p.gain_db,
-                                                                p.phase_deg, flags)
+        return "%s\n%s\nphase %.2f deg\nflags: %s" % (_fmt_hz(p.freq_hz), self.value_text(p),
+                                                      p.phase_deg, flags)
 
     def refresh(self) -> None:
         for t in self.traces.values():
             pts = [p for p in t.points if p.freq_hz > 0 and math.isfinite(p.gain_db)]
             f = np.array([p.freq_hz for p in pts], dtype=float)
-            gain = np.array([p.gain_db for p in pts], dtype=float)
+            gain = np.array([self.value(p) for p in pts], dtype=float)
             phase = np.array([p.phase_deg for p in pts], dtype=float)
             if self.unwrap() and len(pts):
                 phase = unwrap_deg(phase)
@@ -248,7 +298,7 @@ class BodePlot(QWidget):
             return
         near = min(pts, key=lambda p: abs(math.log10(p.freq_hz) - math.log10(freq)) if self.log_x
                    else abs(p.freq_hz - freq))
-        text = "%s   gain %.3f dB" % (_fmt_hz(near.freq_hz), near.gain_db)
+        text = "%s   %s" % (_fmt_hz(near.freq_hz), self.value_text(near))
         if self.has_phase:
             text += "   phase %.2f°" % near.phase_deg
         if near.flags & ~QUIET:

@@ -117,6 +117,7 @@ QCheckBox::indicator {{ width: 14px; height: 14px; border: 1px solid {BORDER}; b
                         background: {RAISED}; }}
 QCheckBox::indicator:checked {{ background: {ACCENT}; border-color: {ACCENT}; }}
 QCheckBox::indicator:disabled {{ background: {SURFACE}; border-color: {HAIRLINE}; }}
+QCheckBox::indicator:checked:disabled {{ background: {ACCENT_DIM}; border-color: {ACCENT_DIM}; }}
 
 QPushButton {{ background: {RAISED}; color: {INK}; border: 1px solid {BORDER}; border-radius: 4px;
                padding: 5px 14px; }}

@@ -61,6 +61,7 @@ class AppSettings:
     scope_min_gap_ms: float = 100.0
     last_preset: str = ""
     unwrap_phase: bool = False
+    vertical_unit: str = "db"           # "db" | "v" | "pct" (gui/bode_plot.py UNITS)
     window_geometry: str = ""           # base64 of QByteArray
     window_state: str = ""
     sim: dict = field(default_factory=lambda: {"preset": "rc_lpf", "params": {}, "noise_vrms": 1e-4,

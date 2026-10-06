@@ -1,4 +1,6 @@
 """GUI smoke tests against the mock drivers (offscreen, no hardware, no modal dialogs)."""
+import math
+
 import pytest
 
 pytest.importorskip("PySide6")
@@ -405,3 +407,87 @@ def test_settings_file_keeps_numbers_and_rejects_bad_values():
     assert s.scope_min_gap_ms == 250.0 and s.startup_mode == "simulation"
     s = AppSettings.from_dict({"scope_min_gap_ms": 5, "startup_mode": "nonsense"})
     assert s.scope_min_gap_ms == 100.0 and s.startup_mode == "instruments"
+
+
+def _sweep(win, qtbot, ppd=3):
+    win.config.ppd.setValue(ppd)
+    _connect(win, qtbot)
+    with qtbot.waitSignal(win.engine.finished, timeout=30000):
+        win.start_sweep()
+    qtbot.waitUntil(lambda: win.state is EngineState.DONE, timeout=5000)
+
+
+def test_vertical_unit_db_voltage_or_percent(win, qtbot):
+    _sweep(win, qtbot)
+    plot, pts = win.plot, win.plot.points()
+    assert [plot.unit_box.itemText(i) for i in range(plot.unit_box.count())] == ["dB", "Voltage", "% of input"]
+    low, high = pts[0], pts[-1]                             # RC low-pass: 50 Hz and 20 MHz
+    assert plot.unit() == "db" and plot.value(low) == low.gain_db
+    assert "dB" in plot.gain_plot.getAxis("left").labelString()
+
+    plot.unit_box.setCurrentIndex(plot.unit_box.findData("v"))
+    assert plot.value(low) == pytest.approx(1.0, rel=0.03)         # 1 Vpp through at 50 Hz
+    assert plot.value(low) == pytest.approx(2 * low.vdut_amp)
+    axis = plot.gain_plot.getAxis("left")
+    assert "Output" in axis.labelString() and "Vpp" in axis.labelString()
+    (_x, (g0, g1), _p) = plot.data_ranges()
+    assert g0 < plot.value(high) < 0.01 and 1.0 < g1 < 1.2         # the view was refitted in volts
+    y = plot.traces["sweep"].gain_line.getData()[1]
+    assert float(y[0]) == pytest.approx(plot.value(low))
+    assert "Vpp" in plot.value_text(low)
+
+    plot.set_unit("pct")
+    assert plot.value(low) == pytest.approx(100.0, abs=1.0) and plot.value(high) < 1.0
+    assert plot.value(low) == pytest.approx(100.0 * 10 ** (low.gain_db / 20.0))
+    assert "%" in plot.gain_plot.getAxis("left").labelString() and "% of input" in plot.value_text(low)
+    win.close()                                             # the choice is remembered
+    from bodeplot.io.settings import load_settings
+    assert load_settings().vertical_unit == "pct"
+
+
+def test_log_axis_keeps_its_labels_when_zoomed_inside_a_decade():
+    from bodeplot.gui.si_widgets import SiAxis
+    axis = SiAxis("bottom")
+    axis.logMode = True
+    # 1.0 kHz to 1.9 kHz: no decade line in view. Before: no tick at all.
+    levels = axis.tickValues(math.log10(1050.0), math.log10(1900.0), 600)
+    vals = [v for _s, vs in levels for v in vs]
+    labels = axis.tickStrings(vals, 1.0, 1.0)
+    assert len(vals) >= 4 and all(labels) and len(set(labels)) == len(labels)
+    assert "1.2 k" in labels and "1.8 k" in labels
+    # 300 Hz to 3 kHz: one decade line; it gets company
+    vals = [v for _s, vs in axis.tickValues(math.log10(300.0), math.log10(3000.0), 600) for v in vs]
+    labels = axis.tickStrings(vals, 1.0, 1.0)
+    assert "1 k" in labels and len([t for t in labels if t]) >= 4
+    # a wide view is unchanged: decades labelled, minor ticks blank
+    levels = axis.tickValues(1.0, 7.5, 600)
+    labels = axis.tickStrings([2.0, 3.0, 2.5], 1.0, 1.0)
+    assert labels == ["100", "1 k", ""]
+
+
+def test_frequency_label_moves_to_the_upper_plot_when_there_is_no_phase(win):
+    plot = win.plot
+    plot.set_has_phase(False)
+    axis = plot.gain_plot.getAxis("bottom")
+    assert axis.label.isVisible() and "Frequency" in axis.labelString() and "Hz" in axis.labelString()
+    plot.set_has_phase(True)
+    assert not plot.gain_plot.getAxis("bottom").label.isVisible()
+    assert "Hz" in plot.phase_plot.getAxis("bottom").labelString()
+
+
+def test_a_ticked_box_still_looks_ticked_while_the_panel_is_disabled():
+    """During a sweep the configuration panel is disabled; a ticked 'Descending' then drew
+    as empty, as if it had reset itself (reported by the user, 2026-10-06)."""
+    from bodeplot.gui import theme
+    qss = theme.stylesheet() if hasattr(theme, "stylesheet") else theme.QSS
+    assert "QCheckBox::indicator:checked:disabled" in qss
+    assert qss.index("QCheckBox::indicator:checked:disabled") > qss.index("QCheckBox::indicator:disabled")
+
+
+def test_descending_sweep_measures_from_the_top_down(win, qtbot):
+    win.config.descending.click()
+    order = []
+    win.engine.point_measured.connect(lambda p: order.append(p.freq_hz))
+    _sweep(win, qtbot)
+    assert win.config.descending.isChecked()
+    assert order[0] == pytest.approx(20e6) and order == sorted(order, reverse=True)
