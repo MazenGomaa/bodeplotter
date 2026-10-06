@@ -1,4 +1,4 @@
-"""Dialogs: settings, connections, simulation settings, image export, skew wizard
+"""Dialogs: settings, connections, simulation settings, image export, skew wizard, calibration
 (SPEC.md section 10). Connections and simulation are panels, shown on their own and as
 tabs of the settings dialog."""
 from __future__ import annotations
@@ -6,14 +6,15 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox,
                                QFormLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
-                               QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                               QProgressBar, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from ..drivers import registry, visa_util
 from ..drivers.mock import SimulatedDUT
 from ..io.export_image import ImageOptions
 from ..io.settings import SCOPE_MIN_GAP_MS, AppSettings
 from ..measure import skew
-from ..models import SkewCheck
+from ..models import SkewCheck, ThroughCal
+from ..sweep import calibration
 from ..units import fmt_si, parse_si
 from . import theme
 
@@ -443,6 +444,145 @@ class SkewWizard(QDialog):
 
     def done(self, r: int) -> None:
         for sig, slot in ((self.engine.skew_measured, self._measured), (self.engine.error, self._failed)):
+            try:
+                sig.disconnect(slot)
+            except (RuntimeError, TypeError):
+                pass
+        super().done(r)
+
+
+# ---------------------------------------------------------------------- through calibration
+def cal_report(cal: ThroughCal) -> str:
+    return "\n".join([
+        "Range:  %s,  %d points" % (calibration.range_text(cal), len(cal.freqs_hz)),
+        "Largest gain deviation:  %.3f dB" % calibration.max_gain_db(cal),
+        "Delay found (DUT − reference):  %+.2f ns" % (calibration.fitted_delay_s(cal) * 1e9),
+        "Measured at %s with %g Vpp" % (cal.checked_at[11:16], cal.amp_vpp)])
+
+
+class CalDialog(QDialog):
+    """Guides the user through the through calibration and shows the result.
+
+    engine: a SweepEngine. get_configs: callable returning engine.Configs. current: the
+    calibration the connection holds now, or None.
+    """
+
+    def __init__(self, engine, get_configs, simulated: bool, current: ThroughCal | None, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Through calibration")
+        self.resize(540, 420)
+        self.engine, self.get_configs = engine, get_configs
+        self.cal: ThroughCal | None = None
+        self.running = False
+        lay = QVBoxLayout(self)
+        intro = (
+            "<b>Put the reference probe and the DUT probe on the same node</b>: both tips on the "
+            "generator output, both ground clips on its shell, both probes at the same setting.<br><br>"
+            "The app measures the difference between the two channels over the full frequency range "
+            "(about 1 minute) and removes it, gain and phase, from every later sweep of this connection "
+            "that uses the same channels, probe settings, coupling and bandwidth limit.<br><br>"
+            "The generator output is switched on for the measurement and off again afterwards.")
+        if simulated:
+            intro += "<br><br><i>Simulation: the simulated DUT probe is moved to the reference node for you.</i>"
+        if current is not None:
+            intro += "<br><br>Current calibration: %s." % calibration.describe(current)[5:]
+        self.intro = QLabel(intro)
+        self.intro.setWordWrap(True)
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 1)
+        self.progress.setValue(0)
+        self.result = QLabel("")
+        self.result.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.result.setWordWrap(True)
+        self.warn = QLabel("")
+        self.warn.setWordWrap(True)
+        self.warn.setTextFormat(Qt.RichText)
+        self.warnings_text = ""
+        lay.addWidget(self.intro)
+        lay.addWidget(self.progress)
+        lay.addWidget(self.result, 1)
+        lay.addWidget(self.warn)
+        row = QHBoxLayout()
+        self.start_btn = QPushButton("Probes are connected: calibrate")
+        self.discard_btn = QPushButton("Discard calibration")
+        self.accept_btn = QPushButton("Accept")
+        self.cancel_btn = QPushButton("Cancel")
+        self.accept_btn.setEnabled(False)
+        self.discard_btn.setVisible(current is not None)
+        row.addWidget(self.start_btn)
+        row.addWidget(self.discard_btn)
+        row.addStretch(1)
+        row.addWidget(self.accept_btn)
+        row.addWidget(self.cancel_btn)
+        lay.addLayout(row)
+        self.start_btn.clicked.connect(self.start)
+        self.discard_btn.clicked.connect(self._discard)
+        self.accept_btn.clicked.connect(self._accept)
+        self.cancel_btn.clicked.connect(self.reject)
+        engine.cal_measured.connect(self._measured)
+        engine.progress.connect(self._progress)
+        engine.error.connect(self._failed)
+
+    def start(self) -> None:
+        self.running = True
+        self.start_btn.setEnabled(False)
+        self.accept_btn.setEnabled(False)
+        self.discard_btn.setEnabled(False)
+        self.progress.setRange(0, 1)
+        self.progress.setValue(0)
+        self.result.setText("Measuring …")
+        self.warn.setText("")
+        self.engine.run_cal(self.get_configs())
+
+    def _progress(self, i: int, n: int) -> None:
+        if self.running:
+            self.progress.setRange(0, n)
+            self.progress.setValue(i)
+
+    def _measured(self, cal: ThroughCal | None) -> None:
+        self.running = False
+        self.start_btn.setEnabled(True)
+        self.discard_btn.setEnabled(True)
+        if cal is None:                             # cancelled: nothing to accept
+            self.cal = None
+            self.result.setText("Cancelled.")
+            self.accept_btn.setEnabled(False)
+            return
+        self.cal = cal
+        self.result.setText(cal_report(cal))
+        kind = "warning" if cal.acceptable else "critical"
+        self.warnings_text = "\n\n".join(cal.warnings)
+        self.warn.setText("<br><br>".join(theme.status_html(kind, w) for w in cal.warnings))
+        self.start_btn.setText("Measure again")
+        self.accept_btn.setEnabled(cal.acceptable)
+
+    def _failed(self, message: str) -> None:
+        if self.running or self.isVisible():
+            self.running = False
+            self.result.setText("")
+            self.warnings_text = message
+            self.warn.setText(theme.status_html("critical", message))
+            self.start_btn.setEnabled(True)
+            self.discard_btn.setEnabled(True)
+
+    def _accept(self) -> None:
+        if self.cal is not None and self.cal.acceptable:
+            self.engine.accept_cal(self.cal)
+            self.accept()
+
+    def _discard(self) -> None:
+        self.engine.discard_cal()
+        self.discard_btn.hide()
+
+    def reject(self) -> None:
+        if self.running:                            # the first Cancel stops the measurement
+            self.engine.abort()
+            return
+        super().reject()
+
+    def done(self, r: int) -> None:
+        for sig, slot in ((self.engine.cal_measured, self._measured), (self.engine.progress, self._progress),
+                          (self.engine.error, self._failed)):
             try:
                 sig.disconnect(slot)
             except (RuntimeError, TypeError):

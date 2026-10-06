@@ -203,7 +203,8 @@ def test_menus_bring_closed_panels_back(win, qtbot):
 def test_menu_actions_mirror_the_toolbar_and_plot(win, qtbot):
     file_menu = win.menuBar().actions()[0].menu()
     labels = [a.text().replace("&", "") for a in file_menu.actions() if not a.isSeparator()]
-    assert labels == ["Connect", "Connections…", "Sim settings…", "Settings…", "Export", "Preset", "Exit"]
+    assert labels == ["Connect", "Connections…", "Sim settings…", "Settings…", "Skew check", "Calibrate",
+                      "Export", "Preset", "Exit"]
     assert not win.export_menu.isEnabled()                      # nothing to export yet
     win.act_unwrap.trigger()
     assert win.plot.unwrap() is True and win.act_unwrap.isChecked()
@@ -593,3 +594,89 @@ def test_a_refused_calibration_cannot_be_accepted(win, qtbot):
     qtbot.waitUntil(lambda: "not accepted" in win.status_log.text.toPlainText(), timeout=5000)
     qtbot.wait(50)
     assert not win.info.cal_valid
+
+
+def test_calibrate_action_sits_next_to_skew_check(win, qtbot):
+    names = [a.text() for a in win.toolbar.actions()]
+    assert names.index("Calibrate") == names.index("Skew check") + 1
+    assert not win.act_cal.isEnabled()
+    _connect(win, qtbot)
+    assert win.act_cal.isEnabled()
+
+
+def test_cal_dialog_measures_shows_and_accepts(win, qtbot):
+    from bodeplot.gui.dialogs import CalDialog
+    _connect(win, qtbot)
+    dlg = CalDialog(win.engine, win.configs, True, None, win)
+    qtbot.addWidget(dlg)
+    assert not dlg.accept_btn.isEnabled() and dlg.discard_btn.isHidden()
+    with qtbot.waitSignal(win.engine.cal_measured, timeout=30000):
+        dlg.start()
+        assert not dlg.start_btn.isEnabled()
+    qtbot.waitUntil(lambda: dlg.accept_btn.isEnabled(), timeout=5000)
+    assert dlg.progress.value() == dlg.progress.maximum() == 58
+    text = dlg.result.text()
+    assert "50 Hz to 20 MHz" in text and "58 points" in text
+    assert "Largest gain deviation" in text and "Delay found" in text
+    assert dlg.start_btn.text() == "Measure again"
+    dlg._accept()
+    qtbot.waitUntil(lambda: win.info.cal_valid, timeout=5000)
+    assert win.skew_status[0] == "good" and win.skew_status[1].startswith("cal: ")
+    assert "50 Hz to 20 MHz" in win.skew_status[1]
+    # a second dialog offers to discard it
+    dlg2 = CalDialog(win.engine, win.configs, True, win.info.cal, win)
+    qtbot.addWidget(dlg2)
+    assert not dlg2.discard_btn.isHidden()
+    with qtbot.waitSignal(win.engine.session_changed, timeout=5000):
+        dlg2._discard()
+    qtbot.waitUntil(lambda: not win.info.cal_valid, timeout=5000)
+    assert dlg2.discard_btn.isHidden() and "UNCHECKED" in win.skew_status[1]
+
+
+def test_cal_dialog_does_not_offer_accept_for_a_refused_result(win, qtbot):
+    from bodeplot.gui.dialogs import CalDialog
+    from bodeplot.sweep import calibration
+    _connect(win, qtbot)
+    dlg = CalDialog(win.engine, win.configs, True, None, win)
+    qtbot.addWidget(dlg)
+    with qtbot.waitSignal(win.engine.cal_measured, timeout=30000) as blocker:
+        win.engine.run_cal(win.configs())
+    cal = blocker.args[0]
+    cal.acceptable, cal.warnings = False, [calibration.NOT_A_THROUGH + ": test"]
+    dlg._measured(cal)
+    assert not dlg.accept_btn.isEnabled() and "through connection" in dlg.warnings_text
+    dlg._measured(None)                                          # a cancelled run
+    assert not dlg.accept_btn.isEnabled() and dlg.start_btn.isEnabled()
+
+
+def test_a_calibration_that_applies_replaces_the_skew_question(win, qtbot):
+    from PySide6.QtWidgets import QMessageBox
+    asked = []
+    win._ask = lambda *a, **k: asked.append(a) or QMessageBox.Cancel
+    _connect(win, qtbot)
+    _calibrate(win, qtbot)
+    _short_sweep(win, 1e3, 1e5, 3)
+    with qtbot.waitSignal(win.engine.finished, timeout=30000):
+        assert win.start_sweep()                                 # check_skew left at its default
+    assert asked == [] and all(p.flags & Flag.CALIBRATED for p in win.result.points)
+    table = win.status_log.table
+    row = [table.item(0, c).text() for c in range(table.columnCount()) if table.item(0, c) is not None]
+    assert any("CALIBRATED" in cell for cell in row)
+    # a sweep that leaves the calibrated range asks, and says which part is not covered
+    _short_sweep(win, 1e6, 30e6, 3)
+    assert win.start_sweep() is False and len(asked) == 1
+    assert asked[0][0] == "Channel skew" and "50 Hz to 20 MHz" in asked[0][1] and "30 MHz" in asked[0][1]
+
+
+def test_status_follows_the_scope_settings(win, qtbot):
+    _connect(win, qtbot)
+    _calibrate(win, qtbot)
+    assert win.skew_status[1].startswith("cal: ") and win.cal_in_use() is not None
+    p = win.config.preset()
+    p.scope.coupling = "AC"
+    win.config.set_preset(p)
+    assert win.cal_in_use() is None and "UNCHECKED" in win.skew_status[1]
+    p.scope.coupling = "DC"
+    win.config.set_preset(p)
+    assert win.skew_status[1].startswith("cal: ")                # kept, and used again
+    assert "cal: " in win.about_text()

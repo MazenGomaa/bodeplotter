@@ -15,13 +15,16 @@ from .. import __version__
 from ..io import export_csv, export_image, export_touchstone, presets
 from ..io.settings import AppSettings, load_settings, save_settings
 from ..measure import skew
-from ..models import EngineState, LogEntry, Method, PointResult, SweepResult, SweepType
+from ..models import EngineState, LogEntry, Method, PointResult, SweepResult, SweepType, ThroughCal
+from ..sweep import calibration
 from ..sweep import plan as plan_mod
 from ..sweep.engine import Configs, ConnectRequest, SessionInfo, SweepEngine
 from . import theme
 from .bode_plot import BodePlot
 from .config_panel import ConfigPanel
-from .dialogs import ConnectionsDialog, ImageExportDialog, SettingsDialog, SimSettingsDialog, SkewWizard
+from ..units import fmt_si
+from .dialogs import (CalDialog, ConnectionsDialog, ImageExportDialog, SettingsDialog, SimSettingsDialog,
+                      SkewWizard)
 from .status_log import StatusLog
 from .waveform_view import WaveformView
 
@@ -134,6 +137,9 @@ class MainWindow(QMainWindow):
         tb.addSeparator()
         self.act_skew = act("Skew check", self.open_skew_wizard,
                             "Measure and correct the delay between the two scope channels")
+        self.act_cal = act("Calibrate", self.open_cal_dialog,
+                           "Through calibration: measure the gain and phase difference between the two "
+                           "measurement paths over the full range and remove it from later sweeps")
         self.act_panel = act("Front panel was used", self.front_panel_used,
                              "Tell the app the scope's front panel was used: the skew check is discarded")
         tb.addSeparator()
@@ -178,6 +184,9 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_connections)
         m.addAction(self.act_sim)
         m.addAction(self.act_settings)
+        m.addSeparator()
+        m.addAction(self.act_skew)
+        m.addAction(self.act_cal)
         m.addSeparator()
         self.export_menu = m.addMenu("&Export")
         for label, fmt in (("CSV\u2026", "csv"), ("PNG\u2026", "png"), ("SVG\u2026", "svg"), ("PDF\u2026", "pdf"),
@@ -247,7 +256,7 @@ class MainWindow(QMainWindow):
             "Sweeps a function generator and reads an oscilloscope to measure gain and phase.",
             "",
             conn,
-            "Channel " + self.skew_status[1],
+            "Correction: " + self.skew_status[1],
             "Real instruments: UNI-T UPO1000 scopes and UTG900E generators over USB (pyvisa-py).",
             "",
             "Python %s, PySide6 %s (Qt %s), pyqtgraph %s, numpy %s" % (
@@ -291,6 +300,25 @@ class MainWindow(QMainWindow):
     def _show_skew(self, kind: str, text: str) -> None:
         self.skew_status = (kind, text)
         self.lbl_skew.setText(theme.status_html(kind, text, bold=kind == "critical"))
+
+    def cal_in_use(self) -> ThroughCal | None:
+        """The connection's through calibration, if it fits the scope settings on screen."""
+        cal = self.info.cal if self.info.connected else None
+        return cal if calibration.matches(cal, self.config.scope()) else None
+
+    def _refresh_correction(self) -> None:
+        """Status bar: the calibration when one applies to the current settings, otherwise
+        the skew state as before."""
+        info = self.info
+        cal = self.cal_in_use()
+        if not info.connected:
+            self._show_skew("idle", "skew: not connected")
+        elif cal is not None:
+            self._show_skew("good", calibration.describe(cal))
+        elif info.skew_valid:
+            self._show_skew("good", info.skew_text)
+        else:
+            self._show_skew("critical", "skew: UNCHECKED — " + (info.recheck_reason or ""))
 
     # ------------------------------------------------------------------ settings
     def _load_ui_state(self) -> None:
@@ -358,6 +386,7 @@ class MainWindow(QMainWindow):
 
     def _on_config_changed(self) -> None:
         self.plot.set_log_x(self.config.sweep().sweep_type is SweepType.LOG)
+        self._refresh_correction()
 
     def _update_actions(self) -> None:
         busy = self.state in BUSY
@@ -371,6 +400,7 @@ class MainWindow(QMainWindow):
         self.act_pause.setText("Resume" if self.state is EngineState.PAUSED else "Pause")
         self.act_abort.setEnabled(busy and self.state is not EngineState.CONNECTING)
         self.act_skew.setEnabled(connected and not busy)
+        self.act_cal.setEnabled(connected and not busy)
         self.act_panel.setEnabled(connected and not busy)
         can_export = bool(self.result and self.result.points) and not busy
         self.export_button.setEnabled(can_export)
@@ -451,6 +481,15 @@ class MainWindow(QMainWindow):
         wiz = SkewWizard(self.engine, self.configs, self.info.simulated, self.skew_freqs_hint(), self)
         return bool(wiz.exec())
 
+    def open_cal_dialog(self) -> bool:
+        if not self.info.connected or self.state in BUSY:
+            return False
+        dlg = CalDialog(self.engine, self.configs, self.info.simulated, self.info.cal, self)
+        ok = bool(dlg.exec())
+        self._progress = (0, 0)                     # the calibration used the progress read-out
+        self._update_clock()
+        return ok
+
     def front_panel_used(self) -> None:
         self.engine.front_panel_used()
 
@@ -473,11 +512,21 @@ class MainWindow(QMainWindow):
         if err:
             self._warn_box("Sweep", err)
             return False
-        # a Fast preview's phase is rough anyway, so it does not ask for the skew check
-        if check_skew and not self.info.skew_valid and self.config.measure().method is not Method.PREVIEW:
+        # A calibration that covers the whole sweep makes the skew check unnecessary. A Fast
+        # preview's phase is rough anyway, so it does not ask either.
+        sweep = self.config.sweep()
+        lo, hi = min(sweep.start_hz, sweep.stop_hz), max(sweep.start_hz, sweep.stop_hz)
+        cal = self.cal_in_use()
+        covered = cal is not None and calibration.covers(cal, lo, hi)
+        if check_skew and not covered and not self.info.skew_valid \
+                and self.config.measure().method is not Method.PREVIEW:
+            partly = "" if cal is None else (
+                "The through calibration covers %s only; this sweep goes from %s to %s, and the part "
+                "outside the calibration needs the skew check.\n\n"
+                % (calibration.range_text(cal), fmt_si(lo, "Hz"), fmt_si(hi, "Hz")))
             answer = self._ask(
                 "Channel skew",
-                (self.info.recheck_reason or "No skew check has been done in this session.") +
+                partly + (self.info.recheck_reason or "No skew check has been done in this session.") +
                 "\n\nWithout it the phase is not corrected: the scope's channels can be 2 ns or more "
                 "apart, which is up to 43° at 20 MHz.\n\nRun the skew check first?",
                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.No)
@@ -551,20 +600,15 @@ class MainWindow(QMainWindow):
         self._update_actions()
 
     def _on_error(self, message: str) -> None:
-        if self.interactive and not any(isinstance(w, SkewWizard) and w.isVisible()
-                                        for w in self.findChildren(SkewWizard)):
+        if self.interactive and not any(w.isVisible() for w in
+                                        self.findChildren(SkewWizard) + self.findChildren(CalDialog)):
             QMessageBox.critical(self, "Error", message)
 
     def _on_session(self, info: SessionInfo) -> None:
         was_valid, self.info = self.info.skew_valid, info
-        if not info.connected:
-            self._show_skew("idle", "skew: not connected")
+        self._refresh_correction()
+        if not info.connected or info.skew_valid:
             self._last_reason = None
-        elif info.skew_valid:
-            self._show_skew("good", info.skew_text)
-            self._last_reason = None
-        else:
-            self._show_skew("critical", "skew: UNCHECKED — " + (info.recheck_reason or ""))
         self.config.set_has_builtin(info.has_builtin if info.connected else True)
         self.plot.set_has_phase(info.has_phase)
         self._update_actions()
