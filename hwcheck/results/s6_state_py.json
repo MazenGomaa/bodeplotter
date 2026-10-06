@@ -8,7 +8,7 @@
   ":SYSTem:LOCK?": "0",
   ":TRIGger:SWEep?": "AUTO",
   ":TRIGger:STATus?": "AUTO",
-  ":TIMebase:SCALe?": "5.000000e-04",
+  ":TIMebase:SCALe?": "5.000000e-03",
   ":CHANnel1:SCALe?": "1.000000e-01",
   ":CHANnel2:SCALe?": "1.000000e-01",
   ":CHANnel1:PROBe?": "1.000000e+00",
@@ -74,7 +74,10 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "b6dcf64",
-    "git_dirty": []
+    "git_commit": "8d8c9e6",
+    "git_dirty": [
+      " M hwcheck/results/s6_lock_on_py.json",
+      " M hwcheck/results/s6_lock_query_py.json"
+    ]
   }
 }

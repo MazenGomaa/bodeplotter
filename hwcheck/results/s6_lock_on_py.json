@@ -8,7 +8,7 @@
   "lock_before": "0",
   "lock_after": "1",
   "remote": {
-    "timebase": 2.5e-08,
+    "timebase": 0.005,
     "status": "AUTO",
     "set_while_in_this_state": "ok"
   },
@@ -27,6 +27,7 @@
     "script": "s6_lock.py",
     "sha256": "d864c44fbb0b4ce8d84f5984bdc3ee3cb0e58cdb296dd7b256b81fa66f9db73b",
     "modules": {
+      "a7_phase_lead.py": "da897892c9d3",
       "common.py": "5ec7f6c3b6a9",
       "dbg0b_ch2.py": "e684dcfb50cd",
       "dbg0b_probe.py": "f4b172a7ece0",
@@ -43,6 +44,7 @@
       "dbg0c_skew6.py": "31639aa9ee8c",
       "dbg0c_skew7.py": "5b47d8364f1d",
       "dbg6_freerun.py": "0efe224d5d25",
+      "dbg7_genoffset_neg.py": "168d0244165d",
       "dbg_gen_alive.py": "2b23ffaa3137",
       "dbg_gen_recover.py": "8c5df469eb96",
       "dbg_latency.py": "bb8f25b338cb",
@@ -54,6 +56,9 @@
       "dbg_wave.py": "c7e5e3603563",
       "dbg_wave2.py": "01e9853157fd",
       "iolayer.py": "9a72e933ae3a",
+      "m7_repeat.py": "4480a8fdc713",
+      "m7_restore.py": "7050708385d0",
+      "m7_sweep.py": "a25e678e0d92",
       "make_table.py": "189dfc588f10",
       "s03_visa_list.py": "b25adeb97e9e",
       "s04_s05_basic.py": "f594ce1600ca",
@@ -66,14 +71,19 @@
       "s0c_realign.py": "3320958d28b0",
       "s6_capbench.py": "3cf22e3bd96c",
       "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "s7_dcoffset.py": "9da4c6b4759a",
+      "s7_dcsource.py": "771a51aa35d6",
+      "s7_gendc.py": "d47960b9fe2e",
+      "s7_genoffset.py": "59938843324f",
+      "s7_rangephase.py": "7b4e85f31478",
+      "s7_smallsig.py": "03c100e7276e",
       "scpi.py": "141705ebc0d6",
-      "t0b_iolayer.py": "848f1f9c9fd2",
+      "t0b_iolayer.py": "b89d4cc28906",
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "8329b4a",
-    "git_dirty": [
-      "?? hwcheck/results/s6_lock_query_py.json"
-    ]
+    "git_commit": "8d8c9e6",
+    "git_dirty": []
   }
 }

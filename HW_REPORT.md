@@ -1043,3 +1043,10 @@ App at commit `b6dcf64`, started with `--debug`, reference CH3 / DUT CH4, full-r
 - Not covered by this test: a scope that is frozen but still on the bus (writes time out instead of failing at once, so the resync takes longer).
 
 **Second and third cable pull, with the fixes** (commit `4828300`, `--debug`, sweeps on CH1 / CH2; from the app's log and the user's screenshot). 19:08:32.767 first failed write (`[Errno 19] No such device`), 19:08:35.358 generator outputs off (2.6 s), 19:08:35.587 error with the new text: "The scope is no longer on USB. ... Check the scope's USB cable and that it is switched on, then connect again and repeat the channel skew check." No "was resynchronised" line. **Reconnect after replugging, no power cycle, same app window: worked** (19:09:13 connected, 19:09:35 a new sweep started). That sweep lost the scope again at 19:09:42.202 after 4 of 114 points, same error and the same sequence (generator off at 19:09:44.795). The user confirmed that this third loss was a deliberate pull as well.
+
+### 13.16 A power cycle clears the panel lock (2026-10-06, evening)
+
+`hwcheck/s6_lock.py on` with the app disconnected: `:SYSTem:LOCK?` 0 before, 1 after `:SYSTem:LOCK ON`; remote control worked while locked. The user pressed a front-panel key: ignored, and the scope showed a "locked" message. The user then power-cycled the scope (USB cable left in). After the boot the panel worked again and `:SYSTem:LOCK?` read 0 (`s6_lock.py query`), with no `:SYSTem:LOCK OFF` sent.
+
+- **A power cycle clears the lock.** So the watchdog's advice to power-cycle a frozen scope also frees its panel; `probe --unlock` is only needed when the scope is not power-cycled.
+- **Power-on state seen here** (`s6_state.py`): the scope came back with the settings it had before (5 ms/div, CH1 and CH2 at 100 mV/div, probe 1X), sweep AUTO and running, no error. One observation, not a general statement about its power-on state.
