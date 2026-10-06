@@ -74,10 +74,9 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "8d8c9e6",
+    "git_commit": "485bfe2",
     "git_dirty": [
-      " M hwcheck/results/s6_lock_on_py.json",
-      " M hwcheck/results/s6_lock_query_py.json"
+      "?? hwcheck/results/m7/probe_walk_20261006.json"
     ]
   }
 }

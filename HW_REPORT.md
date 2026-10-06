@@ -1050,3 +1050,11 @@ App at commit `b6dcf64`, started with `--debug`, reference CH3 / DUT CH4, full-r
 
 - **A power cycle clears the lock.** So the watchdog's advice to power-cycle a frozen scope also frees its panel; `probe --unlock` is only needed when the scope is not power-cycled.
 - **Power-on state seen here** (`s6_state.py`): the scope came back with the settings it had before (5 ms/div, CH1 and CH2 at 100 mV/div, probe 1X), sweep AUTO and running, no error. One observation, not a general statement about its power-on state.
+
+### 13.17 Paced table walk with the probe tool: no freeze (2026-10-06, evening)
+
+`python -m bodeplot.tools.probe --walk-tables --yes` (250 ms after every step), commit `485bfe2`, user at the bench. Raw result: `hwcheck/results/m7/probe_walk_20261006.json`.
+
+- **The walk ran to the end and the scope did not freeze.** One run; the two freezes (0b, and the unpaced `build_tables()` of 2026-10-06) are still unexplained, so this shows that a paced walk can pass, not that it always does.
+- **The walked tables are identical to the shipped ones**: timebase 23 steps, 1 ns to 20 ms/div with 25 ns in place of 20 ns; V/div 15 steps, 500 uV to 20 V. The tool wrote them to `%LOCALAPPDATA%\bodeplot\step_tables.json`.
+- Afterwards (`s6_state.py`): timebase 5 ms/div and CH1 100 mV/div put back, panel unlocked, sweep AUTO, no error, generator outputs off.
