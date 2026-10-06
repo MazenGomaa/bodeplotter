@@ -879,3 +879,24 @@ A bench sweep with only change 1 and 2 in place (`rc_1k_100n_dcfix`) still faile
 - The user saw CH2 "jumping around" on the scope during the sweep and the scope left on 500 uV/div afterwards. The jumping is auto-range and the offset changes at work. The app does not restore the scope's V/div, timebase and offset after a sweep; it only goes back to sweep AUTO and unlocks the panel.
 - Where the 6 to 8 mV of DC at the inputs comes from.
 - Phase drift of about +1 degree between 3 and 40 kHz against the ideal RC (component, probe or scope: not examined).
+
+### 13.7 The DC is not the scope's own input offset (2026-10-06)
+
+The user ran the scope's self calibration, removed all probes and reported that an offset was still visible at 500 uV/div. `hwcheck/s7_dcoffset.py` then read CH1 and CH2 with the inputs open, channel offset 0, timebase 10 ms/div (140 ms record), at nine V/div steps in DC, AC and GND coupling. Generator outputs OFF throughout. Data: `results/s7_dcoffset_py.json`. 0 reply errors, 0 empty blocks.
+
+| V/div | CH1, DC coupling | CH2, DC coupling |
+|---|---|---|
+| 500 uV | +0.165 mV (+0.33 div) | +0.290 mV (+0.58 div) |
+| 1 mV | +0.136 mV (+0.14 div) | +0.266 mV (+0.27 div) |
+| 2 mV | +0.104 mV (+0.05 div) | +0.228 mV (+0.11 div) |
+| 5 mV | -0.145 mV (-0.03 div) | +0.007 mV (0.00 div) |
+| 10 mV | -0.72 mV (-0.07 div) | -0.55 mV (-0.05 div) |
+| 20 mV | -1.5 mV (-0.08 div) | -2.0 mV (-0.10 div) |
+| 50 mV to 1 V | -0.09 to -0.11 div | -0.12 div |
+
+- **The scope's own offset is 0.3 mV or less on the steps from 500 uV to 5 mV/div.** That is 0.3 to 0.6 division at 500 uV/div, which is what the user saw on the screen. On the steps from 10 mV/div up it is a constant -0.1 division (about 2.5 codes).
+- AC coupling gives the same numbers as DC coupling within 0.03 mV on the sensitive steps. So this residual is generated after the coupling switch and **AC coupling does not remove it**.
+- GND coupling returns code 127 on every sample at every step, with zero noise. It is a drawn line, not a measurement of the input stage.
+- Open-input noise: 7 codes rms at 500 uV/div, 3 at 1 mV/div, 1.5 at 2 mV/div (mains pickup included).
+- **The +6.2 mV (CH2) and +8.6 mV (CH1) measured in 13.6 are 20 times larger than this.** So they did not come from the scope's input stage as it is now. Two explanations remain: the generator output carries 60 to 90 mV of DC (seen through the 10X probes), or the scope had a larger offset that the self calibration removed. `hwcheck/s7_dcsource.py` (written, NOT yet run; needs the probes back on the RC) separates the two: DC with the generator output OFF, ON at 1 Vpp and 0.1 Vpp, and ON with the generator's offset set to cancel it.
+- New scope fact: **`:CHANnel<n>:SCALe` is ignored on a channel that is switched off** (`:CHANnel<n>:DISPlay 0`): no error, the read-back stays at the old value. CH2 was off when the script started (left so by the user); the restore switched it off first and then could not put 50 mV/div back. Restored by hand (display on, scale, display off). The scripts now restore DISPlay last.

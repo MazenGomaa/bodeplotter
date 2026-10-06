@@ -1,0 +1,1928 @@
+{
+  "backend": "@py",
+  "rows": [
+    {
+      "coupling": "DC",
+      "vdiv": 0.0005,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": 0.00016314285714285717,
+              "mean_code": 136.15714285714284,
+              "code_min": 129,
+              "code_max": 185,
+              "rms_codes": 7.397558891351958,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.0001676,
+              "mean_code": 136.38,
+              "code_min": 129,
+              "code_max": 179,
+              "rms_codes": 6.6020473015140215,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.0001653714285714286,
+          "mean_div": 0.33074285714285717,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 0.0002976,
+              "mean_code": 142.88,
+              "code_min": 133,
+              "code_max": 219,
+              "rms_codes": 8.51401533607129,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.0002826857142857143,
+              "mean_code": 142.1342857142857,
+              "code_min": 133,
+              "code_max": 213,
+              "rms_codes": 6.31906154231071,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.0002901428571428572,
+          "mean_div": 0.5802857142857144,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 0.001,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": 0.00013251428571428573,
+              "mean_code": 131.31285714285715,
+              "code_min": 128,
+              "code_max": 155,
+              "rms_codes": 3.1141346621296826,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.00014011428571428575,
+              "mean_code": 131.50285714285715,
+              "code_min": 128,
+              "code_max": 152,
+              "rms_codes": 3.4382292547419326,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00013631428571428574,
+          "mean_div": 0.13631428571428572,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 0.00026931428571428577,
+              "mean_code": 134.73285714285714,
+              "code_min": 129,
+              "code_max": 170,
+              "rms_codes": 3.6223599816603946,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.0002624571428571429,
+              "mean_code": 134.56142857142856,
+              "code_min": 129,
+              "code_max": 169,
+              "rms_codes": 3.760767127562554,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00026588571428571434,
+          "mean_div": 0.26588571428571434,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 0.002,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": 9.988572677142857e-05,
+              "mean_code": 129.24857142857144,
+              "code_min": 127,
+              "code_max": 140,
+              "rms_codes": 1.6216167291707775,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.00010811429922857141,
+              "mean_code": 129.35142857142858,
+              "code_min": 128,
+              "code_max": 146,
+              "rms_codes": 1.6985492008638141,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00010400001299999998,
+          "mean_div": 0.05200000649999999,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 0.00022857145714285713,
+              "mean_code": 130.85714285714286,
+              "code_min": 129,
+              "code_max": 148,
+              "rms_codes": 1.416088317319573,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.00022765717131428568,
+              "mean_code": 130.84571428571428,
+              "code_min": 129,
+              "code_max": 138,
+              "rms_codes": 1.4057723565241091,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.0002281143142285714,
+          "mean_div": 0.1140571571142857,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 0.005,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.00015542857142857144,
+              "mean_code": 127.22285714285714,
+              "code_min": 126,
+              "code_max": 133,
+              "rms_codes": 0.5747475044552617,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.00013542857142857144,
+              "mean_code": 127.32285714285715,
+              "code_min": 126,
+              "code_max": 133,
+              "rms_codes": 0.6381158489919317,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.00014542857142857144,
+          "mean_div": -0.029085714285714288,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 1.0857142857142858e-05,
+              "mean_code": 128.05428571428573,
+              "code_min": 127,
+              "code_max": 132,
+              "rms_codes": 0.6844571810223494,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 2.5714285714285716e-06,
+              "mean_code": 128.01285714285714,
+              "code_min": 127,
+              "code_max": 131,
+              "rms_codes": 0.6289268475680115,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 6.714285714285715e-06,
+          "mean_div": 0.001342857142857143,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 0.01,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.0007068571428571429,
+              "mean_code": 126.23285714285714,
+              "code_min": 126,
+              "code_max": 128,
+              "rms_codes": 0.4293588005291573,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0007285714285714286,
+              "mean_code": 126.17857142857143,
+              "code_min": 126,
+              "code_max": 128,
+              "rms_codes": 0.39402424042286577,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0007177142857142857,
+          "mean_div": -0.07177142857142857,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.000544,
+              "mean_code": 126.64,
+              "code_min": 126,
+              "code_max": 129,
+              "rms_codes": 0.4946571684365994,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0005514285714285714,
+              "mean_code": 126.62142857142857,
+              "code_min": 126,
+              "code_max": 130,
+              "rms_codes": 0.54337381427597,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0005477142857142857,
+          "mean_div": -0.05477142857142857,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 0.02,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.0014834285714285715,
+              "mean_code": 126.14571428571429,
+              "code_min": 126,
+              "code_max": 127,
+              "rms_codes": 0.35281954686930433,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0015462857142857142,
+              "mean_code": 126.06714285714285,
+              "code_min": 126,
+              "code_max": 127,
+              "rms_codes": 0.2502692427717617,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0015148571428571429,
+          "mean_div": -0.07574285714285714,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.0020514285714285717,
+              "mean_code": 125.43571428571428,
+              "code_min": 125,
+              "code_max": 127,
+              "rms_codes": 0.5100520181554915,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0019520000000000002,
+              "mean_code": 125.56,
+              "code_min": 125,
+              "code_max": 127,
+              "rms_codes": 0.5188999353026967,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.002001714285714286,
+          "mean_div": -0.10008571428571429,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 0.05,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.005391428571428571,
+              "mean_code": 125.30428571428571,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.46010424728244675,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.005205714285714286,
+              "mean_code": 125.39714285714285,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.48930604754413703,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0052985714285714285,
+          "mean_div": -0.10597142857142856,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.005945714285714286,
+              "mean_code": 125.02714285714286,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.16249960753484788,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.005942857142857143,
+              "mean_code": 125.02857142857142,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.16659862556700858,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0059442857142857145,
+          "mean_div": -0.11888571428571429,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 0.1,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.008765714285714286,
+              "mean_code": 125.80857142857143,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.39342556280621593,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.00926857142857143,
+              "mean_code": 125.68285714285715,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.46536358399226135,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.009017142857142859,
+          "mean_div": -0.09017142857142858,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.011617142857142857,
+              "mean_code": 125.09571428571428,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.2941990163554083,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.011811428571428572,
+              "mean_code": 125.04714285714286,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.21194435157197586,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.011714285714285715,
+          "mean_div": -0.11714285714285715,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "DC",
+      "vdiv": 1.0,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.1,
+              "mean_code": 125.5,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.5,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.10251428571428572,
+              "mean_code": 125.43714285714286,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.4960332444421812,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.10125714285714287,
+          "mean_div": -0.10125714285714287,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.11839999999999999,
+              "mean_code": 125.04,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.19595917942265423,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.11908571428571428,
+              "mean_code": 125.02285714285715,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.1494479637785374,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.11874285714285714,
+          "mean_div": -0.11874285714285714,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.0005,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": 0.000156,
+              "mean_code": 135.8,
+              "code_min": 129,
+              "code_max": 189,
+              "rms_codes": 6.1773780845922,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.00017520000000000003,
+              "mean_code": 136.76,
+              "code_min": 129,
+              "code_max": 183,
+              "rms_codes": 6.377603669986758,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00016560000000000001,
+          "mean_div": 0.3312,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 0.00030594285714285714,
+              "mean_code": 143.29714285714286,
+              "code_min": 133,
+              "code_max": 195,
+              "rms_codes": 6.157248258958622,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.0003204571428571429,
+              "mean_code": 144.02285714285713,
+              "code_min": 135,
+              "code_max": 247,
+              "rms_codes": 7.859083396728572,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.0003132,
+          "mean_div": 0.6264000000000001,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.001,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": 0.00016120000000000002,
+              "mean_code": 132.03,
+              "code_min": 129,
+              "code_max": 154,
+              "rms_codes": 3.0360618288452934,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.00014331428571428572,
+              "mean_code": 131.58285714285714,
+              "code_min": 128,
+              "code_max": 161,
+              "rms_codes": 3.1039592886032064,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00015225714285714288,
+          "mean_div": 0.15225714285714287,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 0.0003060571428571429,
+              "mean_code": 135.65142857142857,
+              "code_min": 131,
+              "code_max": 185,
+              "rms_codes": 4.81351498705595,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.0002807428571428572,
+              "mean_code": 135.01857142857142,
+              "code_min": 131,
+              "code_max": 167,
+              "rms_codes": 3.64236159094394,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00029340000000000003,
+          "mean_div": 0.29340000000000005,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.002,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": 0.00012868573037142856,
+              "mean_code": 129.60857142857142,
+              "code_min": 128,
+              "code_max": 142,
+              "rms_codes": 1.7479574085316885,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.00010468572737142856,
+              "mean_code": 129.30857142857144,
+              "code_min": 128,
+              "code_max": 141,
+              "rms_codes": 1.6297890185229373,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00011668572887142856,
+          "mean_div": 0.05834286443571428,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 0.00028502860705714283,
+              "mean_code": 131.56285714285715,
+              "code_min": 129,
+              "code_max": 158,
+              "rms_codes": 2.086772725565308,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 0.00026102860405714286,
+              "mean_code": 131.26285714285714,
+              "code_min": 129,
+              "code_max": 160,
+              "rms_codes": 2.529718867981264,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 0.00027302860555714287,
+          "mean_div": 0.13651430277857143,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.005,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.00010942857142857144,
+              "mean_code": 127.45285714285714,
+              "code_min": 127,
+              "code_max": 130,
+              "rms_codes": 0.5824140472627524,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.00013857142857142857,
+              "mean_code": 127.30714285714286,
+              "code_min": 126,
+              "code_max": 133,
+              "rms_codes": 0.6491360034849463,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.000124,
+          "mean_div": -0.0248,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": 7.685714285714286e-05,
+              "mean_code": 128.3842857142857,
+              "code_min": 127,
+              "code_max": 139,
+              "rms_codes": 1.048554885038821,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": 4.7428571428571427e-05,
+              "mean_code": 128.23714285714286,
+              "code_min": 127,
+              "code_max": 133,
+              "rms_codes": 0.6596907129365199,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": 6.214285714285714e-05,
+          "mean_div": 0.012428571428571428,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.01,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.0004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0006182857142857143,
+              "mean_code": 126.45428571428572,
+              "code_min": 126,
+              "code_max": 128,
+              "rms_codes": 0.509253154639423,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0005091428571428572,
+          "mean_div": -0.05091428571428572,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.00039828571428571425,
+              "mean_code": 127.00428571428571,
+              "code_min": 127,
+              "code_max": 128,
+              "rms_codes": 0.06532493351527816,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.00042742857142857144,
+              "mean_code": 126.93142857142857,
+              "code_min": 126,
+              "code_max": 129,
+              "rms_codes": 0.3353219592071635,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.00041285714285714287,
+          "mean_div": -0.04128571428571429,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.02,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.0013325714285714286,
+              "mean_code": 126.33428571428571,
+              "code_min": 126,
+              "code_max": 128,
+              "rms_codes": 0.4777583711715471,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.001304,
+              "mean_code": 126.37,
+              "code_min": 126,
+              "code_max": 127,
+              "rms_codes": 0.4828043081829324,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0013182857142857143,
+          "mean_div": -0.06591428571428572,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.0016057142857142858,
+              "mean_code": 125.99285714285715,
+              "code_min": 125,
+              "code_max": 129,
+              "rms_codes": 0.3604843680270155,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.001606857142857143,
+              "mean_code": 125.99142857142857,
+              "code_min": 125,
+              "code_max": 128,
+              "rms_codes": 0.27761373841202824,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0016062857142857144,
+          "mean_div": -0.08031428571428571,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.05,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.004008571428571429,
+              "mean_code": 125.99571428571429,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.06532493351527816,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.004051428571428571,
+              "mean_code": 125.97428571428571,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.15828158839388046,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.004030000000000001,
+          "mean_div": -0.0806,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.004982857142857143,
+              "mean_code": 125.50857142857143,
+              "code_min": 125,
+              "code_max": 127,
+              "rms_codes": 0.5056093515022548,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.005165714285714286,
+              "mean_code": 125.41714285714286,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.49308690296696284,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.005074285714285714,
+          "mean_div": -0.10148571428571428,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 0.1,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.007954285714285716,
+              "mean_code": 126.01142857142857,
+              "code_min": 126,
+              "code_max": 127,
+              "rms_codes": 0.10629185850136157,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.007954285714285716,
+              "mean_code": 126.01142857142857,
+              "code_min": 126,
+              "code_max": 127,
+              "rms_codes": 0.10629185850136157,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.007954285714285716,
+          "mean_div": -0.07954285714285715,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.007885714285714286,
+              "mean_code": 126.02857142857142,
+              "code_min": 125,
+              "code_max": 127,
+              "rms_codes": 0.2249716535431946,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.008502857142857144,
+              "mean_code": 125.87428571428572,
+              "code_min": 125,
+              "code_max": 127,
+              "rms_codes": 0.3643725386726825,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.008194285714285715,
+          "mean_div": -0.08194285714285714,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "AC",
+      "vdiv": 1.0,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.08,
+              "mean_code": 126.0,
+              "code_min": 125,
+              "code_max": 127,
+              "rms_codes": 0.05345224838248488,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.08165714285714286,
+              "mean_code": 125.95857142857143,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.19927931377330457,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.08082857142857143,
+          "mean_div": -0.08082857142857143,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.09394285714285715,
+              "mean_code": 125.65142857142857,
+              "code_min": 125,
+              "code_max": 127,
+              "rms_codes": 0.48542848734549005,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.10314285714285715,
+              "mean_code": 125.42142857142858,
+              "code_min": 125,
+              "code_max": 126,
+              "rms_codes": 0.4937879409344106,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.09854285714285715,
+          "mean_div": -0.09854285714285715,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.0005,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -2e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -2e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -2e-05,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -2e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -2e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 2e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -2e-05,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.001,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -4e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -4e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -4e-05,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -4e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -4e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 4e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -4e-05,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.002,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -8.000001e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -8.000001e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -8.000001e-05,
+          "mean_div": -0.040000005,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -8.000001e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -8.000001e-05,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 8.000001e-05,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -8.000001e-05,
+          "mean_div": -0.040000005,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.005,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.0002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0002,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.0002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0002,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.01,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.0004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0004,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.0004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0004,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.02,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.0008,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0008,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0008,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.0008,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.0008,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.0008,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.0008,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.05,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.002,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.002,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.002,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.002,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 0.1,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.004,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.004,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.004,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.004,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    },
+    {
+      "coupling": "GND",
+      "vdiv": 1.0,
+      "ch": {
+        "1": {
+          "shots": [
+            {
+              "mean_v": -0.04,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.04,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.04,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        },
+        "2": {
+          "shots": [
+            {
+              "mean_v": -0.04,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            },
+            {
+              "mean_v": -0.04,
+              "mean_code": 127.0,
+              "code_min": 127,
+              "code_max": 127,
+              "rms_codes": 0.0,
+              "at_low_rail": 0,
+              "at_high_rail": 0,
+              "yinc": 0.04,
+              "yor": 0.0,
+              "yref": 128.0
+            }
+          ],
+          "mean_v": -0.04,
+          "mean_div": -0.04,
+          "offset_readback": 0.0
+        }
+      }
+    }
+  ],
+  "log": [
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}",
+    "scope set :CHANnel2:SCALe 0.05: read back 1.0, wanted 0.05 (attempt 1)",
+    "scope set :CHANnel2:SCALe 0.05: read back 1.0, wanted 0.05 (attempt 2)"
+  ],
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "gen_outputs_final": [
+    false,
+    false
+  ],
+  "scope_restore_failures": [
+    ":CHANnel2:SCALe: :CHANnel2:SCALe 0.05: read back 1.0, wanted 0.05"
+  ],
+  "scope_stats": {
+    "queries": 4163,
+    "empty_retries": 2,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 2,
+    "forced_triggers": 30,
+    "empty_blocks": 0
+  },
+  "gen_stats": {
+    "queries": 5,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  },
+  "_identity": {
+    "script": "s7_dcoffset.py",
+    "sha256": "a3f5da8ff3caabc668500c6edcc7c32846b415df0e4c953441977e65da9f4289",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "m7_sweep.py": "5602c70727bf",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "s7_smallsig.py": "03c100e7276e",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "8ecf9af",
+    "git_dirty": []
+  }
+}

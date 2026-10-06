@@ -86,13 +86,15 @@ def main():
         ss = Saver(sc)
         for ch in (1, 2):
             k = f":CHANnel{ch}"
+            # DISPlay is saved first so that it is restored last: the scope ignores SCALe
+            # on a channel that is switched off (found in the first run of this script)
+            ss.save(k + ":DISPlay", io.v_bool, b01)
             ss.save(k + ":SCALe", io.v_float, num)
             ss.save(k + ":OFFSet", io.v_float, num)
             ss.save(k + ":BWLimit", io.V_BWL)
             ss.save(k + ":COUPling", io.V_COUPLING)
             ss.save(k + ":VERNier", io.v_bool, b01)
             ss.save(k + ":PROBe", io.v_float, probe)
-            ss.save(k + ":DISPlay", io.v_bool, b01)
         ss.save(":TIMebase:SCALe", io.v_float, num)
         ss.save(":TRIGger:LEVel", io.v_float, num)
         ss.save(":TRIGger:EDGE:SLOPe", io.V_SLOPE)
