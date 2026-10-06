@@ -1061,7 +1061,7 @@ App at commit `b6dcf64`, started with `--debug`, reference CH3 / DUT CH4, full-r
 
 ### 13.18 The RC phase lead is the capacitor's own loss (2026-10-06, evening)
 
-The 100 nF of the test low-pass is a film capacitor (user). The user measured it out of circuit on an LCR meter, series mode (model of the meter not recorded):
+The 100 nF of the test low-pass is a film capacitor (user). The user measured it out of circuit on their LCR meter (UNI-T UT612), series mode:
 
 | Test frequency | Cs | D |
 |---|---|---|
