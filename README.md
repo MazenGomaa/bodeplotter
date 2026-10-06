@@ -124,11 +124,11 @@ These come from the hardware gate and are built into the drivers (`docs/SPEC.md`
 |---|---|
 | `src/bodeplot/` | the application |
 | `tests/` | pytest suite: mock drivers, plus the real drivers against simulated SCPI instruments (`fakes.py`) |
-| `docs/SPEC.md` | design and milestones |
+| `docs/SPEC.md` | design: overview and index of the sections; the detail is in `docs/spec/` (drivers, sweep, skew, gui, web, roadmap) |
+| `docs/ARCHITECTURE.md` | modules, what calls what, where each concern lives (checked against the code by `tests/test_docs.py`) |
+| `docs/STATE.md` | what is done and what is next |
 | `docs/*.pdf` | instrument programming manuals |
-| `HW_REPORT.md` | hardware gate results |
+| `HW_REPORT.md` | what the hardware really does: the current verified facts, and the index of the dated test runs in `docs/hw/` |
 | `hwcheck/` | bench scripts, including `iolayer.py` (the tested I/O reference) and `s0c_realign.py` (optional bench tool; not used by the app). Each script prints its file hash and git commit at start; commit before every bench run. |
 | `run.bat`, `run.sh` | launchers |
 | `scripts/99-usbtmc-unit.rules` | Linux udev rule example (untested) |
-
-Note: `docs/SPEC.md` section 4 shows `SPEC.md` at the repository root; it lives in `docs/`.
