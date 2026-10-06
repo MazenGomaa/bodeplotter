@@ -54,8 +54,14 @@ if SENTINEL:
 DRIVER = "--driver" in argv
 if DRIVER:
     argv.remove("--driver")
+# --tb S: force this timebase (s/div) after the first point, to see whether the busy episodes
+# belong to 200 / 500 ns/div only. --freqs LO HI: eight log-spaced frequencies from LO to HI.
+TB = opt("--tb", 1, float, [None])[0]
+LO_HI = opt("--freqs", 2, float, None)
 N = int(argv[0]) if argv else 200
 FREQS = [1852237.46, 2000000.0, 2159550.32, 2331828.80, 2517850.82, 2718712.78, 2935598.54, 3169786.38]
+if LO_HI:
+    FREQS = [LO_HI[0] * (LO_HI[1] / LO_HI[0]) ** (k / 7.0) for k in range(8)]
 out = {"n": N, "channels": [REF, DUT], "amp_vpp": AMP, "reads": []}
 
 
@@ -75,7 +81,9 @@ def main():
         gen.set_output(stim.gen_channel, True)
         state = meter.initial_state()
         meter.measure(FREQS[0], meas, state)             # auto-range and timebase, single shot
-        print("timebase %g s/div" % state.timebase)
+        if TB is not None:
+            state.timebase = scope.set_timebase(TB)
+        print("timebase %g s/div, frequencies %s" % (state.timebase, ", ".join("%.4g" % f for f in FREQS)))
         scope.free_run()
         time.sleep(0.5)
         if DRIVER:
