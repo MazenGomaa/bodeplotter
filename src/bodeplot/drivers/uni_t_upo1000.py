@@ -550,10 +550,18 @@ class UniTUPO1000(Digitizer):
         self.set_verified(":TRIGger:SWEep", "AUTO", V_SWEEP, "AUTO")                  # U1K p.36
 
     # ------------------------------------------------------------------ acquisition
-    def _settle_before_arm(self, quiet_s: float = 0.3, timeout_s: float = 3.0) -> None:
+    # Margins of one single-shot capture (HW_REPORT.md 12.4). Class attributes so the bench
+    # script hwcheck/s7_capspeed.py can find out how far they can be shortened.
+    ARM_QUIET_S = 0.3               # since the last setting change, before arming
+    STOP_HOLD_S = 0.1               # STOP must hold this long before the record is read
+    MIN_WAIT_EXTRA_S = 0.05         # on top of one screen, before the record is read
+    STATUS_POLL_S = 0.01            # pause between two status polls
+
+    def _settle_before_arm(self, quiet_s: float | None = None, timeout_s: float = 3.0) -> None:
         """A setting change makes the scope restart its acquisition (status ARMED); arming
         a single shot during that gives two arm cycles (HW_REPORT.md 12.4). Wait until
         quiet_s has passed since the last setting and the status is not ARMED."""
+        quiet_s = self.ARM_QUIET_S if quiet_s is None else quiet_s
         t0 = self._clock()
         while True:
             if self._clock() - self._last_set_t >= quiet_s and self.status() != "ARMED":
@@ -607,7 +615,7 @@ class UniTUPO1000(Digitizer):
                 self._settle_before_arm()
                 self.write(":TRIGger:SWEep SINGle")                                   # U1K p.36 (arms)
                 t0 = self._clock()
-                min_wait = self.HDIV * self.tb + 0.05
+                min_wait = self.HDIV * self.tb + self.MIN_WAIT_EXTRA_S
                 force_wait = max(1.0, 60 * self.tb)
                 forced, armed, rearmed = 0, False, False
                 t_stop = t_ready = None
@@ -621,7 +629,7 @@ class UniTUPO1000(Digitizer):
                         timeline.append((round(el, 2), st))
                     armed = armed or st != "STOP"
                     t_stop = (t_stop if t_stop is not None else el) if st == "STOP" else None
-                    if armed and t_stop is not None and el - t_stop >= 0.1 and el >= min_wait:
+                    if armed and t_stop is not None and el - t_stop >= self.STOP_HOLD_S and el >= min_wait:
                         break
                     if not armed and not rearmed and el > 1.5:
                         self.write(":TRIGger:SWEep SINGle")          # the arm command was not taken
@@ -637,7 +645,7 @@ class UniTUPO1000(Digitizer):
                     if el > timeout_s:
                         raise AcquireTimeout(f"acquisition not complete after {el:.1f} s, timeline {timeline}",
                                              ":TRIGger:STATus?")
-                    self._sleep(0.01)
+                    self._sleep(self.STATUS_POLL_S)
                 return {ch: self._fetch_channel(ch) for ch in chans}
             except AcquireTimeout:
                 raise
