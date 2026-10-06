@@ -123,6 +123,27 @@ def test_off_grid_delay_and_gain_mismatch_warn_and_use_measured_value(make_sessi
     assert abs(res.points[-1].phase_deg) < 0.5                     # measured value corrects it
 
 
+def test_evaluate_without_snapping_uses_the_measured_value():
+    hs = [cmath.exp(2j * math.pi * f * 0.08e-9) for f in (10e6, 20e6)]
+    check = skew.evaluate([10e6, 20e6], hs, snap_states=False)
+    assert not check.snapped and check.delay_s == pytest.approx(0.08e-9)
+    assert check.warnings == []                                    # expected, so no warning
+
+
+@pytest.mark.parametrize("ref, dut", [(3, 4), (2, 1)])
+def test_only_ref_ch1_dut_ch2_snaps(make_session, no_sleep, ref, dut):
+    """The four states were measured with reference CH1 and DUT CH2. On the bench CH3 / CH4
+    sat at +0.08 ns and snapping it to +0.15 ns left -0.39 deg at 20 MHz (HW_REPORT 13.14)."""
+    session = make_session(seed=43, skew_state=1, checked=False)
+    session.digitizer.extra_delay_s = -0.07e-9                     # 0.15 - 0.07 = 0.08 ns
+    cfg = ScopeConfig(ref_channel=ref, dut_channel=dut, probe_atten={ref: 10.0, dut: 10.0})
+    check = run_skew_check(session, StimulusConfig(), cfg, MeasureSettings(), sleep=no_sleep)
+    assert not check.snapped and check.delay_s == check.measured_s
+    assert not any("known state" in w for w in check.warnings)
+    default = _check(session, no_sleep)                            # CH1 / CH2 still snaps
+    assert default.snapped and default.delay_s == SKEW_STATES_S[1]
+
+
 def test_check_frequencies_do_not_follow_the_sweep_range(make_session, no_sleep):
     """10 and 20 MHz whatever the sweep range: at 1 MHz a 0.3 ns delay is 0.1 degree, which
     the bench could not resolve (Milestone 7)."""

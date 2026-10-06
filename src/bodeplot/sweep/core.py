@@ -244,7 +244,8 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
             same_node(False)
         if session.dead_reason is None:
             session.end_measurement()
-    return skew.evaluate(freqs, hs, alignment_epoch=epoch)
+    return skew.evaluate(freqs, hs, alignment_epoch=epoch,
+                         snap_states=skew.snaps(scope_cfg.ref_channel, scope_cfg.dut_channel))
 
 
 def watchdog_message(e: InstrumentUnresponsive) -> str:

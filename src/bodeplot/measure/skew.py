@@ -15,6 +15,7 @@ from ..models import SkewCheck
 
 # States measured on the bench (HW_REPORT.md 12.11), seconds.
 KNOWN_STATES_S: tuple[float, ...] = (-1.85e-9, 0.15e-9, 2.15e-9, 4.15e-9)
+SNAP_PAIR = (1, 2)              # (reference, DUT) channels the states were measured on
 SNAP_TOL_S = 0.3e-9             # snap if within this of a known state
 CONSISTENCY_TOL_S = 0.3e-9      # the two check frequencies must agree to this
 GAIN_WARN_DB = 0.3
@@ -51,9 +52,17 @@ def check_frequencies(top_hz: float) -> tuple[float, float]:
     return lo, hi
 
 
-def evaluate(freqs_hz, hs, alignment_epoch: int = 0, now: datetime | None = None) -> SkewCheck:
+def snaps(ref_channel: int, dut_channel: int) -> bool:
+    """The known states belong to one channel pair in one order. On the bench CH3 / CH4
+    sat at +0.08 ns, and snapping that to +0.15 ns left -0.39 deg at 20 MHz (HW_REPORT.md 13.14)."""
+    return (ref_channel, dut_channel) == SNAP_PAIR
+
+
+def evaluate(freqs_hz, hs, alignment_epoch: int = 0, now: datetime | None = None,
+             snap_states: bool = True) -> SkewCheck:
     """Turn same-node transfer measurements into a SkewCheck: mean delay, snapping,
-    gain mismatch and the warnings of SPEC.md 8.6."""
+    gain mismatch and the warnings of SPEC.md 8.6. With snap_states False the measured
+    delay is applied as it is, with no warning."""
     freqs = [float(f) for f in freqs_hz]
     if not freqs or len(freqs) != len(hs):
         raise ValueError("need one H per check frequency")
@@ -61,14 +70,14 @@ def evaluate(freqs_hz, hs, alignment_epoch: int = 0, now: datetime | None = None
     gains = [20.0 * math.log10(abs(h)) if abs(h) > 0 else float("-inf") for h in hs]
     measured = sum(delays) / len(delays)
     gain = sum(gains) / len(gains)
-    applied, snapped = snap(measured)
+    applied, snapped = snap(measured) if snap_states else (measured, False)
     warnings: list[str] = []
     if len(delays) > 1 and max(delays) - min(delays) > CONSISTENCY_TOL_S:
         warnings.append(
             "The two check frequencies disagree by %.2f ns (%s); the offset is not a pure delay."
             % ((max(delays) - min(delays)) * 1e9,
                ", ".join("%.2f ns at %g MHz" % (d * 1e9, f / 1e6) for d, f in zip(delays, freqs))))
-    if not snapped:
+    if snap_states and not snapped:
         warnings.append(
             "Measured delay %.2f ns is more than %.1f ns from every known state (%s ns); "
             "using the measured value." % (measured * 1e9, SNAP_TOL_S * 1e9,
