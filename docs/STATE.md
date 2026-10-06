@@ -4,7 +4,7 @@ What is done, what is next, and the decisions that are not obvious from the code
 
 ## Start here
 
-**v1 and milestone A1 of v2 (through calibration) are done. Next is A2 (`docs/spec/roadmap.md` section 16): connection spec and per-driver skew data.** A2 has no design yet: it starts with the brainstorming step, not with code.
+**v1 and milestone A1 of v2 (through calibration) are done. A2 (connection spec, serial transport, per-driver skew data) was PARKED by the user on 2026-10-07: it served a future device that is not available; ignore it completely until the user brings it up. Next is A3, trace overlay and compare (`docs/spec/roadmap.md` section 16).** A3 has no design yet: it starts with the brainstorming step, not with code.
 
 1. A1 was built on 2026-10-06 and run on the bench on 2026-10-07 (`HW_REPORT.md` section 14). The user saw the results (no mean error; per-point scatter limited by noise: 0.008 dB and 0.05 deg standard deviation with one capture, 0.004 dB and 0.03 deg with 4 averages; the design's "every point within 0.02 dB and 0.1 deg" is met for gain with 4 averages and missed by one point in phase) and answered "lets continue". That is taken as acceptance of A1 as it stands; the criterion in the design was not reworded.
 2. Both branches (`docs-split`, `a1-through-calibration`) were merged into `main` on 2026-10-07. `pytest`: 349 passed.
