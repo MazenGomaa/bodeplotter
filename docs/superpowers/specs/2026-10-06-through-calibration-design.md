@@ -1,6 +1,6 @@
 # Through calibration: design
 
-Date: 2026-10-06. Status: design approved in conversation; this file is for the user's review before the implementation plan. It replaces the one-line roadmap entry in `SPEC.md` section 15.
+Date: 2026-10-06. Status: **approved by the user on 2026-10-06** (design in conversation, then this file). Not built yet; the next step is the implementation plan. It is milestone A1 of the roadmap in `SPEC.md` sections 15 and 16.
 
 ## 1. Purpose
 

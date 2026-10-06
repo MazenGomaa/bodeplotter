@@ -40,12 +40,31 @@ Two levels of simulation, used for different things:
 
 Persistence (`io/`): settings and presets are JSON in the user config folder, loaded through `models.from_dict`, which falls back to defaults field by field; exports are CSV (round-trips), image, Touchstone.
 
+## START HERE (hand-over written 2026-10-06, end of the bench session)
+
+**v1 is done and accepted. The next work is v2, milestone A1: through calibration.** The user cleared the previous session on purpose to start v2 fresh.
+
+1. Read the approved design: `docs/superpowers/specs/2026-10-06-through-calibration-design.md` (approved by the user on 2026-10-06, word for word "Approved"). Nothing of it is built: no code, no tests, no implementation plan yet.
+2. Next step: write the implementation plan (the user works with the superpowers skills: brainstorming is finished for this feature, so `writing-plans` is next, then build test-first), then build it. The files it touches are listed in section 11 of the design.
+3. It ends with a bench acceptance that needs the user at the bench (design section 10): calibrate, through sweep (target 0.02 dB and 0.1 deg), the RC low-pass, reconnect. **Ask what is wired before every bench run**, commit before it, and never cut a bench script's output short.
+4. State of the bench when the session ended (2026-10-06, night): both instruments on USB; the user ran the app last (one Sine fit and one Fast preview sweep of their RC filter), so the generator output is off and the scope restored as the app leaves them, but the wiring is whatever the user left: ASK. Probes are 10X; they are trimmed for other channels than the ones they sit on (0.1 to 0.2 dB tilt), which is exactly what the calibration is meant to remove.
+5. Roadmap after A1: SPEC.md section 15 (phases A to E) and section 16 (milestone tables). Do not start A2 or anything later without the user.
+
+## Roadmap (user's update of 2026-10-06; full text in SPEC.md sections 15 and 16)
+
+Order: **A. v2 on Windows** (A1 through calibration, A2 connection spec + per-driver skew states, A3 trace overlay, A4 auto markers) -> **B. v3 filter recognition** (B1 metrics, B2 classification, B3 rational fit, B4 GUI and export) -> **C. Windows full verification** on the real instruments, reported in HW_REPORT -> **D. WSL**, software only (pytest and `--sim` on Linux, OS-specific fixes; optional usbipd smoke test, labelled as not representative) -> **E. Raspberry Pi Zero 2 W**: E1 hardware gate (stop and report), E2 web frontend (FastAPI + WebSocket in `web/` next to `gui/`, same repo, shared core), E3 deployment.
+
+- Candidate drivers, unscheduled, each with its own hardware gate first: R&S HMO1202 (USB-TMC, switch it from VCP), UNI-T UTD2052CL, JDS6600 generators (serial), tinySA Ultra (serial, magnitude only, above 30 MHz).
+- Parked, see `docs/feature.md` (the user's file): LCR / impedance mode (decision after v3; it needs the v2 calibration and the v3 fitting code, so keep both reusable; the user's UT612 can be the reference meter), curve tracer (needs hardware that does not exist yet; no design work).
+- Dropped by the user: the scope's LAN and web UI; restoring the generator's settings after a sweep.
+- Where the roadmap update and the code disagree, the code wins: nothing is "snapped" to the skew states any more (they only name the state and feed one warning), and the drivers already sit on a `Transport` interface (only `VisaTransport` exists, `open()` still takes resource + backend).
+
 ## Current state (updated 2026-10-06)
 
 - **Milestones 0, 0b, 0c (hardware gate): done. Verdict GO WITH WORKAROUNDS** (`HW_REPORT.md`, top block and section 12).
 - **Milestones 1 to 5: done, against the mock drivers only.** `pytest`: 174 passed (2026-10-06). The user reviewed the GUI and asked for changes, all done (see below).
 - **Milestone 6 (real drivers + probe tool): DONE 2026-10-06.**
-- **Milestone 7 (bench bring-up): DONE 2026-10-06.** The user ran the acceptance from the GUI on the real instruments (connect with no pop-up, skew check, one Sine fit sweep and one Fast preview sweep of their RC filter: "both sweeps look right") and asked for the milestone to be marked done. Full record: HW_REPORT section 13 (13.13 to 13.26 are from that session). `pytest`: 264 passed (2026-10-06, night). Everything is committed (`git log`); the only untracked item is `graphify-out/`.
+- **Milestone 7 (bench bring-up): DONE 2026-10-06.** The user ran the acceptance from the GUI on the real instruments (connect with no pop-up, skew check, one Sine fit sweep and one Fast preview sweep of their RC filter: "both sweeps look right") and asked for the milestone to be marked done. Full record: HW_REPORT section 13 (13.13 to 13.26 are from that session). `pytest`: 264 passed (2026-10-06, night). Everything is committed (`git log`); the only untracked item is `graphify-out/`. `docs/feature.md` (the user's parked-feature notes) is tracked since 2026-10-06.
   - **What is still open (none of it blocks using the app):** (a) the trigger of the +2.15 ns alignment state (13.25); (b) FIXED 2026-10-06 night (13.27): Fast preview keeps off 200 / 500 ns/div (`DigitizerCaps.running_avoid_timebases`, `_off_busy_timebase`), 6 bench sweeps with no pause; what the scope is busy with there is unknown; (c) the user's report of a gain drop near the end of a Fast preview sweep, not reproduced in 15 bench sweeps: ask for a CSV or screenshot; (d) **LAN and the scope's web UI: DROPPED by the user** ("not an option most of the time"), do not raise it again; (e) through calibration (SPEC 15, v2) and Linux; (f) the user's two probes are compensated for the "wrong" channels (0.1 to 0.2 dB tilt), their job with the scope's cal output; (g) the unplugged-cable message was seen by the user on the bench; the "measured value" wording of the skew wizard was in their acceptance run and drew no comment.
   - **No skew pop-up on connect any more (user decision 2026-10-06 night)**: after a connect, a resync or "Front panel was used" the app only shows the red UNCHECKED status and a log line (`MainWindow._prompt_recheck`). Starting a Sine fit sweep without a valid check still asks.
   - **Bench manners learned in that session:** ask what is wired before EVERY bench run, even when a script guards itself (the user stopped a run for this); never cut a bench script's output short (see Rules for instrument work).
@@ -129,7 +148,9 @@ Project root: `C:\Users\mazen\Desktop\bodeplotter`. A git repository (since 2026
 
 | Path | What |
 |---|---|
-| `docs/SPEC.md` | design spec; milestones in section 16, open items in section 17 |
+| `docs/SPEC.md` | design spec; roadmap in section 15, milestones in section 16, open items in section 17 |
+| `docs/superpowers/specs/` | approved designs of features (through calibration, 2026-10-06) |
+| `docs/feature.md` | the user's notes on parked features (LCR mode, curve tracer) |
 | `docs/*.pdf` | the programming manuals (UPO1000 manual is the one cited for the scope, as `U1K p.N`) |
 | `HW_REPORT.md` | hardware report: Milestone 0 findings S1-S9, G1-G5; section 12 = 0b, 0c, alignment fault, capture benchmark |
 | `README.md` | status, how to run, features |

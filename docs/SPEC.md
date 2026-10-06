@@ -14,12 +14,12 @@ This document is the single source of truth for Claude Code. Read it fully befor
   - Generator: **UNI-T UTG932E** (2-channel, sine up to 30 MHz, UTG900E family). Its `*IDN?` reports only the family name `UTG900E`.
 - Python desktop GUI with a live-updating Bode plot.
 - Runs on **Windows and Linux**.
-- Connects over **USB (USBTMC) or LAN**, configured per instrument.
+- Connects over **USB (USBTMC) or LAN**, configured per instrument. (LAN was never tested and was dropped by the user on 2026-10-06; serial links are planned, §15 Phase A.)
 - Pluggable driver architecture, so the app is **not locked to these two models**.
 - Full **simulation mode** (mock instruments + simulated DUT) so everything except the real drivers can be built and tested without hardware.
 
 **Non-goals (v1)**
-- Full probe/channel calibration over frequency, trace overlay, auto markers (v2, §15). The single-frequency **channel alignment check** of §8.6 is NOT deferred: it is required in v1.
+- Full probe/channel calibration over frequency, trace overlay, auto markers (v2, §15; in progress since 2026-10-06). The single-frequency **channel alignment check** of §8.6 is NOT deferred: it is required in v1.
 - Filter recognition (v3, §15).
 - Standalone executables (PyInstaller is a later stage).
 - Loop-gain injection workflows with amplitude profiles.
@@ -671,31 +671,85 @@ All tests run against mock drivers, with no hardware and no display needed. Use 
 
 ---
 
-## 15. Roadmap (design for it, don't build it in v1)
+## 15. Roadmap
 
-**v2**
-- **Probe/channel calibration:** sweep with both probes on the same node, store H_cal(f) per setup, and divide later measurements by it (interpolated). The single-frequency delay check of §8.6 is the v1 subset of this and must not wait for v2.
-- **Trace overlay & compare:** multiple traces on the plot, load CSVs, show or hide traces, show the difference trace.
-- **Auto markers:** −3 dB point(s), peak/notch, gain margin and phase margin readout, user markers.
+Rewritten 2026-10-06 from the user's roadmap update of that day, which sets the plan and the order. Facts about the hardware and the code come from this document, `HW_REPORT.md` and `CLAUDE.md`; where the update assumed something that is no longer true, it is said below.
 
-**v3: filter recognition**
+v1 (Milestones 0 to 7, §16) is done and accepted on Windows. The phases below are done in this order. The milestones of each phase are in §16.
+
+### Phase A. v2 (in progress; finish it on Windows)
+
+- **Through calibration** (probe / channel calibration over frequency): sweep with both probes on the same node, store `H_cal(f)` for the connection, divide later measurements by it. **Design approved by the user on 2026-10-06:** `docs/superpowers/specs/2026-10-06-through-calibration-design.md`. Not built yet. The skew check of §8.6 stays as the quick everyday alternative.
+- **Architecture items, to be scheduled early in v2:**
+  - *Transport-agnostic drivers.* `open()` takes a connection spec (VISA resource + backend, or serial port + baud rate) in place of today's `open(resource, backend)`; each driver declares the transports it supports; the Connections dialog (and later the web settings) adapt to that. State of the code today: the real drivers already talk through a `Transport` interface with an injectable factory (`drivers/transport.py`), but `VisaTransport` is the only implementation and `open()` still takes a VISA resource string and a backend name.
+  - *Skew state table as per-driver data.* The four states (−1.85, +0.15, +2.15, +4.15 ns) are constants in `measure/skew.py`; they belong to the UPO1000 driver. Note: since 2026-10-06 nothing is snapped to them any more (§8.6 step 6): they only name the state in the wizard and feed the "fits no known state" warning. The roadmap update still calls them "snapping states".
+- **Trace overlay and compare:** several traces on the plot, load CSVs, show or hide traces, show the difference trace.
+- **Auto markers:** −3 dB point(s), peak / notch, gain margin and phase margin read-out, user markers.
+
+### Phase B. v3: filter recognition
+
 - Classify the response as LPF / HPF / BPF / BSF / all-pass / unknown.
 - Report:
   - Cutoff(s) at −3 dB relative to the passband.
   - Passband gain and ripple; stopband attenuation.
-  - Centre frequency, bandwidth and Q (for BPF/BSF).
+  - Centre frequency, bandwidth and Q (for BPF / BSF).
   - Roll-off slope in dB/decade → estimated order.
 - Rational transfer-function fit (e.g. vector fitting / least squares on complex H): show the fitted curve and list poles and zeros.
 - Confidence score; refuse to classify when there are too many flags, too narrow a span, or low SNR.
+- Keep the fitting code reusable: the parked LCR mode (below) depends on it.
 
-**Later**
+### Phase C. Windows full verification
+
+After v3, hardware and communication are re-checked end to end on the real instruments, and reported in `HW_REPORT.md`:
+
+- skew check;
+- dual-channel capture;
+- all exports;
+- a known RC low-pass and an RLC band-pass against theory (the RC has been done once, `HW_REPORT.md` 13.18; an RLC band-pass has only ever been measured on the mock);
+- per-point timing.
+
+### Phase D. WSL (software only)
+
+- The full pytest suite and the app in `--sim` mode on Linux.
+- Fix what is OS-specific: paths, launchers, `run.sh`, fonts, platformdirs. (`run.sh` and `scripts/99-usbtmc-unit.rules` exist and have never been run.)
+- Optional: one hardware smoke test through usbipd-win (`*IDN?` and one dual-channel capture), clearly labelled as NOT representative of native Linux because of the USB/IP forwarding.
+
+### Phase E. Raspberry Pi (Pi Zero 2 W, Raspberry Pi OS Lite 64-bit)
+
+- **E1. Pi hardware gate.** The Milestone 0 / 0b / 0c checks again, natively: USB through an OTG adapter and a powered hub; kernel `usbtmc` against pyvisa-py (udev rule / unbind / blacklist); the I/O layer test suite; dual-channel capture; skew states; timing; freeze and out-of-step behaviour. **Stop and report before E2.**
+- **E2. Web frontend.** FastAPI + WebSocket, plotting in the browser. It lives in this repository as a second frontend, `web/` next to `gui/`, sharing `sweep/core.py`, the drivers, the I/O layer and the math. No long-lived fork: a feature branch during development only, then merge. Requirements:
+  - sweep state on the server: a sweep goes on if the browser disconnects, and a reconnecting browser shows the progress;
+  - one controlling client, the others view only;
+  - generator `safe_off` on abort, on error and on server shutdown, plus the watchdog;
+  - LAN only, with a simple password (this is the Pi's network; the instruments stay on USB, and instrument LAN was dropped by the user on 2026-10-06);
+  - logs in RAM or with a small rotation (SD card wear);
+  - exports downloadable from the browser.
+
+  Developed and tested first in WSL / Windows against the mocks, then deployed to the Pi.
+- **E3. Pi deployment:** systemd service, start on boot, install script, README section.
+
+### Candidate drivers (unscheduled; each needs its own hardware gate before use)
+
+| Instrument | Kind | Link | Notes |
+|---|---|---|---|
+| R&S HMO1202 | scope | SCPI over USB-TMC | its USB mode must be switched from VCP to TMC |
+| UNI-T UTD2052CL | scope | per the UTD2000CL programming manual | manual not in `docs/` yet |
+| JDS6600 series | generator | serial, proprietary protocol | the `jds6600` Python package as reference; needs the serial transport of Phase A |
+| tinySA Ultra | spectrum analyzer | serial | `ScalarReceiverMeter`, magnitude only, for work above 30 MHz (the app's own sweeps stop at 20 MHz today) |
+
+### Parked features (`docs/feature.md`)
+
+- **LCR / impedance analyzer mode:** parked, unscheduled; decision after v3. It depends on the v2 calibration and on the v3 fitting code, so both are to be kept reusable. (The user owns a UNI-T UT612 LCR meter, which can serve as the reference meter that file asks for.)
+- **Curve tracer mode:** heavily deferred; it needs hardware that is not available yet. Mentioned only; no design work.
+
+### Later, unscheduled
+
 - PyInstaller builds.
-- Additional drivers: other scopes and generators, and `ScalarReceiverMeter` for spectrum analyzers such as the tinySA Ultra above 20 MHz.
 
-**Design implications for v1:**
+**Design implications that still hold:**
 - Keep `PointResult.h` complex and stored.
 - Keep the CSV loader.
-- Keep plotting able to handle multiple traces internally, even though v1 shows one.
+- Keep plotting able to handle several traces internally.
 
 ---
 
@@ -721,6 +775,30 @@ All tests run against mock drivers, with no hardware and no display needed. Use 
    3. Then sweep the full 50 Hz–20 MHz range and record the per-point timing.
 
 Each milestone ends with `pytest` green and a short note in `README.md` describing what works.
+
+**After v1 (roadmap of §15; every milestone ends with `pytest` green, the notes updated and a commit):**
+
+Phase A, v2, on Windows:
+
+| Milestone | Content | Tests | Stop point |
+|---|---|---|---|
+| A1. Through calibration | as in `docs/superpowers/specs/2026-10-06-through-calibration-design.md`. **State 2026-10-06: design approved; next step is the implementation plan, then the build.** | spec §9: pure functions, mock with tilt and skew, validity rules, fallback, CSV round trip, fakes, GUI | bench acceptance with the user (spec §10), then the user's review |
+| A2. Connection spec and per-driver data | `open(spec)` with VISA or serial; drivers declare their transports; Connections dialog adapts; skew state table moves into the UPO1000 driver | existing driver and GUI tests still pass; a serial transport runs against a loop-back fake; a driver without states gets no state warning | one through sweep and one skew check on the bench to show nothing changed |
+| A3. Trace overlay and compare | several traces, load CSV, show / hide, difference trace | trace model, loader, difference on mismatched grids, GUI offscreen | user's review of the GUI |
+| A4. Auto markers | −3 dB, peak / notch, gain and phase margin, user markers | marker math on the mock DUTs against theory; GUI offscreen | user's review; end of v2 |
+
+Phase B, v3:
+
+| Milestone | Content | Tests | Stop point |
+|---|---|---|---|
+| B1. Response metrics | passband level and ripple, cut-offs, stopband attenuation, slope and order, centre / bandwidth / Q, as pure functions | every simulated DUT against its theory, with noise and with flagged points | none |
+| B2. Classification | LPF / HPF / BPF / BSF / all-pass / unknown, confidence score, refusal rules | each DUT type recognised; refusals for narrow span, low SNR, too many flags | user's review of the rules |
+| B3. Rational fit | poles and zeros from complex H, fitted curve; written to be reused (LCR mode) | recovers the poles of the simulated DUTs within tolerance; stable on noisy data | none |
+| B4. GUI and export | result panel, fit overlay, report in the exports | GUI offscreen; export round trip | user's review; end of v3 |
+
+Phase C: one milestone, the list in §15, reported in `HW_REPORT.md`. Phase D: one milestone, plus the optional usbipd smoke test. Phase E: E1 (stop and report), E2, E3 as in §15.
+
+The candidate drivers and the parked features of §15 are not milestones until the user schedules them.
 
 ---
 
