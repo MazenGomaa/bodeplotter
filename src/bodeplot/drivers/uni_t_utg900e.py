@@ -44,7 +44,8 @@ class UniTUTG900E(SignalSource):
         Command(":CHANnel<n>:BASE:FREQuency", "UTG p.12", True),
         Command(":CHANnel<n>:BASE:PHASe", "UTG p.12", True, note="queried only"),
         Command(":CHANnel<n>:BASE:AMPLitude", "UTG p.13", True),
-        Command(":CHANnel<n>:BASE:OFFSet", "UTG p.13", True),
+        Command(":CHANnel<n>:BASE:OFFSet", "UTG p.13", True, note="negative values are ignored (firmware 1.09)"),
+        Command(":CHANnel<n>:BASE:HIGH", "UTG p.13", True, note="used to reach a negative offset"),
         Command(":CHANnel<n>:MODe?", "UTG p.15", True, note="query only"),
     )
     ALLOWED = tuple(re.compile(p) for p in (
@@ -58,6 +59,7 @@ class UniTUTG900E(SignalSource):
         rf"^{_CH}:BASE:PHASe\?$",                                           # UTG p.12 (query only)
         rf"^{_CH}:BASE:AMPLitude( {_NUM}|\?)$",                             # UTG p.13
         rf"^{_CH}:BASE:OFFSet( {_NUM}|\?)$",                                # UTG p.13
+        rf"^{_CH}:BASE:HIGH( {_NUM}|\?)$",                                  # UTG p.13
         rf"^{_CH}:MODe\?$",                                                 # UTG p.15 (query only)
     ))
     # *IDN? names only the family (UTG900E), so the limits are the smallest of the family
@@ -187,10 +189,48 @@ class UniTUTG900E(SignalSource):
         self.set_verified(f":{c}:LOAD", scpi.plain_decimal(ohms), scpi.v_float, ohms)         # UTG p.11
         self.set_verified(f":{c}:AMPLitude:UNIT", "VPP", V_UNIT, "VPP")                       # UTG p.11
         self.set_frequency(ch, freq_hz)
-        self.set_verified(f":{c}:BASE:AMPLitude", scpi.plain_decimal(amp_vpp, 4), scpi.v_float,
-                          float(amp_vpp))                                                     # UTG p.13
-        self.set_verified(f":{c}:BASE:OFFSet", scpi.plain_decimal(offset_v, 4), scpi.v_float,
-                          float(offset_v), tol_abs=1e-6)                                      # UTG p.13
+        self._set_level(c, float(amp_vpp), float(offset_v))
+
+    def _set_level(self, c: str, amp_vpp: float, offset_v: float) -> None:
+        """Amplitude and offset. This generator (firmware 1.09) ignores every NEGATIVE
+        number it is sent: ':BASE:OFFSet -0.1' and ':BASE:LOW -0.6' leave the value as it
+        was, in any number format, with no error (HW_REPORT.md 13.11). A negative offset
+        -d is reached with positive numbers only: at offset 0 the amplitude is widened to
+        A + 2d, then the top is pulled down to A/2 - d with ':BASE:HIGH'; the bottom stays
+        at -(A/2 + d). Measured: the read-backs give offset -d and amplitude A, and the DC
+        at the output moves. That needs A/2 - d >= 0 and the output OFF meanwhile."""
+        amp = lambda v: self.set_verified(f":{c}:BASE:AMPLitude", scpi.plain_decimal(v, 4), scpi.v_float,
+                                          float(v), tol_abs=1e-6)                             # UTG p.13
+        offs = lambda v: self.set_verified(f":{c}:BASE:OFFSet", scpi.plain_decimal(v, 4), scpi.v_float,
+                                           float(v), tol_abs=1e-6)                            # UTG p.13
+        if offset_v >= 0:
+            offs(0.0)                           # from a known state: the last offset may be negative
+            amp(amp_vpp)
+            offs(offset_v)
+            return
+        d = -offset_v
+        if d > amp_vpp / 2 + 1e-9:
+            raise DriverError(
+                "This generator cannot be set to an offset of %g V at %g Vpp: it ignores negative "
+                "values, and the route around that only reaches down to minus half the amplitude "
+                "(%g V here). Use an offset of %g V or higher." % (offset_v, amp_vpp, -amp_vpp / 2, -amp_vpp / 2),
+                "configure_sine")
+        if amp_vpp + 2 * d > self.caps.amp_max_vpp:
+            raise DriverError("An offset of %g V at %g Vpp is outside what the generator can be set to."
+                              % (offset_v, amp_vpp), "configure_sine")
+        if self.query(f":{c}:OUTPut?", scpi.v_bool):                                          # UTG p.9
+            raise DriverError("A negative offset can only be set while the generator output is off.",
+                              "configure_sine")
+        offs(0.0)
+        amp(amp_vpp + 2 * d)
+        high = amp_vpp / 2 - d
+        self.set_verified(f":{c}:BASE:HIGH", scpi.plain_decimal(high, 4), scpi.v_float, float(high),
+                          tol_abs=1e-4)                                                       # UTG p.13
+        got_off = self.query(f":{c}:BASE:OFFSet?", scpi.v_float)
+        got_amp = self.query(f":{c}:BASE:AMPLitude?", scpi.v_float)
+        if abs(got_off - offset_v) > 1e-3 or abs(got_amp - amp_vpp) > 1e-3:
+            raise SetError("generator offset %g V at %g Vpp: read back offset %g V, amplitude %g Vpp"
+                           % (offset_v, amp_vpp, got_off, got_amp), f":{c}:BASE:HIGH")
 
     def set_frequency(self, ch: int, freq_hz: float) -> None:
         if not (self.caps.sine_min_hz <= freq_hz <= self.caps.sine_max_hz):

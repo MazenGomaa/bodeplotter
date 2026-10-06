@@ -677,3 +677,36 @@ def test_offset_volts_are_put_back_after_a_vdiv_change():
     assert fake.ch[2]["offset"] == pytest.approx(-0.00624)          # not -0.00312
     drv.set_vdiv(2, 0.02)
     assert fake.ch[2]["offset"] == pytest.approx(-0.0064)           # re-quantised to 0.8 mV steps
+
+
+# ---------------------------------------------------------------------- generator offset
+def test_negative_offset_is_reached_without_sending_a_negative_number():
+    """Bench, 2026-10-06: the generator ignores every negative argument (HW_REPORT 13.11)."""
+    drv, fake, clock = make_gen()
+    drv.open("FAKE::GEN", "py")
+    drv.configure_sine(1, 1000.0, 1.0, -0.1, "HIGHZ")
+    assert fake.ch[1]["offset"] == pytest.approx(-0.1) and fake.ch[1]["amp"] == pytest.approx(1.0)
+    sets = [c for c in fake.sent() if " " in c and not c.endswith("?")]
+    assert not any(re.search(r" -\d", c) for c in sets)
+    assert ":CHANnel1:BASE:AMPLitude 1.2" in sets and ":CHANnel1:BASE:HIGH 0.4" in sets
+    # the next configuration starts from a known state, whatever the sign was
+    drv.configure_sine(1, 1000.0, 0.5, 0.05, "HIGHZ")
+    assert fake.ch[1]["offset"] == pytest.approx(0.05) and fake.ch[1]["amp"] == pytest.approx(0.5)
+    drv.configure_sine(1, 1000.0, 1.0, -0.5, "HIGHZ")                 # the lowest reachable: HIGH 0
+    assert fake.ch[1]["offset"] == pytest.approx(-0.5) and fake.ch[1]["amp"] == pytest.approx(1.0)
+    drv.configure_sine(1, 1000.0, 1.0, 0.0, "HIGHZ")
+    assert fake.ch[1]["offset"] == 0.0 and fake.ch[1]["amp"] == pytest.approx(1.0)
+
+
+def test_an_offset_the_generator_cannot_reach_is_refused_in_plain_words():
+    drv, fake, clock = make_gen()
+    drv.open("FAKE::GEN", "py")
+    drv.configure_sine(1, 1000.0, 1.0, 0.0, "HIGHZ")
+    before = dict(fake.ch[1])
+    with pytest.raises(DriverError, match="minus half the amplitude"):
+        drv.configure_sine(1, 1000.0, 1.0, -0.6, "HIGHZ")
+    assert fake.ch[1]["amp"] == before["amp"] and fake.ch[1]["offset"] == before["offset"]
+    fake.ch[1]["output"] = True
+    with pytest.raises(DriverError, match="output is off"):
+        drv.configure_sine(1, 1000.0, 1.0, -0.1, "HIGHZ")
+    assert fake.ch[1]["amp"] == pytest.approx(1.0)                  # never widened with the output on

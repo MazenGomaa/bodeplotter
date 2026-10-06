@@ -101,6 +101,13 @@ class FakeGen(Transport):
                 self.hung = True        # '*OPC?' and friends (HW_REPORT G2)
             return None
         c, name, rest = self.ch[int(m.group(1))], m.group(2), m.group(3) or ""
+        if name == "BASE:HIGH":             # the top of the wave; setting it keeps the bottom
+            if rest == "?":
+                return "%.6e" % (c["offset"] + c["amp"] / 2)
+            high, low = float(rest), c["offset"] - c["amp"] / 2
+            if high >= 0 and high > low:
+                c["amp"], c["offset"] = high - low, (high + low) / 2
+            return None
         key = {"OUTPut": "output", "LOAD": "load", "AMPLitude:UNIT": "unit", "BASE:WAVe": "wave",
                "BASE:FREQuency": "freq", "BASE:AMPLitude": "amp", "BASE:OFFSet": "offset",
                "BASE:PHASe": "phase"}.get(name)
@@ -119,7 +126,7 @@ class FakeGen(Transport):
             c[key] = arg == "ON"
         elif key in ("unit", "wave"):
             c[key] = arg
-        else:
+        elif float(arg) >= 0:               # negative numbers are ignored (HW_REPORT 13.11)
             c[key] = float(arg)
         return None
 
