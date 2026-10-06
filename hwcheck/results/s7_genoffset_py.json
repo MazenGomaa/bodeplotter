@@ -1,0 +1,261 @@
+{
+  "backend": "@py",
+  "a": [
+    {
+      "set": 0.5,
+      "arg": "0.5",
+      "readback": 0.5,
+      "ok": true
+    },
+    {
+      "set": 0.1,
+      "arg": "0.1",
+      "readback": 0.1,
+      "ok": true
+    },
+    {
+      "set": 0.05,
+      "arg": "0.05",
+      "readback": 0.05,
+      "ok": true
+    },
+    {
+      "set": 0.02,
+      "arg": "0.02",
+      "readback": 0.02,
+      "ok": true
+    },
+    {
+      "set": 0.011,
+      "arg": "0.011",
+      "readback": 0.011,
+      "ok": true
+    },
+    {
+      "set": 0.01,
+      "arg": "0.01",
+      "readback": 0.01,
+      "ok": true
+    },
+    {
+      "set": 0.005,
+      "arg": "0.005",
+      "readback": 0.005,
+      "ok": true
+    },
+    {
+      "set": 0.001,
+      "arg": "0.001",
+      "readback": 0.001,
+      "ok": true
+    },
+    {
+      "set": -0.001,
+      "arg": "-0.001",
+      "readback": 0.001,
+      "ok": false
+    },
+    {
+      "set": -0.005,
+      "arg": "-0.005",
+      "readback": 0.001,
+      "ok": false
+    },
+    {
+      "set": -0.01,
+      "arg": "-0.01",
+      "readback": 0.001,
+      "ok": false
+    },
+    {
+      "set": -0.011,
+      "arg": "-0.011",
+      "readback": 0.001,
+      "ok": false
+    },
+    {
+      "set": -0.02,
+      "arg": "-0.02",
+      "readback": 0.001,
+      "ok": false
+    },
+    {
+      "set": -0.1,
+      "arg": "-0.1",
+      "readback": 0.001,
+      "ok": false
+    },
+    {
+      "set": -0.5,
+      "arg": "-0.5",
+      "readback": 0.001,
+      "ok": false
+    },
+    {
+      "set": 0.0,
+      "arg": "0",
+      "readback": 0.0,
+      "ok": true
+    }
+  ],
+  "b": [
+    {
+      "set": 0.0,
+      "arg": "0",
+      "readback": 0.0,
+      "tip_dc_v": 0.05631428571428573,
+      "shots": [
+        0.05500000000000001,
+        0.054000000000000034,
+        0.059942857142857166
+      ],
+      "vpp_tip": 0.9655528099236381
+    },
+    {
+      "set": 0.1,
+      "arg": "0.1",
+      "readback": 0.1,
+      "tip_dc_v": 0.15729523809523804,
+      "shots": [
+        0.15717142857142857,
+        0.1569428571428571,
+        0.15777142857142845
+      ],
+      "vpp_tip": 0.9657573529085819
+    },
+    {
+      "set": -0.1,
+      "arg": "-0.1",
+      "readback": 0.1,
+      "tip_dc_v": 0.15522857142857127,
+      "shots": [
+        0.15671428571428553,
+        0.15459999999999985,
+        0.15437142857142844
+      ],
+      "vpp_tip": 0.9645163353488849
+    },
+    {
+      "set": 0.011,
+      "arg": "0.011",
+      "readback": 0.011,
+      "tip_dc_v": 0.06044761904761906,
+      "shots": [
+        0.06034285714285714,
+        0.059628571428571434,
+        0.061371428571428605
+      ],
+      "vpp_tip": 0.9646859745382681
+    },
+    {
+      "set": -0.011,
+      "arg": "-0.011",
+      "readback": 0.011,
+      "tip_dc_v": 0.06110476190476192,
+      "shots": [
+        0.061171428571428585,
+        0.061028571428571446,
+        0.061114285714285725
+      ],
+      "vpp_tip": 0.9661919909016194
+    },
+    {
+      "set": 0.0,
+      "arg": "0",
+      "readback": 0.0,
+      "tip_dc_v": 0.05566666666666668,
+      "shots": [
+        0.05660000000000004,
+        0.05794285714285713,
+        0.05245714285714287
+      ],
+      "vpp_tip": 0.9671130248592263
+    }
+  ],
+  "log": [
+    "scope resync ok: {'clear': 'pyusb INITIATE_CLEAR (backend clear: VI_ERROR_NSUP_OPER)', 'flushed': 'NotImplementedError: ', 'sentinel_reads': [1, 1, 1]}"
+  ],
+  "gen_idn": "UNI-T Technologies,UTG900E,69746177,1.09",
+  "scope_idn": "UNI-T Technologies,UPO1054,APX1424510001,1. 01. 0047",
+  "gen_outputs_final": [
+    false,
+    false
+  ],
+  "gen_restore_failures": [],
+  "scope_restore_failures": [],
+  "scope_stats": {
+    "queries": 698,
+    "empty_retries": 0,
+    "reply_errors": 0,
+    "out_of_step": 0,
+    "resyncs": 1,
+    "set_retries": 0,
+    "forced_triggers": 0,
+    "empty_blocks": 0
+  },
+  "gen_stats": {
+    "queries": 46,
+    "blocked": 0,
+    "timeouts": 0,
+    "clears": 0,
+    "retries": 0,
+    "set_retries": 0
+  },
+  "_identity": {
+    "script": "s7_genoffset.py",
+    "sha256": "59938843324f0732e7021acfc3770989169db8bbc0a70f4053ad6f5e3befd85e",
+    "modules": {
+      "common.py": "5ec7f6c3b6a9",
+      "dbg0b_ch2.py": "e684dcfb50cd",
+      "dbg0b_probe.py": "f4b172a7ece0",
+      "dbg0b_protviol.py": "f1226bd565eb",
+      "dbg0b_shots.py": "26f72899f907",
+      "dbg0b_single.py": "cde74ac67cc4",
+      "dbg0b_tbstuck.py": "b9e43fe24d84",
+      "dbg0c_output.py": "ba2e3f2b5893",
+      "dbg0c_skew.py": "eebc37287852",
+      "dbg0c_skew2.py": "23aa988ce010",
+      "dbg0c_skew3.py": "31be4921f773",
+      "dbg0c_skew4.py": "646f8fec2f96",
+      "dbg0c_skew5.py": "d619dfb9d855",
+      "dbg0c_skew6.py": "31639aa9ee8c",
+      "dbg0c_skew7.py": "5b47d8364f1d",
+      "dbg6_freerun.py": "0efe224d5d25",
+      "dbg_gen_alive.py": "2b23ffaa3137",
+      "dbg_gen_recover.py": "8c5df469eb96",
+      "dbg_latency.py": "bb8f25b338cb",
+      "dbg_probe.py": "720df3d3ab69",
+      "dbg_resync.py": "a654470fd356",
+      "dbg_resync2.py": "55df79180d06",
+      "dbg_sync.py": "7928a6b174de",
+      "dbg_vdiv.py": "710a2848e606",
+      "dbg_wave.py": "c7e5e3603563",
+      "dbg_wave2.py": "01e9853157fd",
+      "iolayer.py": "9a72e933ae3a",
+      "m7_sweep.py": "4f5ca7ccafa9",
+      "make_table.py": "189dfc588f10",
+      "s03_visa_list.py": "b25adeb97e9e",
+      "s04_s05_basic.py": "f594ce1600ca",
+      "s06_end_to_end.py": "6a829bd2d01e",
+      "s07_s08_timing_robust.py": "8e8725b62b72",
+      "s08b_reconnect.py": "c2415b2eb7c7",
+      "s0b_dual.py": "6955b28aaa94",
+      "s0b_identity.py": "a47db44fb764",
+      "s0c_dual10x.py": "1a212df5353a",
+      "s0c_realign.py": "3320958d28b0",
+      "s6_capbench.py": "3cf22e3bd96c",
+      "s6_lock.py": "d864c44fbb0b",
+      "s6_overdrive.py": "cfe7c4e166ca",
+      "s6_state.py": "8e52ce86cbd8",
+      "s7_dcoffset.py": "9da4c6b4759a",
+      "s7_dcsource.py": "771a51aa35d6",
+      "s7_smallsig.py": "03c100e7276e",
+      "scpi.py": "141705ebc0d6",
+      "t0b_iolayer.py": "b89d4cc28906",
+      "usbclear.py": "a1661a4b4b62",
+      "wave.py": "6a2e133160f2"
+    },
+    "git_commit": "c04fba0",
+    "git_dirty": []
+  }
+}
