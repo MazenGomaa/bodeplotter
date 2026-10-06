@@ -33,6 +33,8 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 LABEL = args[0] if args else "run"
 START, STOP, PPD = (float(args[1]), float(args[2]), int(args[3])) if len(args) >= 4 else (50.0, 20e6, 5)
 DO_SKEW = "--no-skew" not in sys.argv
+# --offset=<volts>: generator DC offset (default 0), to test the DC handling on purpose
+OFFSET = next((float(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--offset=")), 0.0)
 COUPLING = "AC" if "--ac" in sys.argv else "DC"
 SETUP_QUERIES = [":TIMebase:SCALe?", ":TRIGger:SOURce?", ":TRIGger:LEVel?"] + [                # U1K p.16, 38, 37
     ":CHANnel%d:%s?" % (ch, k) for ch in (1, 2)
@@ -56,7 +58,8 @@ def on_point(p):
 
 
 def main():
-    stim, scope_cfg, meas = StimulusConfig(), ScopeConfig(coupling=COUPLING), MeasureSettings()
+    stim, scope_cfg, meas = StimulusConfig(offset_v=OFFSET), ScopeConfig(coupling=COUPLING), MeasureSettings()
+    out["offset_v"] = OFFSET
     out["coupling"] = COUPLING
     t0 = time.perf_counter()
     session = connect.open_session("py")
