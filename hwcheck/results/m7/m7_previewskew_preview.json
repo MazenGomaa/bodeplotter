@@ -1,5 +1,5 @@
 {
-  "rounds": 10,
+  "rounds": 12,
   "channels": [
     1,
     2
@@ -8,231 +8,163 @@
   "log": [
     {
       "label": "at the start",
-      "measured_ns": 0.09252443511686022,
+      "measured_ns": 0.08309429529367156,
       "per_freq_ns": [
-        0.09903102519890264,
-        0.08601784503481777
+        0.08568092981555862,
+        0.0805076607717845
       ],
-      "gain_db": 0.16900351110371062,
+      "gain_db": 0.17796058196279296,
       "epoch": 1,
       "warnings": []
     },
     {
-      "label": "sweep 1",
-      "points": 61,
-      "error": null,
-      "seconds": 25.77512679999927,
-      "empty_blocks": 0,
-      "resyncs": 0,
-      "stale_records": 2
-    },
-    {
-      "label": "after sweep 1 (0 empty, 0 resync)",
-      "measured_ns": 0.07938565990188615,
+      "label": "after resync 1 while running",
+      "measured_ns": 0.09149302587803952,
       "per_freq_ns": [
-        0.08930389887907307,
-        0.06946742092469922
+        0.10725349817892245,
+        0.07573255357715658
       ],
-      "gain_db": 0.1799185119623163,
-      "epoch": 1,
+      "gain_db": 0.18047806298832006,
+      "epoch": 2,
       "warnings": []
     },
     {
-      "label": "sweep 2",
-      "points": 61,
-      "error": null,
-      "seconds": 29.42168369999854,
-      "empty_blocks": 2,
-      "resyncs": 0,
-      "stale_records": 1
-    },
-    {
-      "label": "after sweep 2 (2 empty, 0 resync)",
-      "measured_ns": 0.08475460644252837,
+      "label": "after resync 2 while running",
+      "measured_ns": 0.07800805636929109,
       "per_freq_ns": [
-        0.08802081868456851,
-        0.08148839420048823
+        0.07441355640578634,
+        0.08160255633279584
       ],
-      "gain_db": 0.17975915748384436,
-      "epoch": 1,
+      "gain_db": 0.16924403413471123,
+      "epoch": 3,
       "warnings": []
     },
     {
-      "label": "sweep 3",
-      "points": 61,
-      "error": null,
-      "seconds": 25.02090789999056,
-      "empty_blocks": 0,
-      "resyncs": 0,
-      "stale_records": 0
-    },
-    {
-      "label": "after sweep 3 (0 empty, 0 resync)",
-      "measured_ns": 0.0815402286497244,
+      "label": "after resync 3 while running",
+      "measured_ns": 0.08687869796521902,
       "per_freq_ns": [
-        0.09067602990304045,
-        0.07240442739640836
+        0.0973435083076655,
+        0.07641388762277254
       ],
-      "gain_db": 0.18093526964083256,
-      "epoch": 1,
+      "gain_db": 0.17822564098504323,
+      "epoch": 4,
       "warnings": []
     },
     {
-      "label": "sweep 4",
-      "points": 61,
-      "error": null,
-      "seconds": 24.988548399996944,
-      "empty_blocks": 0,
-      "resyncs": 0,
-      "stale_records": 0
-    },
-    {
-      "label": "after sweep 4 (0 empty, 0 resync)",
-      "measured_ns": 0.08254128264564345,
+      "label": "after resync 4 while running",
+      "measured_ns": 0.09799210403880787,
       "per_freq_ns": [
-        0.08474625784054306,
-        0.08033630745074384
+        0.10871707259840671,
+        0.08726713547920902
       ],
-      "gain_db": 0.16568583478640725,
-      "epoch": 1,
+      "gain_db": 0.17686255356362973,
+      "epoch": 5,
       "warnings": []
     },
     {
-      "label": "sweep 5",
-      "points": 61,
-      "error": null,
-      "seconds": 33.36012230000051,
-      "empty_blocks": 4,
-      "resyncs": 0,
-      "stale_records": 1
-    },
-    {
-      "label": "after sweep 5 (4 empty, 0 resync)",
-      "measured_ns": 0.09273225514919786,
+      "label": "after resync 5 while running",
+      "measured_ns": 0.08861428538616284,
       "per_freq_ns": [
-        0.1087608887423882,
-        0.0767036215560075
+        0.1047657365953173,
+        0.07246283417700836
       ],
-      "gain_db": 0.17030524284806697,
-      "epoch": 1,
+      "gain_db": 0.16901330964102546,
+      "epoch": 6,
       "warnings": []
     },
     {
-      "label": "sweep 6",
-      "points": 61,
-      "error": null,
-      "seconds": 25.416278499993496,
-      "empty_blocks": 0,
-      "resyncs": 0,
-      "stale_records": 1
-    },
-    {
-      "label": "after sweep 6 (0 empty, 0 resync)",
-      "measured_ns": 0.07897376580138275,
+      "label": "after resync 6 while running",
+      "measured_ns": 0.08774276338216008,
       "per_freq_ns": [
-        0.0892213827221114,
-        0.06872614888065412
+        0.08277221028618201,
+        0.09271331647813816
       ],
-      "gain_db": 0.17811831222799906,
-      "epoch": 1,
+      "gain_db": 0.17356225254020566,
+      "epoch": 7,
       "warnings": []
     },
     {
-      "label": "sweep 7",
-      "points": 61,
-      "error": null,
-      "seconds": 29.259399699993082,
-      "empty_blocks": 2,
-      "resyncs": 0,
-      "stale_records": 1
-    },
-    {
-      "label": "after sweep 7 (2 empty, 0 resync)",
-      "measured_ns": 0.08290699754101993,
+      "label": "after resync 7 while running",
+      "measured_ns": 0.08743654157075599,
       "per_freq_ns": [
-        0.08646950030757798,
-        0.07934449477446187
+        0.09703836654757807,
+        0.07783471659393393
       ],
-      "gain_db": 0.17973463034902157,
-      "epoch": 1,
+      "gain_db": 0.17580972011723098,
+      "epoch": 8,
       "warnings": []
     },
     {
-      "label": "sweep 8",
-      "points": 61,
-      "error": null,
-      "seconds": 25.52228259999538,
-      "empty_blocks": 0,
-      "resyncs": 0,
-      "stale_records": 1
-    },
-    {
-      "label": "after sweep 8 (0 empty, 0 resync)",
-      "measured_ns": 0.08970906496291395,
+      "label": "after resync 8 while running",
+      "measured_ns": 0.09017343466500677,
       "per_freq_ns": [
-        0.10251996435662863,
-        0.07689816556919923
+        0.09670532634827426,
+        0.08364154298173926
       ],
-      "gain_db": 0.17662800750932178,
-      "epoch": 1,
+      "gain_db": 0.18221476101774975,
+      "epoch": 9,
       "warnings": []
     },
     {
-      "label": "sweep 9",
-      "points": 61,
-      "error": null,
-      "seconds": 25.754697700001998,
-      "empty_blocks": 0,
-      "resyncs": 0,
-      "stale_records": 2
-    },
-    {
-      "label": "after sweep 9 (0 empty, 0 resync)",
-      "measured_ns": 0.08532751638313894,
+      "label": "after resync 9 while running",
+      "measured_ns": 0.09318596802761038,
       "per_freq_ns": [
-        0.08719054624623679,
-        0.08346448652004108
+        0.10687500027722568,
+        0.07949693577799506
       ],
-      "gain_db": 0.16521092026551643,
-      "epoch": 1,
+      "gain_db": 0.17454652497055423,
+      "epoch": 10,
       "warnings": []
     },
     {
-      "label": "sweep 10",
-      "points": 61,
-      "error": null,
-      "seconds": 25.494509600001038,
-      "empty_blocks": 0,
-      "resyncs": 0,
-      "stale_records": 1
+      "label": "after resync 10 while running",
+      "measured_ns": 0.08235557097235606,
+      "per_freq_ns": [
+        0.08726612659528114,
+        0.07744501534943098
+      ],
+      "gain_db": 0.18014343122568502,
+      "epoch": 11,
+      "warnings": []
     },
     {
-      "label": "after sweep 10 (0 empty, 0 resync)",
-      "measured_ns": 0.07979332839897946,
+      "label": "after resync 11 while running",
+      "measured_ns": 0.07897591403532614,
       "per_freq_ns": [
-        0.08567363692317852,
-        0.07391301987478038
+        0.07453309487725307,
+        0.0834187331933992
       ],
-      "gain_db": 0.17532955126606334,
-      "epoch": 1,
+      "gain_db": 0.16813918529952698,
+      "epoch": 12,
+      "warnings": []
+    },
+    {
+      "label": "after resync 12 while running",
+      "measured_ns": 0.09072954302667945,
+      "per_freq_ns": [
+        0.10668759211610811,
+        0.07477149393725079
+      ],
+      "gain_db": 0.178586693401181,
+      "epoch": 13,
       "warnings": []
     }
   ],
   "scope_stats": {
-    "queries": 10542,
+    "queries": 4381,
     "empty_retries": 0,
     "reply_errors": 0,
     "out_of_step": 0,
-    "resyncs": 1,
+    "resyncs": 13,
     "set_retries": 0,
     "forced_triggers": 0,
-    "empty_blocks": 8,
+    "empty_blocks": 0,
     "rearms": 0,
-    "stale_records": 10
+    "stale_records": 0
   },
   "_identity": {
     "script": "m7_previewskew.py",
-    "sha256": "0c972a9531b40f93595de43a7d013eb28d47b7d84edbb0c7cab260290434f0b0",
+    "sha256": "0ee49809fb9a8720274e7d1741fa9e3c4dd3e06fd62af7193a5fe21d2a3bbc70",
     "modules": {
       "a7_phase_lead.py": "da897892c9d3",
       "common.py": "5ec7f6c3b6a9",
@@ -294,9 +226,7 @@
       "usbclear.py": "a1661a4b4b62",
       "wave.py": "6a2e133160f2"
     },
-    "git_commit": "ae9e19c",
-    "git_dirty": [
-      " M hwcheck/results/s6_state_py.json"
-    ]
+    "git_commit": "a851809",
+    "git_dirty": []
   }
 }
