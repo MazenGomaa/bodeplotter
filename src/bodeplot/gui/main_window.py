@@ -21,7 +21,7 @@ from ..sweep.engine import Configs, ConnectRequest, SessionInfo, SweepEngine
 from . import theme
 from .bode_plot import BodePlot
 from .config_panel import ConfigPanel
-from .dialogs import ConnectionsDialog, ImageExportDialog, SimSettingsDialog, SkewWizard
+from .dialogs import ConnectionsDialog, ImageExportDialog, SettingsDialog, SimSettingsDialog, SkewWizard
 from .status_log import StatusLog
 from .waveform_view import WaveformView
 
@@ -37,7 +37,9 @@ class MainWindow(QMainWindow):
         # '--sim' is for this run only. It used to be saved with the settings, so a later
         # start without the flag still came up in simulation (found by the user, 2026-10-06).
         self._stored_simulate: bool | None = None
-        if simulate is not None:
+        if simulate is None and self.settings.startup_mode != "last":
+            simulate = self.settings.startup_mode == "simulation"       # Settings > Start-up mode
+        if simulate is not None and simulate != self.settings.simulate:
             self._stored_simulate = self.settings.simulate
             self.settings.simulate = simulate
         self.sim_seed = sim_seed
@@ -115,6 +117,14 @@ class MainWindow(QMainWindow):
             tb.addAction(a)
             return a
 
+        tb.addWidget(QLabel(" Mode "))
+        self.mode_box = QComboBox()
+        self.mode_box.addItem("Instruments", False)
+        self.mode_box.addItem("Simulation", True)
+        self.mode_box.setToolTip("Real instruments or the built-in simulation, for this session. "
+                                 "Disconnect to change it. The mode at start-up is in File > Settings.")
+        self.mode_box.activated.connect(lambda i: self.set_mode(bool(self.mode_box.itemData(i))))
+        tb.addWidget(self.mode_box)
         self.act_connect = act("Connect", self.toggle_connection)
         self.act_connections = act("Connections…", self.edit_connections)
         tb.addSeparator()
@@ -146,7 +156,12 @@ class MainWindow(QMainWindow):
         self.act_preset_save_as = act("Save As…", self.save_preset_as)
         self.act_preset_delete = act("Delete", self.delete_preset)
         tb.addSeparator()
-        self.act_sim = act("Sim settings…", self.edit_sim_settings)
+        # File menu only: the toolbar has no room for it, and it is a tab of Settings
+        self.act_sim = QAction("Sim settings…", self)
+        self.act_sim.triggered.connect(self.edit_sim_settings)
+        self.act_settings = act("Settings…", self.edit_settings,
+                                "Start-up mode, instruments, simulation and the other stored settings")
+        self.act_settings.setShortcut("Ctrl+,")
         self.sim_label = QLabel("")
         self.sim_label.setTextFormat(Qt.RichText)
         self.sim_label.setContentsMargins(0, 0, 12, 0)
@@ -162,6 +177,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_connect)
         m.addAction(self.act_connections)
         m.addAction(self.act_sim)
+        m.addAction(self.act_settings)
         m.addSeparator()
         self.export_menu = m.addMenu("&Export")
         for label, fmt in (("CSV\u2026", "csv"), ("PNG\u2026", "png"), ("SVG\u2026", "svg"), ("PDF\u2026", "pdf"),
@@ -362,7 +378,10 @@ class MainWindow(QMainWindow):
             a.setEnabled(not busy)
         self.preset_box.setEnabled(not busy)
         self.plot.remeasure_enabled = connected and not busy and bool(self.result)
+        self.act_settings.setEnabled(not busy)
         sim = self.info.simulated if connected else self.settings.simulate
+        self.mode_box.setEnabled(not busy and not connected)
+        self.mode_box.setCurrentIndex(1 if sim else 0)
         self.sim_label.setText(theme.status_html("warning", "SIMULATION", bold=True) if sim else "")
 
     # ------------------------------------------------------------------ connection
@@ -387,6 +406,30 @@ class MainWindow(QMainWindow):
             d.apply_to(self.settings)
             self._stored_simulate = None        # the user chose: this is now the stored value
             save_settings(self.settings)
+            self._update_actions()
+
+    def set_mode(self, simulate: bool) -> None:
+        """Instruments or simulation for this session (the Mode box). Only while disconnected."""
+        if self.info.connected or self.state in BUSY:
+            self._update_actions()              # put the box back
+            return
+        self.settings.simulate = bool(simulate)
+        self._stored_simulate = None            # the user chose: this is now "the mode used last time"
+        save_settings(self.settings)
+        self._say("info", "Mode: %s." % ("simulation" if simulate else "real instruments"))
+        self._update_actions()
+
+    def edit_settings(self) -> None:
+        was = self.settings.simulate
+        d = SettingsDialog(self.settings, self, connected=self.info.connected,
+                           open_folders=(("Open settings folder", self.open_config_folder),
+                                         ("Open log folder", self.open_log_folder)))
+        if d.exec():
+            d.apply_to(self.settings)
+            if self.settings.simulate != was:
+                self._stored_simulate = None
+            self.act_unwrap.setChecked(self.settings.unwrap_phase)
+            self._save_settings()
             self._update_actions()
 
     def edit_sim_settings(self) -> None:

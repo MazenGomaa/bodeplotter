@@ -192,7 +192,7 @@ def test_menus_bring_closed_panels_back(win, qtbot):
 def test_menu_actions_mirror_the_toolbar_and_plot(win, qtbot):
     file_menu = win.menuBar().actions()[0].menu()
     labels = [a.text().replace("&", "") for a in file_menu.actions() if not a.isSeparator()]
-    assert labels == ["Connect", "Connections…", "Sim settings…", "Export", "Preset", "Exit"]
+    assert labels == ["Connect", "Connections…", "Sim settings…", "Settings…", "Export", "Preset", "Exit"]
     assert not win.export_menu.isEnabled()                      # nothing to export yet
     win.act_unwrap.trigger()
     assert win.plot.unwrap() is True and win.act_unwrap.isChecked()
@@ -339,3 +339,69 @@ def test_sim_flag_is_for_this_run_only(qtbot, tmp_path, monkeypatch):
     qtbot.addWidget(w2)
     assert not w2.settings.simulate
     w2.close()
+
+
+@pytest.mark.parametrize("mode,stored,expect", [("instruments", True, False), ("simulation", False, True),
+                                                ("last", True, True), ("last", False, False)])
+def test_startup_mode_decides_what_a_plain_start_comes_up_in(qtbot, tmp_path, monkeypatch, mode, stored, expect):
+    from bodeplot.io.settings import load_settings, save_settings
+    monkeypatch.setenv("BODEPLOT_CONFIG_DIR", str(tmp_path / "cfg"))
+    save_settings(AppSettings(simulate=stored, startup_mode=mode))
+    w = MainWindow()
+    w.interactive = False
+    qtbot.addWidget(w)
+    assert w.settings.simulate is expect
+    assert w.mode_box.currentData() is expect
+    assert ("SIMULATION" in w.sim_label.text()) is expect
+    w.close()
+    assert load_settings().simulate is stored       # the start-up mode does not overwrite "last time"
+
+
+def test_mode_box_switches_between_instruments_and_simulation(win, qtbot):
+    from bodeplot.io.settings import load_settings
+    assert win.mode_box.currentData() is True and win.mode_box.isEnabled()
+    win.mode_box.setCurrentIndex(0)
+    win.mode_box.activated.emit(0)
+    assert win.settings.simulate is False and win.sim_label.text() == ""
+    assert load_settings().simulate is False
+    assert win.connect_request().simulate is False
+    win.set_mode(True)
+    assert win.mode_box.currentData() is True and "SIMULATION" in win.sim_label.text()
+    _connect(win, qtbot)
+    assert not win.mode_box.isEnabled()             # not while connected
+    win.set_mode(False)
+    assert win.settings.simulate is True and win.mode_box.currentData() is True
+
+
+def test_settings_dialog_holds_every_stored_setting(qtbot):
+    from bodeplot.gui.dialogs import SettingsDialog
+    s = AppSettings(simulate=True, startup_mode="last", sim=dict(SIM))
+    d = SettingsDialog(s)
+    qtbot.addWidget(d)
+    assert [d.tabs.tabText(i) for i in range(d.tabs.count())] == ["General", "Instruments", "Simulation"]
+    assert d.startup.currentData() == "last" and d.gap.minimum() == 100
+    d.startup.setCurrentIndex(d.startup.findData("simulation"))
+    d.gap.setValue(250)
+    d.unwrap.setChecked(True)
+    d.connections.simulate.setChecked(False)
+    d.connections.source.setText(" USB0::1::2::3::INSTR ")
+    d.sim.preset.setCurrentIndex(d.sim.preset.findData("through"))
+    d._accept()
+    d.apply_to(s)
+    assert (s.startup_mode, s.scope_min_gap_ms, s.unwrap_phase, s.simulate) == ("simulation", 250.0, True, False)
+    assert s.source_resource == "USB0::1::2::3::INSTR" and s.sim["preset"] == "through"
+    # while connected the instrument and simulation tabs are read-only and are not applied
+    d2 = SettingsDialog(s, connected=True)
+    qtbot.addWidget(d2)
+    d2.connections.source.setText("changed")
+    d2.startup.setCurrentIndex(d2.startup.findData("instruments"))
+    d2._accept()
+    d2.apply_to(s)
+    assert s.source_resource == "USB0::1::2::3::INSTR" and s.startup_mode == "instruments"
+
+
+def test_settings_file_keeps_numbers_and_rejects_bad_values():
+    s = AppSettings.from_dict({"scope_min_gap_ms": 250, "startup_mode": "simulation"})
+    assert s.scope_min_gap_ms == 250.0 and s.startup_mode == "simulation"
+    s = AppSettings.from_dict({"scope_min_gap_ms": 5, "startup_mode": "nonsense"})
+    assert s.scope_min_gap_ms == 100.0 and s.startup_mode == "instruments"

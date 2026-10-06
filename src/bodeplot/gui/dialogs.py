@@ -1,15 +1,17 @@
-"""Dialogs: connections, simulation settings, image export, skew wizard (SPEC.md section 10)."""
+"""Dialogs: settings, connections, simulation settings, image export, skew wizard
+(SPEC.md section 10). Connections and simulation are panels, shown on their own and as
+tabs of the settings dialog."""
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox,
                                QFormLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
-                               QPushButton, QSpinBox, QVBoxLayout, QWidget)
+                               QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from ..drivers import registry, visa_util
 from ..drivers.mock import SimulatedDUT
 from ..io.export_image import ImageOptions
-from ..io.settings import AppSettings
+from ..io.settings import SCOPE_MIN_GAP_MS, AppSettings
 from ..measure import skew
 from ..models import SkewCheck
 from ..units import fmt_si, parse_si
@@ -30,12 +32,10 @@ SIM_LABELS = {"through": "Through (wire)", "rc_lpf": "RC low-pass", "rc_hpf": "R
 
 
 # ---------------------------------------------------------------------- connections
-class ConnectionsDialog(QDialog):
+class ConnectionsPanel(QWidget):
     def __init__(self, settings: AppSettings, parent=None, connected: bool = False):
         super().__init__(parent)
         self.connected = connected
-        self.setWindowTitle("Connections")
-        self.resize(560, 420)
         lay = QVBoxLayout(self)
         form = QFormLayout()
         self.simulate = QCheckBox("Simulate (mock instruments and simulated DUT)")
@@ -65,10 +65,6 @@ class ConnectionsDialog(QDialog):
                            "both fields empty to find the instruments automatically.")
         self.note.setWordWrap(True)
         lay.addWidget(self.note)
-        box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        box.accepted.connect(self.accept)
-        box.rejected.connect(self.reject)
-        lay.addWidget(box)
         self.discover_btn.clicked.connect(self.discover)
         self.test_btn.clicked.connect(self.test)
         self.found.itemDoubleClicked.connect(self._pick)
@@ -132,11 +128,27 @@ class ConnectionsDialog(QDialog):
         settings.digitizer_resource = self.digitizer.text().strip()
 
 
+class ConnectionsDialog(QDialog):
+    def __init__(self, settings: AppSettings, parent=None, connected: bool = False):
+        super().__init__(parent)
+        self.setWindowTitle("Connections")
+        self.resize(560, 420)
+        lay = QVBoxLayout(self)
+        self.panel = ConnectionsPanel(settings, self, connected)
+        lay.addWidget(self.panel)
+        box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        box.accepted.connect(self.accept)
+        box.rejected.connect(self.reject)
+        lay.addWidget(box)
+
+    def apply_to(self, settings: AppSettings) -> None:
+        self.panel.apply_to(settings)
+
+
 # ---------------------------------------------------------------------- simulation
-class SimSettingsDialog(QDialog):
+class SimSettingsPanel(QWidget):
     def __init__(self, sim: dict, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Simulation settings")
         lay = QVBoxLayout(self)
         self.form = QFormLayout()
         self.preset = QComboBox()
@@ -162,10 +174,7 @@ class SimSettingsDialog(QDialog):
         tail.addRow("Noise at the scope input", self.noise)
         tail.addRow("Latency per command", self.latency)
         lay.addLayout(tail)
-        box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        box.accepted.connect(self._accept)
-        box.rejected.connect(self.reject)
-        lay.addWidget(box)
+        lay.addStretch(1)
         self._params_in = dict(sim.get("params") or {})
         self._edits: dict[str, QLineEdit] = {}
         self.preset.currentIndexChanged.connect(self._rebuild)
@@ -189,7 +198,8 @@ class SimSettingsDialog(QDialog):
             self._edits[key] = e
             self.param_form.addRow(label, e)
 
-    def _values(self) -> dict:
+    def values(self) -> dict:
+        """Raises ValueError with a message for the user when a field is not usable."""
         name = self.preset.currentData()
         if name == "custom":
             params = {"num": [float(x) for x in self.num.text().replace(";", ",").split(",") if x.strip()],
@@ -203,13 +213,106 @@ class SimSettingsDialog(QDialog):
         return {"preset": name, "params": params, "noise_vrms": self.noise.value() / 1e3,
                 "latency_ms": self.latency.value()}
 
+class SimSettingsDialog(QDialog):
+    def __init__(self, sim: dict, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Simulation settings")
+        lay = QVBoxLayout(self)
+        self.panel = SimSettingsPanel(sim, self)
+        lay.addWidget(self.panel)
+        box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        box.accepted.connect(self._accept)
+        box.rejected.connect(self.reject)
+        lay.addWidget(box)
+
     def _accept(self) -> None:
         try:
-            self.result_sim = self._values()
+            self.result_sim = self.panel.values()
         except ValueError as e:
             QMessageBox.warning(self, "Simulation settings", "Invalid value: %s" % e)
             return
         self.accept()
+
+
+# ---------------------------------------------------------------------- settings
+STARTUP_LABELS = (("instruments", "Real instruments"), ("simulation", "Simulation"),
+                  ("last", "The mode used last time"))
+
+
+class SettingsDialog(QDialog):
+    """Every stored setting in one place: General, Instruments, Simulation."""
+
+    def __init__(self, settings: AppSettings, parent=None, connected: bool = False, open_folders=None):
+        super().__init__(parent)
+        self.setWindowTitle("Settings")
+        self.resize(620, 520)
+        lay = QVBoxLayout(self)
+        self.tabs = QTabWidget()
+        lay.addWidget(self.tabs)
+
+        general = QWidget()
+        form = QFormLayout(general)
+        self.startup = QComboBox()
+        for key, label in STARTUP_LABELS:
+            self.startup.addItem(label, key)
+        self.startup.setCurrentIndex(max(0, self.startup.findData(settings.startup_mode)))
+        self.startup.setToolTip("What the app comes up in when it is started. The Mode box in the "
+                                "toolbar changes the mode of the running session.")
+        form.addRow("Start-up mode", self.startup)
+        self.gap = QSpinBox()
+        self.gap.setRange(int(SCOPE_MIN_GAP_MS[0]), int(SCOPE_MIN_GAP_MS[1]))
+        self.gap.setSingleStep(50)
+        self.gap.setSuffix(" ms")
+        self.gap.setValue(int(round(settings.scope_min_gap_ms)))
+        self.gap.setToolTip("Minimum pause after the app changes the scope's timebase or V/div. "
+                            "Takes effect at the next Connect.")
+        form.addRow("Pause after a scope range change", self.gap)
+        self.unwrap = QCheckBox("Unwrap phase")
+        self.unwrap.setChecked(settings.unwrap_phase)
+        form.addRow("Plot", self.unwrap)
+        if open_folders:
+            row = QHBoxLayout()
+            for label, slot in open_folders:
+                b = QPushButton(label)
+                b.clicked.connect(slot)
+                row.addWidget(b)
+            row.addStretch(1)
+            form.addRow("Folders", row)
+        self.tabs.addTab(general, "General")
+
+        self.connections = ConnectionsPanel(settings, self, connected)
+        self.tabs.addTab(self.connections, "Instruments")
+        self.sim = SimSettingsPanel(settings.sim, self)
+        self.tabs.addTab(self.sim, "Simulation")
+        if connected:
+            for w in (self.connections, self.sim):
+                w.setEnabled(False)
+            note = QLabel("Disconnect to change the instrument and simulation settings.")
+            note.setWordWrap(True)
+            lay.addWidget(note)
+
+        box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        box.accepted.connect(self._accept)
+        box.rejected.connect(self.reject)
+        lay.addWidget(box)
+        self.result_sim = dict(settings.sim)
+
+    def _accept(self) -> None:
+        try:
+            self.result_sim = self.sim.values()
+        except ValueError as e:
+            self.tabs.setCurrentWidget(self.sim)
+            QMessageBox.warning(self, "Settings", "Invalid simulation value: %s" % e)
+            return
+        self.accept()
+
+    def apply_to(self, settings: AppSettings) -> None:
+        settings.startup_mode = self.startup.currentData()
+        settings.scope_min_gap_ms = float(self.gap.value())
+        settings.unwrap_phase = self.unwrap.isChecked()
+        if self.connections.isEnabled():
+            self.connections.apply_to(settings)
+            settings.sim = self.result_sim
 
 
 # ---------------------------------------------------------------------- image export

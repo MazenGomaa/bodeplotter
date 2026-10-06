@@ -45,12 +45,18 @@ def write_json(path: Path, data: dict) -> None:
     os.replace(tmp, path)               # atomic: a crash cannot leave half a file
 
 
+# What a plain start comes up in. "last" = whatever mode was selected when the app closed.
+STARTUP_MODES = ("instruments", "simulation", "last")
+SCOPE_MIN_GAP_MS = (100.0, 2000.0)      # 100 ms is the pacing proven on the bench; never below it
+
+
 @dataclass
 class AppSettings:
     backend: str = DEFAULT_BACKEND
     source_resource: str = ""
     digitizer_resource: str = ""
     simulate: bool = False
+    startup_mode: str = "instruments"
     # Minimum pause after a timebase or V/div change on the real scope, on top of *OPC?
     scope_min_gap_ms: float = 100.0
     last_preset: str = ""
@@ -77,12 +83,18 @@ class AppSettings:
             v = data[key]
             if isinstance(default, bool):
                 setattr(s, key, bool(v))
+            elif isinstance(default, float):
+                if isinstance(v, (int, float)) and not isinstance(v, bool):
+                    setattr(s, key, float(v))
             elif isinstance(default, str):
                 setattr(s, key, v if isinstance(v, str) else default)
             elif isinstance(default, dict):
                 setattr(s, key, v if isinstance(v, dict) else default)
         if s.backend not in BACKENDS:
             s.backend = DEFAULT_BACKEND
+        if s.startup_mode not in STARTUP_MODES:
+            s.startup_mode = "instruments"
+        s.scope_min_gap_ms = min(max(s.scope_min_gap_ms, SCOPE_MIN_GAP_MS[0]), SCOPE_MIN_GAP_MS[1])
         return s
 
 
