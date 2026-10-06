@@ -1018,3 +1018,14 @@ Both probes on generator CH1, both 10X. App started with `run.bat`, Mode = Instr
 - **Fault found and fixed**: the wizard's intro text named 0.5 MHz and 1 MHz (it still followed the sweep range) while the check ran at 10 and 20 MHz. Text only; fixed in `MainWindow.skew_freqs_hint` (commit `919814c`).
 - **One enumeration miss**: the first `s6_state.py` of the session found no VISA resource at all (`list_resources` empty) although Windows and libusb showed both devices; the same script worked a few seconds later. Not reproduced, cause unknown.
 - The app's log file holds no per-command lines for this run, so the command sequence was not reviewed.
+
+### 13.14 CH3 / CH4, never used before (2026-10-06, evening)
+
+The two probe BNCs moved to scope CH3 (reference) and CH4 (DUT), tips still on generator CH1, both 10X, channels set in the Scope panel. App at commit `919814c`. Values are read from the user's screenshots.
+
+- **CH3 / CH4 work**: the skew check and a 114-point sweep (50 Hz to 20 MHz, 5 Vpp, 100 mV/div) ran with no retries and no flags. The sweep took 128 s against 114 s on CH1 / CH2 (about 0.92 s per point against 0.75 s at the top of the range); not looked into.
+- **The delay of this pair is +0.08 to +0.09 ns, not +0.15 ns.** First check: +0.09 ns at 10 MHz (+0.34 deg), +0.08 ns at 20 MHz (+0.59 deg), gain -0.053 / -0.069 dB. Second check: +0.27 deg and +0.66 deg, gain -0.067 / -0.049 dB, measured +0.08 ns. Both were snapped to +0.15 ns, because the four states were measured on CH1 / CH2 and +0.08 ns lies inside the 0.3 ns snap window.
+- **The snap over-corrects on this pair**: after accepting, the through sweep's phase falls from 0 to **-0.39 deg at 20 MHz** (-0.09, -0.21, -0.33, -0.38, -0.39 deg from 12.7 to 20 MHz). The measured value would have left about +0.1 deg. Below 1 MHz the error is under 0.03 deg.
+- **CH4 reads lower than CH3 towards high frequency**: output 100 % of input at 50 Hz, falling to about 99.0 % at 20 MHz (-0.06 to -0.10 dB over the last five points). On CH1 / CH2 the same sweep stays within 99.6 to 100.1 %. The app does not correct gain; the wizard's warning threshold is 0.3 dB.
+- **CH1 / CH2 repeated straight afterwards** (BNCs moved back): check +0.59 deg at 10 MHz, +1.21 deg at 20 MHz, measured +0.17 ns, snapped to +0.15 ns, gain mismatch -0.01 dB; sweep 114 s, phase -0.10 to +0.13 deg over the last five points, gain -0.002 to -0.030 dB. So the CH1 / CH2 delay has now read +0.14 and +0.17 ns in one evening (0.03 ns is 0.2 deg at 20 MHz).
+- Open: whether CH3 / CH4 has the same 2 ns steps around its own +0.08 ns (not tested; it would need a `:RUN`, which is forbidden).
