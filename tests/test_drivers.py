@@ -839,3 +839,20 @@ def test_fast_preview_sweep_with_the_real_drivers():
     assert any("Fast preview" in e.text for e in logs) and not any("skew" in e.text.lower() for e in logs)
     assert not fgen.ch[1]["output"] and not fscope.lock and fscope.mode == "run"
     session.close()
+
+
+@pytest.mark.parametrize("method_name, uses_them", [("PREVIEW", False), ("SINEFIT", True)])
+def test_fast_preview_keeps_off_the_timebases_at_which_the_running_scope_goes_busy(method_name, uses_them):
+    """Bench, HW_REPORT 13.24 and 13.27: read while running at 200 or 500 ns/div the scope goes
+    busy for 3.4 s now and then; at 100 ns/div and 1 us/div it does not. Single shot is free."""
+    from bodeplot.models import Method
+    session, fgen, fscope, clock = fake_bench()
+    result = SweepRunner(session, SweepConfig(start_hz=5e5, stop_hz=5e6, points_per_decade=12),
+                         StimulusConfig(), ScopeConfig(), MeasureSettings(method=Method[method_name]),
+                         sleep=clock.sleep).run()
+    assert result.meta["error"] is None
+    used = {p.timebase for p in result.points}
+    assert bool(used & {2e-7, 5e-7}) is uses_them
+    for p in result.points:                              # still at least one cycle, and enough samples
+        assert 14 * p.timebase * p.freq_hz >= 1.0 and abs(p.gain_db) < 0.2
+    session.close()

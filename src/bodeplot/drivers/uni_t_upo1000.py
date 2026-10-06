@@ -152,7 +152,8 @@ class UniTUPO1000(Digitizer):
             # auto-range aims at the 8 screen divisions; the data reach 10.1, which is headroom
             vertical_divs=self.SCREEN_VDIVS, horizontal_divs=float(self.HDIV),
             has_builtin_amplitude=False, has_builtin_phase=False,
-            min_hz=5.0 / (self.HDIV * max(tb)), max_hz=bw, data_vertical_divs=self.DATA_VDIVS)
+            min_hz=5.0 / (self.HDIV * max(tb)), max_hz=bw, data_vertical_divs=self.DATA_VDIVS,
+            running_avoid_timebases=self.RUNNING_BUSY_TB)
 
     def usable_vdiv(self) -> tuple[float, ...]:
         return tuple(s for s in self.tables.vdiv
@@ -628,6 +629,10 @@ class UniTUPO1000(Digitizer):
                     ch, w.dt * w.volts.size, span)
         return ""
 
+    # Read while running at these timebases, the scope goes busy for about 3.4 s now and
+    # then (14 episodes in 500 pair reads at 200 ns/div; none in 300 at 100 ns/div and none
+    # in 300 at 1 us/div; HW_REPORT.md 13.24, 13.27). 500 ns/div showed the same in sweeps.
+    RUNNING_BUSY_TB = (2e-7, 5e-7)
     RUN_QUIET_S = 0.1               # since the last setting change, before a read from the running scope
     RUN_EMPTY_WAIT_S = 0.5          # after an empty reply of the running scope, before the next read
 

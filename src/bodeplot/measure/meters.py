@@ -102,7 +102,30 @@ class DualChannelScopeMeter(ResponseMeter):
         return st
 
     # ------------------------------------------------------------------
-    def _set_timebase(self, freq_hz: float, state: MeterState) -> float:
+    def _off_busy_timebase(self, want: float, freq_hz: float) -> float:
+        """For a read from the running scope: the nearest step that is not one of the
+        digitizer's running_avoid_timebases. Slower if a cycle still gets enough samples,
+        otherwise faster if at least one cycle still fits on the screen."""
+        caps = self.dig.caps
+        avoid = caps.running_avoid_timebases
+        near = lambda tb: any(abs(tb - a) <= 1e-9 * a for a in avoid)
+        if not near(want):
+            return want
+        steps = sorted(caps.timebase_steps)
+        i = min(range(len(steps)), key=lambda k: abs(steps[k] - want))
+        for tb in steps[i + 1:]:                                    # slower
+            if not near(tb):
+                if autorange.samples_per_cycle(freq_hz, tb / 50.0) >= self.cfg.min_samples_per_cycle:
+                    return tb
+                break
+        for tb in reversed(steps[:i]):                              # faster
+            if not near(tb):
+                if caps.horizontal_divs * tb * freq_hz >= 1.0:
+                    return tb
+                break
+        return want
+
+    def _set_timebase(self, freq_hz: float, state: MeterState, running: bool = False) -> float:
         caps = self.dig.caps
         want = autorange.choose_timebase(freq_hz, caps.timebase_steps, caps.horizontal_divs,
                                          self.cfg.target_cycles)
@@ -113,6 +136,8 @@ class DualChannelScopeMeter(ResponseMeter):
                and steps.index(want) > 0
                and caps.horizontal_divs * steps[steps.index(want) - 1] * freq_hz >= 1.0):
             want = steps[steps.index(want) - 1]
+        if running:
+            want = self._off_busy_timebase(want, freq_hz)
         if state.timebase is None or abs(state.timebase - want) > 1e-12 * want:
             state.timebase = self.dig.set_timebase(want)      # use what the scope reports
         return state.timebase
@@ -191,7 +216,7 @@ class DualChannelScopeMeter(ResponseMeter):
         ref_ch, dut_ch = self.cfg.ref_channel, self.cfg.dut_channel
         if not state.vdiv:
             state.vdiv.update(self.initial_state().vdiv)
-        tb = self._set_timebase(freq_hz, state)
+        tb = self._set_timebase(freq_hz, state, running=settings.method is Method.PREVIEW)
         waves, flags, retries = self._autorange(settings, state)
         if waves is None:
             raise MeasureCancelled()

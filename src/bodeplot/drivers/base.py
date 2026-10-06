@@ -77,6 +77,9 @@ class DigitizerCaps:
     # Divisions the waveform data cover before they stop at a rail (more than the screen
     # shows on the UPO1054: 10.1 against 8). 0 = unknown.
     data_vertical_divs: float = 0.0
+    # Timebases at which a scope that is read while RUNNING (acquire_running) goes busy
+    # now and then; Method.PREVIEW keeps off them. Single shot is not affected.
+    running_avoid_timebases: tuple[float, ...] = ()
 
 
 @dataclass
