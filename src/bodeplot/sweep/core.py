@@ -88,9 +88,23 @@ class Session:
         except Exception as e:
             log.warning("front-panel %s failed: %s", "lock" if on else "unlock", e)
 
+    def begin_measurement(self) -> None:
+        """Before a sweep, skew check or re-measure: lock the front panel and remember
+        the scope's settings for end_measurement(). Never raises."""
+        self.lock_panel(True)
+        try:
+            self.digitizer.save_setup()
+        except Exception as e:
+            log.warning("could not read the scope's settings; they will not be restored: %s", e)
+
     def end_measurement(self) -> None:
-        """After a sweep, skew check or re-measure: leave the scope running (it stops
-        after every single shot) and give the front panel back. Never raises."""
+        """After a sweep, skew check or re-measure: put the scope's settings back, leave
+        it running (it stops after every single shot) and give the front panel back.
+        Never raises."""
+        try:
+            self.digitizer.restore_setup()
+        except Exception as e:
+            log.warning("could not restore the scope's settings: %s", e)
         try:
             self.digitizer.free_run()
         except Exception as e:
@@ -162,7 +176,7 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
     try:
         if same_node:
             same_node(True)
-        session.lock_panel(True)
+        session.begin_measurement()
         src.configure_sine(stim.gen_channel, freqs[0], stim.amp_vpp, stim.offset_v, stim.load)
         meter.prepare(stim.amp_vpp, stim.offset_v)
         src.set_output(stim.gen_channel, True)
@@ -337,7 +351,7 @@ class SweepRunner:
                                   "point is flagged SKEW_UNCHECKED. " + (self.session.recheck_reason or ""))
             else:
                 self._log("info", "Channel skew correction: %+.2f ns." % (delay_s * 1e9))
-            self.session.lock_panel(True)
+            self.session.begin_measurement()
             meter, state = self._start(p.freqs_hz[0])
             self._set_state(EngineState.RUNNING)
             n = len(p.freqs_hz)
@@ -391,7 +405,7 @@ class SweepRunner:
         delay_s = self.session.skew_delay()
         try:
             self._set_state(EngineState.RUNNING)
-            self.session.lock_panel(True)
+            self.session.begin_measurement()
             meter, state = self._start(freq_hz)
             point = self._measure_one(meter, state, freq_hz, delay_s)
             point.flags |= Flag.REMEASURED

@@ -138,6 +138,13 @@ class Digitizer(ABC):
     def free_run(self) -> None:
         """Leave the instrument running for the user after a sweep. Optional."""
 
+    def save_setup(self) -> None:
+        """Remember the user's settings before a measurement changes them. Optional."""
+
+    def restore_setup(self) -> list[str]:
+        """Put back what save_setup() remembered; returns what could not be restored."""
+        return []
+
     def builtin_amplitude(self, ch: int) -> float:          # optional, volts peak
         raise NotImplementedError
 

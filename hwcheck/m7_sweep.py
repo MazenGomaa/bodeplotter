@@ -1,7 +1,8 @@
 """Milestone 7: the app's own drivers and sweep engine on the real instruments, headless.
 
 Run with the APP venv (it imports bodeplot):
-    .venv\\Scripts\\python.exe -W ignore hwcheck\\m7_sweep.py <label> [start_hz stop_hz points_per_decade] [--no-skew]
+    .venv\\Scripts\\python.exe -W ignore hwcheck\\m7_sweep.py <label> [start_hz stop_hz points_per_decade] [--no-skew] [--ac]
+--ac: scope channels AC coupled (default DC).
 
 What it does, through exactly the code the GUI uses (drivers/connect.py, sweep/core.py):
   1. find and open both instruments (generator outputs forced OFF on open);
@@ -32,6 +33,10 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 LABEL = args[0] if args else "run"
 START, STOP, PPD = (float(args[1]), float(args[2]), int(args[3])) if len(args) >= 4 else (50.0, 20e6, 5)
 DO_SKEW = "--no-skew" not in sys.argv
+COUPLING = "AC" if "--ac" in sys.argv else "DC"
+SETUP_QUERIES = [":TIMebase:SCALe?", ":TRIGger:SOURce?", ":TRIGger:LEVel?"] + [                # U1K p.16, 38, 37
+    ":CHANnel%d:%s?" % (ch, k) for ch in (1, 2)
+    for k in ("DISPlay", "PROBe", "SCALe", "OFFSet", "COUPling", "BWLimit", "VERNier")]        # U1K p.12-15
 logging.basicConfig(level=logging.WARNING, format="   . %(name)s: %(message)s")
 out = {"label": LABEL, "start_hz": START, "stop_hz": STOP, "points_per_decade": PPD, "log": []}
 
@@ -51,7 +56,8 @@ def on_point(p):
 
 
 def main():
-    stim, scope_cfg, meas = StimulusConfig(), ScopeConfig(), MeasureSettings()
+    stim, scope_cfg, meas = StimulusConfig(), ScopeConfig(coupling=COUPLING), MeasureSettings()
+    out["coupling"] = COUPLING
     t0 = time.perf_counter()
     session = connect.open_session("py")
     out["connect_s"] = time.perf_counter() - t0
@@ -61,6 +67,8 @@ def main():
     try:
         for w in session.take_warnings():
             print("WARNING:", w)
+        setup = lambda: {q: session.digitizer.query(q, lambda r: r) for q in SETUP_QUERIES}
+        out["scope_setup_before"] = setup()
         if DO_SKEW:
             t0 = time.perf_counter()
             check = run_skew_check(session, stim, scope_cfg, meas, SweepConfig(start_hz=START, stop_hz=STOP),
@@ -95,6 +103,12 @@ def main():
         print("scope counters:", out["scope_stats"])
         print("generator counters:", out["generator_stats"])
         if session.dead_reason is None:
+            out["scope_setup_after"] = setup()
+            diff = {q: (v, out["scope_setup_after"][q]) for q, v in out["scope_setup_before"].items()
+                    if out["scope_setup_after"][q] != v}
+            out["scope_setup_changed"] = diff
+            print("scope settings before the sweep:", out["scope_setup_before"])
+            print("scope settings NOT restored:", diff or "none")
             out["outputs_at_end"] = [session.source.output(1), session.source.output(2)]
             out["panel_locked_at_end"] = session.digitizer.query(":SYSTem:LOCK?", lambda r: r)   # U1K p.6
             out["sweep_mode_at_end"] = session.digitizer.query(":TRIGger:SWEep?", lambda r: r)   # U1K p.36

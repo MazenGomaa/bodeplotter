@@ -301,6 +301,8 @@ class FakeScope(Transport):
             v = _plain(arg)
             if v is None:
                 return None             # exponent notation: ignored (HW_REPORT S1)
+            if ch is not None and not self.ch[ch]["display"]:
+                return None             # ignored on a channel that is off (HW_REPORT 13.7)
             below = [s for s in table if s <= v * (1 + 1e-9)]
             new = max(below) if below else table[0]
         if what == "timebase":

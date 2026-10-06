@@ -128,6 +128,7 @@ class UniTUPO1000(Digitizer):
         self.vdiv: dict[int, float] = {}
         self.probe: dict[int, float] = {}
         self.offset_v: dict[int, float] = {}    # channel offset in volts at the input, as last set
+        self._saved: dict | None = None         # the user's setup, see save_setup()
         self.panel_locked = False
         self.last_timeline: list = []
         self._gap_until = 0.0
@@ -395,10 +396,22 @@ class UniTUPO1000(Digitizer):
         if coupling not in ("DC", "AC"):
             raise DriverError(f"unsupported coupling {coupling!r}", "configure_channel")
         self.probe[ch] = float(probe_atten) or 1.0
+        saved = self._saved["channels"].setdefault(ch, {}) if self._saved is not None else None
+        first = saved is not None and not saved
+        if first:
+            saved["display"] = self.query(f":{c}:DISPlay?", scpi.v_bool)
+            saved["probe"] = self.query(f":{c}:PROBe?", scpi.v_float)
         self.set_verified(f":{c}:DISPlay", "1", scpi.v_bool, True)                    # U1K p.13
         # The scope's own probe ratio stays at 1X: waveform data are input-referred whatever
         # the ratio (HW_REPORT.md S2, 12.10), so the probe ratio is applied here in software.
         self.set_verified(f":{c}:PROBe", scpi.probe_ratio(1), scpi.v_float, 1.0)      # U1K p.14
+        if first:
+            # read at 1X, where the read-backs are input-referred (HW_REPORT.md S2)
+            saved["vernier"] = self.query(f":{c}:VERNier?", scpi.v_bool)
+            saved["scale"] = self.query(f":{c}:SCALe?", scpi.v_float)
+            saved["offset"] = self.query(f":{c}:OFFSet?", scpi.v_float)
+            saved["coupling"] = self.query(f":{c}:COUPling?", V_COUPLING)
+            saved["bwl"] = self.query(f":{c}:BWLimit?", V_BWL)
         self.set_verified(f":{c}:VERNier", "0", scpi.v_bool, False)                   # U1K p.15
         self.set_verified(f":{c}:COUPling", coupling, V_COUPLING, coupling)           # U1K p.13
         bw = "20M" if bw_limit else "FULL"
@@ -445,6 +458,63 @@ class UniTUPO1000(Digitizer):
         self.set_verified(":TRIGger:LEVel", scpi.plain_decimal(at_input), scpi.v_float, at_input,
                           tol_abs=vd / self.CODES_PER_DIV)                            # U1K p.37
         self.set_verified(":TRIGger:SWEep", "AUTO", V_SWEEP, "AUTO")                  # U1K p.36
+
+    _TRIG_SAVED = (("mode", ":TRIGger:MODE", V_TRIGMODE), ("src", ":TRIGger:SOURce", V_SRC),
+                   ("slope", ":TRIGger:EDGE:SLOPe", V_SLOPE), ("level", ":TRIGger:LEVel", scpi.v_float))
+
+    def save_setup(self) -> None:
+        """Remember the user's timebase and trigger now, and each channel's settings the
+        first time configure_channel() touches it, for restore_setup(). The bench sweeps
+        left the scope on whatever range the last point used (HW_REPORT.md 13.6)."""
+        if self._saved is not None:
+            return
+        self._saved = dict(channels={}, timebase=self.query(":TIMebase:SCALe?", scpi.v_float),   # U1K p.16
+                           trig={k: self.query(cmd + "?", v) for k, cmd, v in self._TRIG_SAVED})
+
+    def restore_setup(self) -> list[str]:
+        """Put back what save_setup() remembered. Every setting is tried; the ones that
+        could not be restored are returned (and logged), nothing is raised for them.
+        Untested on hardware for a scope probe ratio other than 1X: offset and trigger
+        level are then sent as they were read."""
+        saved, self._saved = self._saved, None
+        bad: list[str] = []
+        if saved is None:
+            return bad
+
+        def put(cmd, arg, validate, expect, **kw):
+            try:
+                self.set_verified(cmd, arg, validate, expect, **kw)
+            except InstrumentUnresponsive:
+                raise
+            except DriverError as e:
+                bad.append("%s: %s" % (cmd, e))
+
+        for ch, s in saved["channels"].items():
+            if len(s) < 7:                      # configure_channel failed half way
+                continue
+            c = ":" + self._chan(ch)
+            step = s["scale"] / self.CODES_PER_DIV
+            # the channel is on and at 1X here; SCALe is ignored on a channel that is
+            # switched off (HW_REPORT.md 13.7), so DISPlay goes last
+            put(c + ":VERNier", "1" if s["vernier"] else "0", scpi.v_bool, s["vernier"])       # U1K p.15
+            put(c + ":SCALe", scpi.plain_decimal(s["scale"]), scpi.v_float, s["scale"])        # U1K p.14
+            put(c + ":OFFSet", scpi.plain_decimal(s["offset"]), scpi.v_float, s["offset"], tol_abs=step)
+            put(c + ":COUPling", s["coupling"], V_COUPLING, s["coupling"])                     # U1K p.13
+            put(c + ":BWLimit", s["bwl"], V_BWL, s["bwl"])                                     # U1K p.12
+            put(c + ":PROBe", scpi.probe_ratio(s["probe"]), scpi.v_float, s["probe"])          # U1K p.14
+            put(c + ":DISPlay", "1" if s["display"] else "0", scpi.v_bool, s["display"])       # U1K p.13
+            self.vdiv.pop(ch, None)
+            self.offset_v.pop(ch, None)
+        put(":TIMebase:SCALe", scpi.plain_decimal(saved["timebase"]), scpi.v_float, saved["timebase"])  # U1K p.16
+        self.tb = self.query(":TIMebase:SCALe?", scpi.v_float)
+        t = saved["trig"]
+        put(":TRIGger:MODE", t["mode"], V_TRIGMODE, t["mode"])                                 # U1K p.36
+        put(":TRIGger:SOURce", t["src"], V_SRC, t["src"])                                      # U1K p.38
+        put(":TRIGger:EDGE:SLOPe", t["slope"], V_SLOPE, t["slope"])                            # U1K p.39
+        put(":TRIGger:LEVel", scpi.plain_decimal(t["level"]), scpi.v_float, t["level"], tol_abs=1.0)   # U1K p.37
+        for b in bad:
+            log.warning("scope setting not restored: %s", b)
+        return bad
 
     def status(self) -> str:
         return self.query(":TRIGger:STATus?", V_STATUS)                               # U1K p.37

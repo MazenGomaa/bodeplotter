@@ -184,6 +184,7 @@ class MockScope(Digitizer):
         self.trigger = (ref_channel, 0.0)
         self.chan = {ch: dict(vdiv=1.0, coupling="DC", probe=1.0, bw_limit=False, offset=0.0)
                      for ch in range(1, 5)}
+        self._saved = None
         self.acquire_count = 0
         self.fail_next: str | None = None       # test hook
         self.timeout_next = 0                   # test hook: this many acquisitions time out
@@ -239,6 +240,15 @@ class MockScope(Digitizer):
             raise DriverError(f"unsupported coupling {coupling!r}", "configure_channel")
         self.chan[ch].update(coupling=coupling, probe=float(probe_atten), bw_limit=bool(bw_limit),
                              offset=float(offset_v))
+
+    def save_setup(self) -> None:
+        if self._saved is None:
+            self._saved = (self.timebase, self.trigger, {ch: dict(c) for ch, c in self.chan.items()})
+
+    def restore_setup(self) -> list[str]:
+        if self._saved is not None:
+            (self.timebase, self.trigger, self.chan), self._saved = self._saved, None
+        return []
 
     def set_vdiv(self, ch, vdiv) -> float:
         self._cmd("set_vdiv")

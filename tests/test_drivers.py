@@ -394,6 +394,42 @@ def test_sweep_with_the_real_drivers_measures_an_rc_low_pass():
     session.close()
 
 
+def test_sweep_puts_the_users_scope_settings_back():
+    """Bench, 2026-10-06: a sweep left the scope on the last point's V/div and timebase.
+    CH2 is off here on purpose: the scope ignores SCALe on a channel that is off."""
+    rc = 1e3 * 100e-9
+    session, fgen, fscope, clock = fake_bench(h=lambda f: 1.0 / (1.0 + 2j * math.pi * f * rc))
+    fscope.ch[1].update(scale=0.5, offset=0.1, probe=1.0, coupling="AC", bwl="20M")
+    fscope.ch[2].update(scale=0.05, offset=-0.004, probe=10.0, display=False)
+    fscope.timebase = 2e-3
+    fscope.trig.update(src="CHANnel2", slope="NEGative", level=0.01)
+    before = ({n: dict(c) for n, c in fscope.ch.items()}, fscope.timebase, dict(fscope.trig))
+    runner = SweepRunner(session, SweepConfig(start_hz=100.0, stop_hz=1e5, points_per_decade=2),
+                         StimulusConfig(), ScopeConfig(), MeasureSettings(), sleep=clock.sleep)
+    result = runner.run()
+    assert result.meta["error"] is None and len(result.points) == 7
+    assert any(c.startswith(":CHANnel2:SCALe ") for c in fscope.sent())     # the sweep did change it
+    after = ({n: dict(c) for n, c in fscope.ch.items()}, fscope.timebase, dict(fscope.trig))
+    assert after[0][1] == pytest.approx(before[0][1])
+    assert after[0][2] == pytest.approx(before[0][2])
+    assert after[1] == before[1] and after[2] == pytest.approx(before[2])
+    assert fscope.sweep == "AUTO" and fscope.mode == "run" and not fscope.lock
+    session.close()
+
+
+def test_restore_reports_what_it_could_not_put_back_and_does_not_raise():
+    drv, fake, clock = opened_scope()
+    drv.save_setup()
+    drv.configure_channel(1, "DC", 10.0, False, 0.0)
+    drv.set_timebase(1e-4)
+    fake.ch[1]["scale"] = 0.3            # between steps: cannot be read back as set
+    drv._saved["channels"][1]["scale"] = 0.3
+    fake.ch[1]["scale"] = 0.2
+    bad = drv.restore_setup()
+    assert len(bad) == 1 and ":CHANnel1:SCALe" in bad[0]
+    assert fake.timebase == 1e-3 and drv.restore_setup() == []       # the rest went back; second call is a no-op
+
+
 @pytest.mark.parametrize("state", [-1.85e-9, 0.15e-9, 2.15e-9, 4.15e-9])
 def test_skew_check_with_the_real_driver_finds_each_state(state):
     session, fgen, fscope, clock = fake_bench(delay=state)
