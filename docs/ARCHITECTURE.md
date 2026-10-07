@@ -36,7 +36,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `units.py` | SI prefixes: `fmt_si`, `parse_si` | - |
 | `drivers/base.py` | interfaces `SignalSource`, `Digitizer`; `Waveform`; capability dataclasses; `DriverError` | - |
 | `drivers/connect.py` | scan the bus, pick by `*IDN?`, open a real `Session` | `drivers/base.py`, `drivers/registry.py`, `drivers/step_tables.py`, `drivers/transport.py`, `drivers/visa_util.py`, `io/settings.py`, `sweep/core.py` |
-| `drivers/mock.py` | `MockSource`, `MockScope`, `SimulatedDUT` (Simulation mode) | `drivers/base.py`, `drivers/step_tables.py` |
+| `drivers/mock.py` | `MockSource`, `MockScope`, `SimulatedDUT` (Simulation mode) | `drivers/base.py`, `drivers/step_tables.py`, `measure/theory.py` |
 | `drivers/registry.py` | `*IDN?` string to driver class | - |
 | `drivers/scpi.py` | command descriptions, reply validators, `InstrumentUnresponsive`, `BlockedCommand` | `drivers/base.py` |
 | `drivers/step_tables.py` | shipped timebase and V/div tables per model and firmware; the user's walked tables | `io/settings.py` |
@@ -46,7 +46,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `drivers/visa_util.py` | the only pyvisa import: resource manager, discovery, the `BODEPLOT_NO_HARDWARE` guard | - |
 | `gui/bode_plot.py` | gain and phase plots, follow / fit view, vertical unit, re-measure request | `gui/si_widgets.py`, `gui/theme.py`, `measure/sinefit.py`, `models.py`, `units.py` |
 | `gui/config_panel.py` | the input panel; builds the config dataclasses and presets | `gui/si_widgets.py`, `io/presets.py`, `models.py` |
-| `gui/dialogs.py` | settings, connections, simulation settings, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/mock.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py`, `units.py` |
+| `gui/dialogs.py` | settings, connections, simulation settings, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/mock.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
 | `gui/main_window.py` | toolbar, menus, status bar, sweep control, exports; the engine's only client | `__init__.py`, `gui/bode_plot.py`, `gui/config_panel.py`, `gui/dialogs.py`, `gui/status_log.py`, `gui/theme.py`, `gui/waveform_view.py`, `io/export_csv.py`, `io/export_image.py`, `io/export_touchstone.py`, `io/presets.py`, `io/settings.py`, `logging_setup.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py`, `sweep/engine.py`, `sweep/plan.py`, `units.py` |
 | `gui/si_widgets.py` | k / M number entry, SI axis | `units.py` |
 | `gui/status_log.py` | point table and log text | `models.py`, `units.py` |
@@ -60,6 +60,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `measure/builtin.py` | gain and phase from the scope's own measurements (simulation only) | `drivers/base.py` |
 | `measure/meters.py` | `DualChannelScopeMeter`: one frequency point, auto-range, bad-capture retry | `drivers/base.py`, `drivers/scpi.py`, `measure/builtin.py`, `measure/sinefit.py`, `models.py`, `sweep/autorange.py` |
 | `measure/sinefit.py` | sine fit, SNR, `gain_phase`, `unwrap_deg` | - |
+| `measure/theory.py` | transfer functions of ideal circuits: the simulated DUT and the plot's theory curves | `units.py` |
 | `measure/skew.py` | channel skew: delay from H, correction, evaluation, texts | `models.py` |
 | `sweep/autorange.py` | pure V/div and timebase decisions | - |
 | `sweep/calibration.py` | through calibration, the pure part: frequencies, interpolation, plausibility, validity against the scope settings | `models.py`, `sweep/plan.py`, `units.py` |

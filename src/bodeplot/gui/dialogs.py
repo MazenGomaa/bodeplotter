@@ -12,24 +12,13 @@ from ..drivers import registry, visa_util
 from ..drivers.mock import SimulatedDUT
 from ..io.export_image import ImageOptions
 from ..io.settings import SCOPE_MIN_GAP_MS, AppSettings
-from ..measure import skew
+from ..measure import skew, theory
 from ..models import SkewCheck, ThroughCal
 from ..sweep import calibration
 from ..units import fmt_si, parse_si
 from . import theme
 
-SIM_PARAMS = {
-    "through": {},
-    "rc_lpf": {"r": (1e3, "R (Ω)"), "c": (100e-9, "C (F)")},
-    "rc_hpf": {"r": (1e3, "R (Ω)"), "c": (100e-9, "C (F)")},
-    "rlc_bpf": {"r": (100.0, "R (Ω)"), "l": (1e-3, "L (H)"), "c": (100e-9, "C (F)")},
-    "rlc_notch": {"r": (100.0, "R (Ω)"), "l": (1e-3, "L (H)"), "c": (100e-9, "C (F)")},
-    "butter2_lpf": {"fc": (10e3, "Cutoff (Hz)")},
-    "custom": {},
-}
-SIM_LABELS = {"through": "Through (wire)", "rc_lpf": "RC low-pass", "rc_hpf": "RC high-pass",
-              "rlc_bpf": "RLC band-pass", "rlc_notch": "RLC notch", "butter2_lpf": "Butterworth low-pass, 2nd order",
-              "custom": "Custom H(s)"}
+SIM_PARAMS, SIM_LABELS = theory.PARAMS, theory.LABELS      # the simulated DUT's circuits (measure/theory.py)
 
 
 # ---------------------------------------------------------------------- connections

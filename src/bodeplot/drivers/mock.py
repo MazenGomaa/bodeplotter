@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from ..measure.theory import TransferFunction
 from . import step_tables
 from .base import (AcquireTimeout, Digitizer, DigitizerCaps, DriverError, SignalSource,
                    SourceCaps, Waveform)
@@ -34,59 +35,10 @@ CODES_PER_DIV = 25.0
 
 # ---------------------------------------------------------------------- DUT
 @dataclass
-class SimulatedDUT:
-    """Transfer function H(s) = num(s) / den(s), coefficients highest power first."""
-    name: str = "through"
-    num: tuple[float, ...] = (1.0,)
-    den: tuple[float, ...] = (1.0,)
+class SimulatedDUT(TransferFunction):
+    """The DUT of Simulation mode: a transfer function (measure/theory.py) plus the load
+    it puts on the source."""
     input_impedance_ohm: float = 1e9        # loads the source (50 ohm) at the ref node
-    params: dict = field(default_factory=dict)
-
-    def h(self, freq_hz: float) -> complex:
-        s = 2j * math.pi * freq_hz
-        n = sum(c * s ** (len(self.num) - 1 - i) for i, c in enumerate(self.num))
-        d = sum(c * s ** (len(self.den) - 1 - i) for i, c in enumerate(self.den))
-        return n / d if d != 0 else complex("inf")
-
-    # ---- presets
-    @classmethod
-    def through(cls) -> "SimulatedDUT":
-        return cls("through")
-
-    @classmethod
-    def rc_lpf(cls, r: float = 1e3, c: float = 100e-9) -> "SimulatedDUT":
-        return cls("rc_lpf", (1.0,), (r * c, 1.0), params=dict(r=r, c=c))
-
-    @classmethod
-    def rc_hpf(cls, r: float = 1e3, c: float = 100e-9) -> "SimulatedDUT":
-        return cls("rc_hpf", (r * c, 0.0), (r * c, 1.0), params=dict(r=r, c=c))
-
-    @classmethod
-    def rlc_bpf(cls, r: float = 100.0, l: float = 1e-3, c: float = 100e-9) -> "SimulatedDUT":
-        """Series L-C, output across R:  H = sRC / (s^2 LC + sRC + 1).  Q = sqrt(L/C)/R."""
-        return cls("rlc_bpf", (r * c, 0.0), (l * c, r * c, 1.0), params=dict(r=r, l=l, c=c))
-
-    @classmethod
-    def rlc_notch(cls, r: float = 100.0, l: float = 1e-3, c: float = 100e-9) -> "SimulatedDUT":
-        """Series R, output across series L-C:  H = (s^2 LC + 1) / (s^2 LC + sRC + 1)."""
-        return cls("rlc_notch", (l * c, 0.0, 1.0), (l * c, r * c, 1.0), params=dict(r=r, l=l, c=c))
-
-    @classmethod
-    def butter2_lpf(cls, fc: float = 10e3) -> "SimulatedDUT":
-        w = 2 * math.pi * fc
-        return cls("butter2_lpf", (w * w,), (1.0, math.sqrt(2.0) * w, w * w), params=dict(fc=fc))
-
-    @classmethod
-    def custom(cls, num, den) -> "SimulatedDUT":
-        return cls("custom", tuple(float(x) for x in num), tuple(float(x) for x in den))
-
-    PRESETS = ("through", "rc_lpf", "rc_hpf", "rlc_bpf", "rlc_notch", "butter2_lpf", "custom")
-
-    @classmethod
-    def from_preset(cls, name: str, **kw) -> "SimulatedDUT":
-        if name not in cls.PRESETS:
-            raise ValueError(f"unknown DUT preset {name!r}")
-        return getattr(cls, name)(**kw)
 
 
 # ---------------------------------------------------------------------- source
