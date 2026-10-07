@@ -282,3 +282,97 @@ def test_simulation_settings_still_use_the_same_form(qtbot):
     p.circuit._edits["r"].setText("0")
     with pytest.raises(ValueError, match="positive"):
         p.values()
+
+
+# ---------------------------------------------------------------------- main window
+from bodeplot.gui.main_window import MainWindow          # noqa: E402
+from bodeplot.io.settings import AppSettings             # noqa: E402
+from bodeplot.models import EngineState, SweepConfig, SweepType     # noqa: E402
+
+SIM = {"preset": "rc_lpf", "params": {"r": 1e3, "c": 100e-9}, "noise_vrms": 2e-4, "latency_ms": 0.0}
+
+
+@pytest.fixture
+def win(qtbot, tmp_path, monkeypatch):
+    monkeypatch.setenv("BODEPLOT_CONFIG_DIR", str(tmp_path / "cfg"))
+    w = MainWindow(simulate=True, settings=AppSettings(simulate=True, sim=dict(SIM)), sim_seed=7)
+    w.interactive = False
+    qtbot.addWidget(w)
+    w.show()
+    yield w
+    w.close()
+
+
+def run_sweep(win, qtbot, lo=100.0, hi=1e5, ppd=4):
+    if not win.info.connected:
+        with qtbot.waitSignal(win.engine.session_changed, timeout=5000):
+            win.toggle_connection()
+        qtbot.waitUntil(lambda: win.info.connected, timeout=5000)
+    p = win.config.preset()
+    p.sweep = SweepConfig(SweepType.LOG, lo, hi, ppd)
+    p.measure.settle_ms, p.measure.settle_cycles = 0.0, 0.0
+    win.config.set_preset(p)
+    with qtbot.waitSignal(win.engine.finished, timeout=30000):
+        assert win.start_sweep(check_skew=False)
+    qtbot.waitUntil(lambda: win.state is EngineState.DONE, timeout=5000)
+
+
+def test_window_has_a_traces_panel(win):
+    assert win.plot.set is win.traces and win.traces_panel.traces is win.traces
+    assert win.traces_panel.interactive is False                 # follows the window's switch
+    dock, act = win.docks["dock_traces"], win.view_actions["dock_traces"]
+    assert dock.isVisible() and act.isChecked() and dock.windowTitle() == "Traces"
+    dock.close()
+    win.act_reset_layout.trigger()
+    assert dock.isVisible()
+    assert win.plot.span_hint == (50.0, 20e6)                    # the sweep settings of the panel
+    assert not win.traces_panel.keep_btn.isEnabled()
+
+
+def test_a_new_sweep_keeps_the_other_traces(win, qtbot):
+    run_sweep(win, qtbot)
+    first = win.plot.points()
+    assert win.traces_panel.keep_btn.isEnabled()
+    win.traces_panel.keep()
+    win.traces_panel.add_theory(RC)
+    kept, th = win.traces.traces[1], win.traces.traces[2]
+    win.plot.ref_box.setCurrentIndex(win.plot.ref_box.findData(th.id))
+    win.plot.ref_box.activated.emit(win.plot.ref_box.currentIndex())
+    run_sweep(win, qtbot, 1e3, 1e4, 3)
+    assert [t.kind for t in win.traces.traces] == ["live", "kept", "theory"]
+    assert kept.points == first and len(win.plot.points()) == 4 and win.traces.reference() is th
+    # against the ideal filter the simulated one reads zero within its noise
+    y = line_y(win.plot, win.traces.live)
+    assert np.abs(y).max() < 0.1
+    assert "Loaded" not in win.status_log.text.toPlainText()
+    assert win.result is not None and len(win.result.points) == 4          # the exports' result is the live sweep
+
+
+def test_panel_messages_reach_the_status_log(win, tmp_path):
+    win.traces_panel.load_files([str(tmp_path / "missing.csv")])
+    assert "Not loaded: missing.csv" in win.status_log.text.toPlainText()
+    win.traces_panel.set_unit("db")
+    win.plot.set_unit("v")
+    assert win.traces_panel.unit == "v"                           # the panel follows the plot's unit
+
+
+def test_image_export_draws_what_the_plot_shows(win, qtbot, tmp_path, monkeypatch):
+    from bodeplot.io import export_image
+    run_sweep(win, qtbot)
+    win.traces_panel.add_theory(RC)
+    win.plot.set.set_reference(win.traces.traces[1].id)
+    win.plot.traces_changed()
+    seen = {}
+    real = export_image.write_image
+
+    def spy(path, result, opts=None, series=None, labels=None):
+        seen.update(series=series, labels=labels)
+        return real(path, result, opts, series, labels)
+    monkeypatch.setattr(export_image, "write_image", spy)
+    for name in ("t.png", "t.svg", "t.pdf"):
+        out = win.export(tmp_path / name)
+        assert out.exists() and out.stat().st_size > 500
+    assert [s.name for s in seen["series"]] == ["Sweep", "RC low-pass 1 kΩ 100 nF"]
+    assert seen["labels"] == ("Gain difference (dB)", "Phase difference (deg)", "relative to RC low-pass 1 kΩ 100 nF")
+    csv = win.export(tmp_path / "t.csv").read_text(encoding="utf-8")
+    assert "RC low-pass" not in csv and "# bodeplot_csv: 1" in csv        # the CSV is the live sweep only

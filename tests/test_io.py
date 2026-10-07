@@ -243,3 +243,24 @@ def test_image_follows_the_vertical_unit(tmp_path, result, unit, label, top, mon
     path = export_image.write_image(tmp_path / "plot.svg", result, export_image.ImageOptions(unit=unit))
     assert path.exists() and seen["ax"].get_ylabel() == label
     assert float(max(seen["y"])) == pytest.approx(top, abs=0.05 * max(1.0, top))
+
+
+def test_image_with_several_series_and_a_legend(tmp_path, result):
+    import numpy as np
+    from bodeplot.io.export_image import ImageSeries
+    f = np.array([p.freq_hz for p in result.points])
+    g = np.array([p.gain_db for p in result.points])
+    ph = np.array([p.phase_deg for p in result.points])
+    flagged = np.zeros(len(f), dtype=bool)
+    flagged[2] = True
+    series = [ImageSeries("Sweep", 0, f, g, ph, flagged), ImageSeries("ideal", 1, f, g - 0.1, ph, None),
+              ImageSeries("ninth", None, f, g - 0.2, ph, None), ImageSeries("empty", 3, f[:0], g[:0], ph[:0], None)]
+    labels = ("Gain difference (dB)", "Phase difference (deg)", "relative to ideal")
+    for ext in ("png", "svg", "pdf"):
+        out = export_image.write_image(tmp_path / ("multi." + ext), result, export_image.ImageOptions(), series, labels)
+        assert out.stat().st_size > 500
+    svg = (tmp_path / "multi.svg").read_text(encoding="utf-8")
+    assert export_image.PRINT_SERIES[1].lower() in svg.lower() and export_image.PRINT_MUTED.lower() in svg.lower()
+    one = export_image.write_image(tmp_path / "one.svg", result, export_image.ImageOptions()).read_text(encoding="utf-8")
+    assert export_image.PRINT_SERIES[0].lower() in one.lower()               # without series: as before
+    assert export_image.PRINT_SERIES[1].lower() not in one.lower()

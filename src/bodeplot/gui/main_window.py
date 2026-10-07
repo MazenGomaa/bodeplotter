@@ -19,6 +19,7 @@ from ..models import EngineState, LogEntry, Method, PointResult, SweepResult, Sw
 from ..sweep import calibration
 from ..sweep import plan as plan_mod
 from ..sweep.engine import Configs, ConnectRequest, SessionInfo, SweepEngine
+from ..traces import TraceSet
 from . import theme
 from .bode_plot import BodePlot
 from .config_panel import ConfigPanel
@@ -26,6 +27,7 @@ from ..units import fmt_si
 from .dialogs import (CalDialog, ConnectionsDialog, ImageExportDialog, SettingsDialog, SimSettingsDialog,
                       SkewWizard)
 from .status_log import StatusLog
+from .traces_panel import TracesPanel
 from .waveform_view import WaveformView
 
 log = logging.getLogger("bodeplot.gui")
@@ -46,7 +48,7 @@ class MainWindow(QMainWindow):
             self._stored_simulate = self.settings.simulate
             self.settings.simulate = simulate
         self.sim_seed = sim_seed
-        self.interactive = True         # tests switch this off: no modal dialogs
+        self._interactive = True        # tests switch this off: no modal dialogs (see the property)
         self.info = SessionInfo()
         self.state = EngineState.IDLE
         self.result: SweepResult | None = None
@@ -63,14 +65,18 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Bode plotter %s" % __version__)
         self.resize(1400, 860)
         self.docks: dict[str, QDockWidget] = {}
-        self.plot = BodePlot()
+        self.traces = TraceSet()
+        self.plot = BodePlot(self.traces)
         self.setCentralWidget(self.plot)
         self.config = ConfigPanel()
         self.waveform = WaveformView()
         self.status_log = StatusLog()
+        self.traces_panel = TracesPanel(self.traces)
+        self.traces_panel.interactive = self._interactive
         for title, name, widget, area in (
                 ("Configuration", "dock_config", self.config, Qt.LeftDockWidgetArea),
                 ("Waveform", "dock_waveform", self.waveform, Qt.RightDockWidgetArea),
+                ("Traces", "dock_traces", self.traces_panel, Qt.RightDockWidgetArea),
                 ("Status log", "dock_log", self.status_log, Qt.BottomDockWidgetArea)):
             dock = QDockWidget(title, self)
             dock.setObjectName(name)
@@ -90,6 +96,9 @@ class MainWindow(QMainWindow):
         e.session_changed.connect(self._on_session)
         e.point_remeasured.connect(self._on_remeasured)
         self.plot.remeasure_requested.connect(self.remeasure)
+        self.traces_panel.changed.connect(self.plot.traces_changed)
+        self.traces_panel.message.connect(self._say)
+        self.plot.unit_box.currentIndexChanged.connect(lambda _i: self.traces_panel.set_unit(self.plot.unit()))
 
         self._build_toolbar()
         self._build_menus()
@@ -103,6 +112,16 @@ class MainWindow(QMainWindow):
         self._tick.timeout.connect(self._update_clock)
         self._tick.start()
         self._update_actions()
+
+    @property
+    def interactive(self) -> bool:
+        """False in the tests: no modal dialog or message box, here or in the Traces panel."""
+        return self._interactive
+
+    @interactive.setter
+    def interactive(self, on: bool) -> None:
+        self._interactive = bool(on)
+        self.traces_panel.interactive = self._interactive
 
     # ------------------------------------------------------------------ UI construction
     def _build_toolbar(self) -> None:
@@ -202,7 +221,7 @@ class MainWindow(QMainWindow):
 
         m = mb.addMenu("&View")
         self.view_actions = {}
-        for name, text in (("dock_config", "&Configuration"), ("dock_waveform", "&Waveform"),
+        for name, text in (("dock_config", "&Configuration"), ("dock_waveform", "&Waveform"), ("dock_traces", "&Traces"),
                            ("dock_log", "&Status log")):
             a = self.docks[name].toggleViewAction()     # checked while the dock is open
             a.setText(text)
@@ -329,6 +348,7 @@ class MainWindow(QMainWindow):
             self.preset_box.setCurrentText(s.last_preset)
         self.plot.set_unwrap(s.unwrap_phase)
         self.plot.set_unit(s.vertical_unit)
+        self.traces_panel.set_unit(self.plot.unit())
         self.act_unwrap.setChecked(s.unwrap_phase)
         try:
             if s.window_geometry:
@@ -386,6 +406,8 @@ class MainWindow(QMainWindow):
 
     def _on_config_changed(self) -> None:
         self.plot.set_log_x(self.config.sweep().sweep_type is SweepType.LOG)
+        sweep = self.config.sweep()
+        self.plot.set_span_hint(min(sweep.start_hz, sweep.stop_hz), max(sweep.start_hz, sweep.stop_hz))
         self._refresh_correction()
 
     def _update_actions(self) -> None:
@@ -550,6 +572,7 @@ class MainWindow(QMainWindow):
         self.result = None
         self._points = []
         self.plot.clear()
+        self.traces_panel.refresh_buttons()
         self.status_log.clear_points()
         self.waveform.clear()
         self._t_start = time.monotonic()
@@ -575,6 +598,7 @@ class MainWindow(QMainWindow):
         self._points.append(p)
         self.plot.add_point(p)
         self.status_log.add_point(p)
+        self.traces_panel.refresh_buttons()
 
     def _on_progress(self, i: int, n: int) -> None:
         self._progress = (i, n)
@@ -593,11 +617,13 @@ class MainWindow(QMainWindow):
         self.plot.set_points(result.points)             # re-fits the view while it is following
         self._update_clock()
         self._update_actions()
+        self.traces_panel.refresh_buttons()
 
     def _on_remeasured(self, result: SweepResult, point: PointResult) -> None:
         self.result = result
         self.plot.set_points(result.points)
         self._update_actions()
+        self.traces_panel.refresh_buttons()
 
     def _on_error(self, message: str) -> None:
         if self.interactive and not any(w.isVisible() for w in
@@ -694,7 +720,8 @@ class MainWindow(QMainWindow):
             o = image_opts or self._image_opts
             o = export_image.ImageOptions(o.title, o.dpi, o.width_in, o.height_in, self.plot.unwrap(),
                                           self.config.sweep().sweep_type is SweepType.LOG, self.info.has_phase, self.plot.unit())
-            out = export_image.write_image(path, self.result, o)
+            series, labels = self.plot.export_series()
+            out = export_image.write_image(path, self.result, o, series, labels)
         else:
             raise ValueError("unknown export format %r" % fmt)
         self._say("info", "Exported %s" % out)
