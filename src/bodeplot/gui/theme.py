@@ -85,6 +85,9 @@ QToolBar QToolButton {{ background: transparent; color: {INK_2}; border: 1px sol
 QToolBar QToolButton:hover {{ background: {RAISED}; color: {INK}; border-color: {BORDER}; }}
 QToolBar QToolButton:pressed {{ background: {ACCENT_DIM}; }}
 QToolBar QToolButton:disabled {{ color: #5b5a56; }}
+QToolBar QToolButton#primary {{ background: {ACCENT_DIM}; color: {INK}; border-color: {ACCENT}; }}
+QToolBar QToolButton#primary:hover {{ background: {ACCENT}; }}
+QToolBar QToolButton#primary:disabled {{ background: transparent; color: #5b5a56; border-color: {HAIRLINE}; }}
 QToolBar QLabel {{ color: {MUTED}; }}
 
 QDockWidget {{ color: {INK_2}; }}

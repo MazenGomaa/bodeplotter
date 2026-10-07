@@ -35,6 +35,8 @@ log = logging.getLogger("bodeplot.gui")
 BUSY = (EngineState.CONNECTING, EngineState.RUNNING, EngineState.PAUSED, EngineState.ABORTING)
 
 
+LAYOUT_VERSION = 2      # the arrangement of the panels; a window layout stored by another one is not restored
+
 class MainWindow(QMainWindow):
     def __init__(self, simulate: bool | None = None, settings: AppSettings | None = None,
                  sim_seed: int | None = None):
@@ -78,18 +80,23 @@ class MainWindow(QMainWindow):
         self.markers_panel = MarkersPanel(self.plot)
         for title, name, widget, area in (
                 ("Configuration", "dock_config", self.config, Qt.LeftDockWidgetArea),
-                ("Waveform", "dock_waveform", self.waveform, Qt.RightDockWidgetArea),
                 ("Traces", "dock_traces", self.traces_panel, Qt.RightDockWidgetArea),
                 ("Markers", "dock_markers", self.markers_panel, Qt.RightDockWidgetArea),
-                ("Status log", "dock_log", self.status_log, Qt.BottomDockWidgetArea)):
+                ("Status log", "dock_log", self.status_log, Qt.BottomDockWidgetArea),
+                ("Waveform", "dock_waveform", self.waveform, Qt.BottomDockWidgetArea)):
             dock = QDockWidget(title, self)
             dock.setObjectName(name)
             dock.setWidget(widget)
             self.addDockWidget(area, dock)
             self.docks[name] = dock
-        # the markers belong to a trace: their panel shares the place of the Traces panel, as a tab behind it
+        # The window reads in working order (user's review of 2026-10-07): set up on the left, the
+        # plot in the middle, reading the result on the right (Traces, and Markers as a tab behind
+        # it: markers belong to a trace). What is watched while a sweep runs, the log and the
+        # waveform, shares a low strip underneath.
         self.tabifyDockWidget(self.docks["dock_traces"], self.docks["dock_markers"])
         self.docks["dock_traces"].raise_()
+        self.splitDockWidget(self.docks["dock_log"], self.docks["dock_waveform"], Qt.Horizontal)
+        self._default_sizes()
 
         self.engine = SweepEngine(self)
         e = self.engine
@@ -112,7 +119,7 @@ class MainWindow(QMainWindow):
         self._build_toolbar()
         self._build_menus()
         self._build_statusbar()
-        self._default_state = self.saveState()      # the layout "Reset layout" goes back to
+        self._default_state = self.saveState(LAYOUT_VERSION)    # the layout "Reset layout" goes back to
         self._load_ui_state()
         self.apply_settings()
         self.config.changed.connect(self._on_config_changed)
@@ -146,6 +153,16 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(a)
         return a
 
+    def _default_sizes(self) -> None:
+        """Sizes of the panels at a first start, as shares of the window, so that they fit any
+        screen: the strip underneath is low, the right column a good quarter of the width, and
+        the waveform as wide as that column, so that its edge lines up with it."""
+        d = self.docks
+        right = int(0.27 * self.width())
+        self.resizeDocks([d["dock_traces"]], [right], Qt.Horizontal)
+        self.resizeDocks([d["dock_log"], d["dock_waveform"]], [self.width() - right, right], Qt.Horizontal)
+        self.resizeDocks([d["dock_log"]], [int(0.2 * self.height())], Qt.Vertical)
+
     def _build_toolbar(self) -> None:
         tb = QToolBar("Main")
         tb.setObjectName("toolbar_main")
@@ -173,6 +190,8 @@ class MainWindow(QMainWindow):
         self.act_start = act("Start", self.start_sweep,
                              "Run a sweep with the settings of the Configuration panel. It replaces the live "
                              "sweep on the plot; kept and loaded traces stay.")
+        # the one action the window exists for: the only accented button (theme: QToolButton#primary)
+        tb.widgetForAction(self.act_start).setObjectName("primary")
         self.act_pause = act("Pause", self.toggle_pause,
                              "Hold the sweep after the point being measured, and go on from there later.")
         self.act_abort = act("Abort", self.abort,
@@ -288,7 +307,7 @@ class MainWindow(QMainWindow):
 
     def reset_layout(self) -> None:
         """Every dock and the toolbar back where they started, all visible."""
-        self.restoreState(self._default_state)
+        self.restoreState(self._default_state, LAYOUT_VERSION)
         for dock in self.docks.values():
             dock.setFloating(False)
             dock.show()
@@ -396,7 +415,8 @@ class MainWindow(QMainWindow):
             if s.window_geometry:
                 self.restoreGeometry(QByteArray.fromBase64(s.window_geometry.encode("ascii")))
             if s.window_state:
-                self.restoreState(QByteArray.fromBase64(s.window_state.encode("ascii")))
+                # a layout stored by another arrangement of the panels is refused: the new one shows
+                self.restoreState(QByteArray.fromBase64(s.window_state.encode("ascii")), LAYOUT_VERSION)
         except Exception:                           # a bad saved layout must not stop the app
             log.warning("could not restore the window layout")
         # The panels ticked in Settings > General are shown at start-up (all of them unless the
@@ -416,7 +436,7 @@ class MainWindow(QMainWindow):
         s.marker_values = self.plot.marker_values()
         s.marker_color = self.plot.marker_color()
         s.window_geometry = bytes(self.saveGeometry().toBase64()).decode("ascii")
-        s.window_state = bytes(self.saveState().toBase64()).decode("ascii")
+        s.window_state = bytes(self.saveState(LAYOUT_VERSION).toBase64()).decode("ascii")
         self._save_settings()
 
     def _save_settings(self) -> None:

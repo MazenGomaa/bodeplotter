@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QPixmap
-from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QMessageBox, QPushButton, QStyledItemDelegate, QTreeWidget,
+from PySide6.QtWidgets import (QFileDialog, QGridLayout, QMessageBox, QPushButton, QStyledItemDelegate, QTreeWidget,
                                QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from ..io import export_csv
@@ -54,7 +54,8 @@ class TracesPanel(QWidget):
         self.tree.setToolTip("Tick a trace to show it. Double-click a name to change it; double-click the kind "
                              "of a theory curve to change its values.")
         lay.addWidget(self.tree, 1)
-        row = QHBoxLayout()
+        # two rows of two: four buttons in one row made the right column too wide for a small screen
+        grid = QGridLayout()
         self.load_btn = QPushButton("Load CSV…")
         self.theory_btn = QPushButton("Add theory…")
         self.keep_btn = QPushButton("Keep sweep")
@@ -64,10 +65,9 @@ class TracesPanel(QWidget):
         self.keep_btn.setToolTip("Keep the current sweep on the plot when the next one starts")
         self.remove_btn.setToolTip("Take the selected trace off the plot. The live sweep cannot be removed; "
                                    "untick it to hide it.")
-        for b in (self.load_btn, self.theory_btn, self.keep_btn, self.remove_btn):
-            row.addWidget(b)
-        row.addStretch(1)
-        lay.addLayout(row)
+        for i, b in enumerate((self.load_btn, self.theory_btn, self.keep_btn, self.remove_btn)):
+            grid.addWidget(b, i // 2, i % 2)
+        lay.addLayout(grid)
         self.load_btn.clicked.connect(self._load_clicked)
         self.theory_btn.clicked.connect(self._theory_clicked)
         self.keep_btn.clicked.connect(self.keep)

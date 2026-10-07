@@ -139,14 +139,14 @@ Traces are kept for this run of the app only. The image export shows every visib
 
 ## Markers
 
-The **Markers** panel (a tab behind the Traces panel; View > Markers) switches markers on one trace (**Markers on**, the live sweep unless you choose another). Each marker is a dashed line through both plots with its values written next to the curve, and the panel lists all of them in a table.
+The **Markers** panel (on the right, a tab behind the Traces panel; View > Markers) switches markers on one trace (**Markers on**, the live sweep unless you choose another). Each marker is a dashed line through both plots with its values written next to the curve, and the panel lists all of them in a table.
 
 - **−3 dB** marks where the gain is 3 dB below the highest gain of the trace: `fc` for a low-pass or high-pass, `fL` and `fH` with bandwidth and Q for a band-pass.
 - **Peak** and **Notch** mark the highest and the lowest gain when they are real ones: not at an end of the trace and at least 1 dB clear of both ends.
 - **Margins** reads the trace as a loop gain: the phase margin where the gain passes 0 dB (180° + phase) and the gain margin where the phase passes −180°.
 - **Your own markers:** right-click the plot > **Add marker here**, then drag it, or right-click it to type a frequency (1k, 2.5M), to remove it, or to make it the **reference marker**; the others then show their difference to it and the slope in dB per decade. Up to eight.
 
-Between two measured points the values are interpolated. With **Difference to trace** set, the markers measure the difference curve. **Copy values** puts a table on the clipboard, and the image export shows the markers. Untick **Values on the plot** to keep only the names on the plot and read the numbers in the table; **Colour…** changes the marker colour on screen. The ticks, that choice and the colour are remembered; your own markers are not.
+Between two measured points the values are interpolated. With **Difference to trace** set, the markers measure the difference curve. **Copy values** puts a table on the clipboard, and the image export shows the markers. Untick **Values on the plot** to keep only the names on the plot and read the numbers in the table; the **Colour** button changes the marker colour on screen. The ticks, that choice and the colour are remembered; your own markers are not.
 
 ## Instrument rules that matter
 

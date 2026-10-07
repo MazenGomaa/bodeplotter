@@ -143,6 +143,7 @@ def test_the_table_lists_every_marker_with_its_values(plot, panel):
     assert got[1] == ["pk", "", "", "", "none"]                  # switched on, and a low-pass has no peak
     assert got[2][1] == "1 kHz" and got[2][4] == "reference marker"
     assert got[3][4].startswith("rel. M1: x10, ") and got[3][4].endswith("dB/dec")
+    assert panel.table.topLevelItem(3).toolTip(4) == got[3][4]   # a long note can be read in full in a narrow panel
     plot.set_unit("pct")
     assert rows(panel)[0][2].endswith("%")
     plot.set_unit("db")
@@ -194,7 +195,7 @@ def test_marker_colour_can_be_chosen(plot, panel):
     for bad in ("orange", "#12", None, 7):
         panel.set_color(bad)
         assert plot.marker_color() == "#ff8800"                  # not a colour: nothing changes
-    panel.default_color_btn.click()
+    panel.act_default_color.trigger()
     assert plot.marker_color() == "" and plot.marker_layer.items("fc").lines[0].pen.color().name() == theme.MARK_INK
     assert export_image.PRINT_MARKER == "#444444"                # the image on white keeps its own grey
 
@@ -243,3 +244,89 @@ def test_marker_look_survives_a_restart(win, qtbot):
         again.close()
     damaged = AppSettings.from_dict({"marker_color": "red", "marker_values": "x"})
     assert damaged.marker_color == "" and damaged.marker_values is True
+
+
+# ---------------------------------------------------------------------- layout (user's review, 2026-10-07)
+# "the waveform and the markers are squashed": the window is now set up | measure | read, with
+# what is watched during a sweep (log, waveform) in a low strip underneath.
+def test_colour_is_one_swatch_button_with_a_menu(plot, panel):
+    assert not hasattr(panel, "default_color_btn")
+    menu = panel.color_btn.menu()
+    assert [a.text() for a in menu.actions()] == ["Choose…", "Theme default"] and menu.toolTipsVisible()
+    assert all(len(a.toolTip()) >= 25 and a.toolTip() != a.text() for a in menu.actions())
+    assert not panel.act_default_color.isEnabled()               # it is the theme's colour already
+    panel.set_color("#ff8800")
+    assert panel.act_default_color.isEnabled()
+    panel.act_default_color.trigger()
+    assert plot.marker_color() == ""
+
+
+def test_the_panel_gives_its_height_to_the_table(plot, panel):
+    plot.set_points(sweep())
+    plot.set_marker_kinds(["cutoff"])
+    panel.resize(380, 520)
+    QApplication.processEvents()
+    assert panel.table.height() >= 0.6 * panel.height()
+    assert len({b.y() for b in panel.kind_boxes.values()}) == 1                  # the four ticks share one line
+    assert panel.table.y() < panel.add_btn.y() < panel.values_box.y()            # content, then actions, then options
+    item = panel.table.topLevelItem(0)
+    from PySide6.QtCore import Qt
+    assert all(item.textAlignment(c) & Qt.AlignRight for c in (1, 2, 3))         # figures line up by digit
+    row = sum(b.sizeHint().width() for b in (panel.add_btn, panel.clear_btn, panel.copy_btn))
+    assert panel.minimumSizeHint().width() <= row + 60           # no wider than its three buttons need
+
+
+def test_window_layout_is_set_up_measure_read_with_watching_below(win, qtbot):
+    from PySide6.QtCore import Qt
+    d = win.docks
+    area = win.dockWidgetArea
+    assert area(d["dock_config"]) == Qt.LeftDockWidgetArea
+    assert area(d["dock_traces"]) == Qt.RightDockWidgetArea and area(d["dock_markers"]) == Qt.RightDockWidgetArea
+    assert area(d["dock_log"]) == Qt.BottomDockWidgetArea and area(d["dock_waveform"]) == Qt.BottomDockWidgetArea
+    qtbot.waitUntil(lambda: d["dock_waveform"].geometry().left() > d["dock_log"].geometry().right() - 2, timeout=2000)
+    log, wave, traces = d["dock_log"].geometry(), d["dock_waveform"].geometry(), d["dock_traces"].geometry()
+    assert abs(log.top() - wave.top()) < 6                       # side by side in one strip
+    assert traces.bottom() <= wave.top() + 2                     # the reading column ends above the strip
+    assert traces.height() > 1.8 * log.height() and log.height() <= 0.27 * win.height()
+    assert win.plot.width() >= 0.5 * win.width()                 # the plot keeps at least half the window
+
+
+def test_only_a_layout_saved_by_this_arrangement_is_restored(win, qtbot):
+    from PySide6.QtCore import Qt
+    win.addDockWidget(Qt.RightDockWidgetArea, win.docks["dock_waveform"])
+    old = AppSettings.from_dict(win.settings.to_dict())
+    old.window_state = bytes(win.saveState().toBase64()).decode("ascii")       # as versions before this one stored it
+    a = MainWindow(simulate=True, settings=old, sim_seed=7)
+    a.interactive = False
+    qtbot.addWidget(a)
+    try:
+        assert a.dockWidgetArea(a.docks["dock_waveform"]) == Qt.BottomDockWidgetArea       # the new arrangement shows
+        a.addDockWidget(Qt.RightDockWidgetArea, a.docks["dock_waveform"])                  # the user moves it ...
+        a._save_ui_state()
+        b = MainWindow(simulate=True, settings=AppSettings.from_dict(a.settings.to_dict()), sim_seed=7)
+        b.interactive = False
+        qtbot.addWidget(b)
+        try:
+            assert b.dockWidgetArea(b.docks["dock_waveform"]) == Qt.RightDockWidgetArea    # ... and it stays there
+        finally:
+            b.close()
+    finally:
+        a.close()
+
+
+def test_start_is_the_one_accented_toolbar_button(win):
+    from PySide6.QtWidgets import QToolButton
+    primary = [b for b in win.toolbar.findChildren(QToolButton) if b.objectName() == "primary"]
+    assert primary == [win.toolbar.widgetForAction(win.act_start)]
+    assert "QToolBar QToolButton#primary" in theme.QSS and theme.ACCENT in theme.QSS
+
+
+def test_the_right_column_can_be_narrow(win, qtbot):
+    """The app must fit a 1280 px wide screen: the Traces panel's four buttons in one row made
+    the right column 415 px wide at least, and the window 1361."""
+    tp = win.traces_panel
+    win.docks["dock_traces"].raise_()
+    qtbot.waitUntil(lambda: tp.isVisible() and tp.keep_btn.y() > 0, timeout=2000)
+    assert tp.load_btn.y() == tp.theory_btn.y() < tp.keep_btn.y() == tp.remove_btn.y()       # two rows of two
+    assert tp.minimumSizeHint().width() <= win.markers_panel.minimumSizeHint().width() + 20
+    assert win.plot.ref_box.minimumContentsLength() <= 12

@@ -1,14 +1,17 @@
 """The Markers panel (SPEC.md section 10): which trace the markers measure, which automatic
-markers are on, the user's markers, how they look, and a table of all their values.
+markers are on, a table of all their values, the user's markers, and how they look.
 
 The panel only switches and shows. The state and the rules are the plot's (gui/bode_plot.py,
 markers.py); the plot says when the markers were worked out again and the panel follows.
+
+Its order is content first: the table takes every pixel the switches above it and the two
+rows below it leave (user's review of 2026-10-07: the table had been squeezed to two rows).
 """
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPixmap
-from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QGridLayout, QHBoxLayout, QLabel, QPushButton,
+from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton,
                                QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from ..markers import KINDS, MAX_USER
@@ -16,6 +19,7 @@ from . import theme
 from .bode_plot import MARKER_TEXT
 
 COLUMNS = ("Marker", "Frequency", "Gain", "Phase", "Note")
+FIGURES = (1, 2, 3)                     # the columns of numbers: right-aligned, so that digits line up
 
 
 class MarkersPanel(QWidget):
@@ -30,9 +34,9 @@ class MarkersPanel(QWidget):
         row = QHBoxLayout()
         self.trace_label = QLabel("Markers on")
         self.trace_box = QComboBox()
-        # a fixed width whatever the traces are called, as the plot's own trace box
+        # a small fixed width whatever the traces are called: the list that drops down shows the full names
         self.trace_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self.trace_box.setMinimumContentsLength(14)
+        self.trace_box.setMinimumContentsLength(8)
         self.trace_box.setToolTip("The trace the markers measure: all automatic markers and your own read this one "
                                   "trace, as it is drawn")
         self.trace_label.setToolTip(self.trace_box.toolTip())
@@ -40,21 +44,25 @@ class MarkersPanel(QWidget):
         row.addWidget(self.trace_box, 1)
         lay.addLayout(row)
 
-        grid = QGridLayout()
+        row = QHBoxLayout()
         self.kind_boxes: dict[str, QCheckBox] = {}
-        for i, kind in enumerate(KINDS):
+        for kind in KINDS:
             text, tip = MARKER_TEXT[kind]
             box = QCheckBox(text)
             box.setToolTip(tip)
             box.toggled.connect(lambda on, k=kind: self.plot.set_marker_kind(k, on))
-            grid.addWidget(box, i // 2, i % 2)
+            row.addWidget(box)
             self.kind_boxes[kind] = box
-        lay.addLayout(grid)
+        row.addStretch(1)
+        lay.addLayout(row)
 
         self.table = QTreeWidget()
         self.table.setColumnCount(len(COLUMNS))
         self.table.setHeaderLabels(list(COLUMNS))
         self.table.setRootIsDecorated(False)
+        self.table.setMinimumWidth(0)
+        for c in FIGURES:
+            self.table.headerItem().setTextAlignment(c, Qt.AlignRight | Qt.AlignVCenter)
         self.table.setToolTip("Every marker with its frequency, gain and phase on the chosen trace. 'none': the "
                               "marker is switched on, and this curve has none.")
         lay.addWidget(self.table, 1)
@@ -74,20 +82,25 @@ class MarkersPanel(QWidget):
         row.addStretch(1)
         lay.addLayout(row)
 
+        # how the markers look: changed once in a while, so one quiet row at the bottom
         row = QHBoxLayout()
         self.values_box = QCheckBox("Values on the plot")
         self.values_box.setChecked(plot.marker_values())
         self.values_box.setToolTip("Write frequency, gain and phase next to each marker on the plot. Without it a "
                                    "marker carries its name only and the numbers are read in this table.")
-        self.color_btn = QPushButton("Colour…")
-        self.color_btn.setToolTip("Choose the colour of the marker lines, dots and labels on the plot. The exported "
-                                  "image keeps its own dark grey for the white background.")
-        self.default_color_btn = QPushButton("Default colour")
-        self.default_color_btn.setToolTip("Go back to the theme's own marker colour, a neutral light grey")
+        self.color_btn = QPushButton("Colour")
+        self.color_btn.setToolTip("The colour of the marker lines, dots and labels on the plot. The exported image "
+                                  "keeps its own dark grey for the white background.")
+        menu = QMenu(self.color_btn)
+        menu.setToolTipsVisible(True)
+        self.act_choose_color = menu.addAction("Choose…")
+        self.act_choose_color.setToolTip("Pick the colour of the markers on the plot from the colour dialog")
+        self.act_default_color = menu.addAction("Theme default")
+        self.act_default_color.setToolTip("Go back to the theme's own marker colour, a neutral light grey")
+        self.color_btn.setMenu(menu)
         row.addWidget(self.values_box)
         row.addStretch(1)
         row.addWidget(self.color_btn)
-        row.addWidget(self.default_color_btn)
         lay.addLayout(row)
 
         self.trace_box.activated.connect(lambda i: self.plot.set_marker_trace(self.trace_box.itemData(i)))
@@ -95,8 +108,8 @@ class MarkersPanel(QWidget):
         self.clear_btn.clicked.connect(lambda _checked=False: self.plot.clear_markers())
         self.copy_btn.clicked.connect(lambda _checked=False: self.plot.copy_markers())
         self.values_box.toggled.connect(lambda on: self.plot.set_marker_values(on))
-        self.color_btn.clicked.connect(lambda _checked=False: self._choose_color())
-        self.default_color_btn.clicked.connect(lambda _checked=False: self.set_color(""))
+        self.act_choose_color.triggered.connect(lambda _checked=False: self._choose_color())
+        self.act_default_color.triggered.connect(lambda _checked=False: self.set_color(""))
         plot.markers_changed.connect(self.refresh)
         self.refresh()
 
@@ -118,16 +131,19 @@ class MarkersPanel(QWidget):
         """Show what the plot holds now: the trace, the ticks, the look, the table."""
         plot = self.plot
         self.color = plot.marker_color()
-        pix = QPixmap(12, 12)
+        side = self.fontMetrics().height()              # the swatch grows with the font, on any screen scale
+        pix = QPixmap(side, side)
         pix.fill(QColor(self.color or theme.MARK_INK))
         self.color_btn.setIcon(QIcon(pix))
-        self.default_color_btn.setEnabled(bool(self.color))
+        self.act_default_color.setEnabled(bool(self.color))
         self.trace_box.blockSignals(True)
         self.trace_box.clear()
         for t in plot.set.traces:
             self.trace_box.addItem(t.name, t.id)
         self.trace_box.setCurrentIndex(max(0, self.trace_box.findData(plot.markers.trace_id)))
         self.trace_box.blockSignals(False)
+        self.trace_box.view().setMinimumWidth(
+            max(self.fontMetrics().horizontalAdvance(t.name) for t in plot.set.traces) + 40)
         on = plot.marker_kinds()
         for kind, box in self.kind_boxes.items():
             if box.isChecked() != (kind in on):
@@ -140,9 +156,12 @@ class MarkersPanel(QWidget):
             self.values_box.blockSignals(False)
         self.add_btn.setEnabled(plot.can_add_marker())
         self.clear_btn.setEnabled(bool(plot.markers.user))
-        rows = plot.marker_rows()
         self.table.clear()
-        for r in rows:
-            self.table.addTopLevelItem(QTreeWidgetItem(list(r)))
+        for r in plot.marker_rows():
+            item = QTreeWidgetItem(list(r))
+            item.setToolTip(len(COLUMNS) - 1, r[-1])    # the note in full, when the column is cut short
+            for c in FIGURES:
+                item.setTextAlignment(c, Qt.AlignRight | Qt.AlignVCenter)
+            self.table.addTopLevelItem(item)
         for c in range(len(COLUMNS) - 1):
             self.table.resizeColumnToContents(c)

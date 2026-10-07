@@ -94,7 +94,7 @@ class BodePlot(QWidget):
         # a fixed width whatever the traces are called (the list that drops down is as wide as
         # its longest name, and the tooltip shows the chosen one in full)
         self.ref_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self.ref_box.setMinimumContentsLength(18)
+        self.ref_box.setMinimumContentsLength(12)
         self.ref_box.setToolTip("Show the difference to one trace: every trace is drawn divided by the one chosen "
                                 "here, as the gain difference in dB and the phase difference in degrees. 'off' "
                                 "shows the traces as measured. Not available with the vertical unit Voltage.")
