@@ -128,6 +128,18 @@ class MainWindow(QMainWindow):
         self.traces_panel.interactive = self._interactive
 
     # ------------------------------------------------------------------ UI construction
+    def _toolbar_action(self, text: str, slot, tip: str = "") -> QAction:
+        """A toolbar button that calls slot() with NO argument. A QAction hands its 'checked'
+        flag (False) to any slot that can take an argument: connected directly, Start called
+        start_sweep(False) and never asked for the skew check, and Save As took False for the
+        preset name and did nothing (found on 2026-10-07)."""
+        a = QAction(text, self)
+        a.triggered.connect(lambda *_checked, _slot=slot: _slot())
+        if tip:
+            a.setToolTip(tip)
+        self.toolbar.addAction(a)
+        return a
+
     def _build_toolbar(self) -> None:
         tb = QToolBar("Main")
         tb.setObjectName("toolbar_main")
@@ -135,13 +147,7 @@ class MainWindow(QMainWindow):
         self.addToolBar(tb)
         self.toolbar = tb
 
-        def act(text, slot, tip=""):
-            a = QAction(text, self)
-            a.triggered.connect(slot)
-            if tip:
-                a.setToolTip(tip)
-            tb.addAction(a)
-            return a
+        act = self._toolbar_action
 
         tb.addWidget(QLabel(" Mode "))
         self.mode_box = QComboBox()

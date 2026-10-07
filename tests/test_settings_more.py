@@ -332,3 +332,76 @@ def test_loading_a_preset_says_what_it_changed(qtbot, tmp_path, monkeypatch):
     assert "Loaded preset 'first': it holds the settings that were already on screen, so nothing changed" in log
     assert "Configuration panel" in log
     win.close()
+
+
+# ---------------------------------------------------------------------- toolbar buttons (user report 2026-10-07)
+def type_into(spin, text):
+    """Type into a number field as a user does, WITHOUT pressing Enter or leaving the field."""
+    from PySide6.QtTest import QTest
+    spin.setFocus()
+    spin.lineEdit().selectAll()
+    QTest.keyClicks(spin.lineEdit(), text)
+
+
+def test_a_typed_value_counts_without_pressing_enter(qtbot, tmp_path, monkeypatch):
+    """User: two presets saved after changing the stop frequency were identical. A toolbar
+    button does not take the keyboard focus, so a number typed into a field and not confirmed
+    with Enter was not read: Save stored the old value, and Start would have swept the old range."""
+    win = make_win(qtbot, tmp_path, monkeypatch)
+    type_into(win.config.stop_hz, "5k")
+    assert win.config.sweep().stop_hz == 5000.0
+    type_into(win.config.amp_vpp, "2.5")
+    assert win.config.stimulus().amp_vpp == 2.5
+    type_into(win.config.averages, "4")
+    assert win.config.measure().averages == 4
+    type_into(win.config.target_cycles, "8")
+    assert win.config.scope().target_cycles == 8.0
+    win.close()
+
+
+def test_save_as_and_switching_presets_from_the_toolbar(qtbot, tmp_path, monkeypatch):
+    """User: 'the Save As button does nothing' (the button passed its 'checked' flag as the
+    preset name) and switching presets did not bring the stop frequency back."""
+    from PySide6.QtWidgets import QInputDialog
+    from bodeplot.io import presets
+    win = make_win(qtbot, tmp_path, monkeypatch)
+    names = iter(["LPF", "hpf"])
+    monkeypatch.setattr(QInputDialog, "getText", lambda *a, **k: (next(names), True))
+    type_into(win.config.stop_hz, "5M")
+    win.act_preset_save_as.trigger()                              # the toolbar button itself
+    type_into(win.config.stop_hz, "100k")
+    win.act_preset_save_as.trigger()
+    assert presets.list_presets() == ["LPF", "hpf"]
+    assert presets.load_preset("LPF").sweep.stop_hz == 5e6 and presets.load_preset("hpf").sweep.stop_hz == 1e5
+    assert win.preset_box.currentText() == "hpf"
+    for name, stop in (("LPF", 5e6), ("hpf", 1e5), ("LPF", 5e6)):
+        win.preset_box.setCurrentText(name)
+        win.preset_box.activated.emit(win.preset_box.currentIndex())
+        assert win.config.sweep().stop_hz == stop, name
+    type_into(win.config.stop_hz, "2M")                           # Save overwrites the selected preset
+    win.act_preset_save.trigger()
+    assert presets.load_preset("LPF").sweep.stop_hz == 2e6 and presets.load_preset("hpf").sweep.stop_hz == 1e5
+    win.close()
+
+
+def test_the_start_button_asks_for_the_skew_check(qtbot, tmp_path, monkeypatch):
+    """The Start button passed its 'checked' flag (False) as check_skew, so a sweep started
+    from the toolbar never asked for the skew check, whatever its state."""
+    from PySide6.QtWidgets import QMessageBox
+    win = make_win(qtbot, tmp_path, monkeypatch)
+    connect(win, qtbot)
+    asked = []
+    win._ask = lambda *a, **k: asked.append(a[0]) or QMessageBox.Cancel
+    win.act_start.trigger()
+    assert asked == ["Channel skew"] and win.state is not EngineState.RUNNING
+    win.close()
+
+
+def test_no_toolbar_button_hands_its_checked_flag_to_its_slot(qtbot, tmp_path, monkeypatch):
+    """Every toolbar action calls its slot with no argument (the cause of the two reports above)."""
+    win = make_win(qtbot, tmp_path, monkeypatch)
+    got = []
+    probe = win._toolbar_action("probe", lambda *args: got.append(args))
+    probe.trigger()
+    assert got == [()]
+    win.close()

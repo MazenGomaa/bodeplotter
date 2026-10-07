@@ -45,6 +45,8 @@ Part of the design spec. Overview and the index of all sections: `docs/SPEC.md`.
 
 ## 11. Presets & settings
 
+**Presets.** A preset is a saved copy of the Configuration panel (sweep, stimulus, scope, measurement) and nothing else. Save As (toolbar or File > Preset) stores the panel under a new name; Save overwrites the selected preset; choosing a preset loads it, and the status log says what it changed or that nothing did. What is typed into a number field counts without Enter (`ConfigPanel.commit`).
+
 **Settings dialog (extended 2026-10-07 on the user's request).** Tabs General, Advanced, Instruments, Simulation. Everything is stored in `settings.json` (`io/settings.py`: out-of-range values are limited, wrong ones fall back to the default) and takes effect at once through `MainWindow.apply_settings`.
 
 - *General:* start-up mode; pause after a scope range change; unwrap phase; open the skew wizard after every connect (off by default: the pop-up on every connect was removed on 2026-10-06); show explanations, and after how long (0 to 10 s, default 3 s); keep previous sweeps as traces (off, or 1 to 6; older ones are removed, sweeps the user kept stay); the folder for Export and Load CSV (empty: the folder used last, which is remembered); grid colour of the plots (a colour, or the theme's own); which panels are shown at start-up (all four by default; a panel not shown is in the View menu); log every instrument command (as `--debug`).

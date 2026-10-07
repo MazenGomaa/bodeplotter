@@ -203,15 +203,26 @@ class ConfigPanel(QScrollArea):
         self.n_points.setEnabled(not log)
 
     # ---- read
+    def commit(self) -> None:
+        """Take over what was typed into a number field and not yet confirmed with Enter. A
+        toolbar button or a shortcut does not take the keyboard focus away, so without this the
+        field still reported its old value: Start swept the old range and Save stored it (user
+        report 2026-10-07)."""
+        for field in self.widget().findChildren(QAbstractSpinBox):
+            field.interpretText()           # nothing happens for a field whose text is its value
+
     def sweep(self) -> SweepConfig:
+        self.commit()
         return SweepConfig(self.sweep_type.currentData(), self.start_hz.value(), self.stop_hz.value(),
                            self.ppd.value(), self.n_points.value(), self.descending.isChecked())
 
     def stimulus(self) -> StimulusConfig:
+        self.commit()
         return StimulusConfig(self.gen_channel.value(), self.amp_vpp.value(), self.offset_v.value(),
                               self.load.currentData())
 
     def scope(self) -> ScopeConfig:
+        self.commit()
         b = self._base_scope
         ref, dut = self.ref_channel.value(), self.dut_channel.value()
         return ScopeConfig(ref, dut, {ref: self.ref_probe.currentData(), dut: self.dut_probe.currentData()},
@@ -219,6 +230,7 @@ class ConfigPanel(QScrollArea):
                            self.target_cycles.value(), b.min_samples_per_cycle)
 
     def measure(self) -> MeasureSettings:
+        self.commit()
         b = self._base_measure
         m = MeasureSettings(self.method.currentData(), self.averages.value(), self.settle_ms.value(),
                             self.settle_cycles.value(), b.autorange_target, b.autorange_max_retries,
