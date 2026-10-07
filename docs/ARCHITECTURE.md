@@ -34,6 +34,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `__main__.py` | entry point: `python -m bodeplot [--sim] [--debug]` | `__init__.py`, `app.py` |
 | `app.py` | QApplication bootstrap, theme, main window | `gui/main_window.py`, `gui/theme.py`, `logging_setup.py` |
 | `logging_setup.py` | rotating log file, `log_path()` | - |
+| `markers.py` | the markers of the Bode plot: what is switched on, the user's markers, the rules (-3 dB, peak, notch, margins), label and clipboard texts; no Qt | `measure/response.py`, `units.py` |
 | `models.py` | config dataclasses, `PointResult`, `SkewCheck`, `SweepResult`, `Flag`, `from_dict` / `to_jsonable` | - |
 | `traces.py` | the traces of the Bode plot (live, kept, file, theory), the relative-to maths, a trace as a response curve | `measure/response.py`, `measure/theory.py`, `models.py` |
 | `units.py` | SI prefixes: `fmt_si`, `parse_si` | - |
