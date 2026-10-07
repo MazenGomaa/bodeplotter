@@ -9,16 +9,15 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
                                QProgressBar, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from ..drivers import registry, visa_util
-from ..drivers.mock import SimulatedDUT
 from ..io.export_image import ImageOptions
 from ..io.settings import SCOPE_MIN_GAP_MS, AppSettings
 from ..measure import skew, theory
+from ..measure.theory import TransferFunction
 from ..models import SkewCheck, ThroughCal
 from ..sweep import calibration
 from ..units import fmt_si, parse_si
 from . import theme
 
-SIM_PARAMS, SIM_LABELS = theory.PARAMS, theory.LABELS      # the simulated DUT's circuits (measure/theory.py)
 
 
 # ---------------------------------------------------------------------- connections
@@ -135,22 +134,105 @@ class ConnectionsDialog(QDialog):
         self.panel.apply_to(settings)
 
 
-# ---------------------------------------------------------------------- simulation
-class SimSettingsPanel(QWidget):
-    def __init__(self, sim: dict, parent=None):
+# ---------------------------------------------------------------------- circuits
+class TransferFunctionForm(QWidget):
+    """A circuit and its part values (measure/theory.py): the simulated DUT in the
+    simulation settings, and a theory curve of the plot."""
+
+    def __init__(self, preset: str = "rc_lpf", params: dict | None = None, title: str = "Circuit", parent=None):
         super().__init__(parent)
         lay = QVBoxLayout(self)
-        self.form = QFormLayout()
+        lay.setContentsMargins(0, 0, 0, 0)
+        form = QFormLayout()
         self.preset = QComboBox()
-        for name in SimulatedDUT.PRESETS:
-            self.preset.addItem(SIM_LABELS[name], name)
-        self.form.addRow("DUT", self.preset)
-        lay.addLayout(self.form)
+        for name in TransferFunction.PRESETS:
+            self.preset.addItem(theory.LABELS[name], name)
+        form.addRow(title, self.preset)
+        lay.addLayout(form)
         self.param_host = QWidget()
         self.param_form = QFormLayout(self.param_host)
         lay.addWidget(self.param_host)
         self.num = QLineEdit("1")
         self.den = QLineEdit("1e-4, 1")
+        self._params_in = dict(params or {})
+        self._edits: dict[str, QLineEdit] = {}
+        self.preset.currentIndexChanged.connect(self._rebuild)
+        self.preset.setCurrentIndex(max(0, self.preset.findData(preset)))
+        self._rebuild()
+
+    def _rebuild(self) -> None:
+        while self.param_form.rowCount():
+            self.param_form.removeRow(0)
+        self._edits = {}
+        name = self.preset.currentData()
+        if name == "custom":
+            self.num = QLineEdit(", ".join("%g" % x for x in self._params_in.get("num", [1.0])))
+            self.den = QLineEdit(", ".join("%g" % x for x in self._params_in.get("den", [1e-4, 1.0])))
+            self.param_form.addRow("Numerator (highest power first)", self.num)
+            self.param_form.addRow("Denominator", self.den)
+            return
+        for key, (default, label) in theory.PARAMS[name].items():
+            e = QLineEdit(fmt_si(float(self._params_in.get(key, default))))
+            e.setToolTip("Accepts SI multipliers: 1k, 100n, 1m (M = mega, m = milli)")
+            self._edits[key] = e
+            self.param_form.addRow(label, e)
+
+    def values(self) -> tuple[str, dict]:
+        """(circuit, its values). Raises ValueError with a message for the user when a
+        field is not usable."""
+        name = self.preset.currentData()
+        if name == "custom":
+            params = {"num": [float(x) for x in self.num.text().replace(";", ",").split(",") if x.strip()],
+                      "den": [float(x) for x in self.den.text().replace(";", ",").split(",") if x.strip()]}
+        else:
+            params = {k: parse_si(e.text()) for k, e in self._edits.items()}
+        theory.build(name, params)                      # the one place that judges the values
+        return name, params
+
+
+class TheoryDialog(QDialog):
+    """A theory curve for the plot: pick a circuit and enter its parts, or H(s) itself."""
+
+    def __init__(self, tf: TransferFunction | None = None, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Theory curve")
+        self.resize(420, 260)
+        lay = QVBoxLayout(self)
+        self.circuit = TransferFunctionForm(tf.name if tf else "rc_lpf", dict(tf.params) if tf else None,
+                                            "Circuit", self)
+        lay.addWidget(self.circuit)
+        note = QLabel("The ideal response of the circuit: no component losses, no lead inductance, no probe.")
+        note.setWordWrap(True)
+        lay.addWidget(note)
+        self.error = QLabel("")
+        self.error.setWordWrap(True)
+        self.error.setTextFormat(Qt.RichText)
+        lay.addWidget(self.error)
+        lay.addStretch(1)
+        box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        box.accepted.connect(self._accept)
+        box.rejected.connect(self.reject)
+        lay.addWidget(box)
+        self.tf: TransferFunction | None = None
+
+    def _accept(self) -> None:
+        try:
+            self.tf = theory.build(*self.circuit.values())
+        except ValueError as e:
+            self.tf = None
+            self.error.setText(theme.status_html("critical", "Invalid value: %s" % e))
+            return
+        self.accept()
+
+
+# ---------------------------------------------------------------------- simulation
+class SimSettingsPanel(QWidget):
+    def __init__(self, sim: dict, parent=None):
+        super().__init__(parent)
+        lay = QVBoxLayout(self)
+        self.circuit = TransferFunctionForm(sim.get("preset", "rc_lpf"), sim.get("params"), "DUT", self)
+        self.preset = self.circuit.preset           # the settings dialog and its tests reach it by this name
+        lay.addWidget(self.circuit)
         tail = QFormLayout()
         self.noise = QDoubleSpinBox()
         self.noise.setDecimals(3)
@@ -165,41 +247,10 @@ class SimSettingsPanel(QWidget):
         tail.addRow("Latency per command", self.latency)
         lay.addLayout(tail)
         lay.addStretch(1)
-        self._params_in = dict(sim.get("params") or {})
-        self._edits: dict[str, QLineEdit] = {}
-        self.preset.currentIndexChanged.connect(self._rebuild)
-        self.preset.setCurrentIndex(max(0, self.preset.findData(sim.get("preset", "rc_lpf"))))
-        self._rebuild()
-
-    def _rebuild(self) -> None:
-        while self.param_form.rowCount():
-            self.param_form.removeRow(0)
-        self._edits = {}
-        name = self.preset.currentData()
-        if name == "custom":
-            self.num = QLineEdit(", ".join("%g" % x for x in self._params_in.get("num", [1.0])))
-            self.den = QLineEdit(", ".join("%g" % x for x in self._params_in.get("den", [1e-4, 1.0])))
-            self.param_form.addRow("Numerator (highest power first)", self.num)
-            self.param_form.addRow("Denominator", self.den)
-            return
-        for key, (default, label) in SIM_PARAMS[name].items():
-            e = QLineEdit(fmt_si(float(self._params_in.get(key, default))))
-            e.setToolTip("Accepts SI multipliers: 1k, 100n, 1m (M = mega, m = milli)")
-            self._edits[key] = e
-            self.param_form.addRow(label, e)
 
     def values(self) -> dict:
         """Raises ValueError with a message for the user when a field is not usable."""
-        name = self.preset.currentData()
-        if name == "custom":
-            params = {"num": [float(x) for x in self.num.text().replace(";", ",").split(",") if x.strip()],
-                      "den": [float(x) for x in self.den.text().replace(";", ",").split(",") if x.strip()]}
-            if not params["num"] or not params["den"] or not any(params["den"]):
-                raise ValueError("numerator and denominator need at least one coefficient")
-        else:
-            params = {k: parse_si(e.text()) for k, e in self._edits.items()}
-            if any(v <= 0 for v in params.values()):
-                raise ValueError("component values must be positive")
+        name, params = self.circuit.values()
         return {"preset": name, "params": params, "noise_vrms": self.noise.value() / 1e3,
                 "latency_ms": self.latency.value()}
 

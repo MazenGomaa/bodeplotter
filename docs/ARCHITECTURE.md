@@ -47,11 +47,12 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `drivers/visa_util.py` | the only pyvisa import: resource manager, discovery, the `BODEPLOT_NO_HARDWARE` guard | - |
 | `gui/bode_plot.py` | gain and phase plots of a trace set, relative display, follow / fit view, vertical unit, re-measure request | `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `measure/sinefit.py`, `models.py`, `traces.py`, `units.py` |
 | `gui/config_panel.py` | the input panel; builds the config dataclasses and presets | `gui/si_widgets.py`, `io/presets.py`, `models.py` |
-| `gui/dialogs.py` | settings, connections, simulation settings, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/mock.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
+| `gui/dialogs.py` | settings, connections, simulation settings, the circuit form and theory dialog, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
 | `gui/main_window.py` | toolbar, menus, status bar, sweep control, exports; the engine's only client | `__init__.py`, `gui/bode_plot.py`, `gui/config_panel.py`, `gui/dialogs.py`, `gui/status_log.py`, `gui/theme.py`, `gui/waveform_view.py`, `io/export_csv.py`, `io/export_image.py`, `io/export_touchstone.py`, `io/presets.py`, `io/settings.py`, `logging_setup.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py`, `sweep/engine.py`, `sweep/plan.py`, `units.py` |
 | `gui/si_widgets.py` | k / M number entry, SI axis | `units.py` |
 | `gui/status_log.py` | point table and log text | `models.py`, `units.py` |
 | `gui/theme.py` | every colour of the app, `status_html` | - |
+| `gui/traces_panel.py` | the Traces dock: the list of traces; load CSV, add theory, keep, remove | `gui/dialogs.py`, `gui/theme.py`, `io/export_csv.py`, `measure/theory.py`, `traces.py` |
 | `gui/waveform_view.py` | the two captured waveforms with their fits | `gui/theme.py`, `models.py`, `units.py` |
 | `io/export_csv.py` | CSV writer and loader, the skew and calibration header lines | `measure/sinefit.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py` |
 | `io/export_image.py` | PNG / SVG / PDF with matplotlib | `io/export_csv.py`, `measure/sinefit.py`, `models.py` |

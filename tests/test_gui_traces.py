@@ -147,3 +147,138 @@ def test_export_series_is_what_the_plot_shows(plot):
     series, labels = plot.export_series()
     assert labels == ("Gain difference (dB)", "Phase difference (deg)", "relative to RC low-pass 1 kΩ 100 nF")
     assert series[0].gain == pytest.approx(0.0, abs=1e-9)
+
+
+# ---------------------------------------------------------------------- theory dialog
+def test_theory_dialog_builds_a_transfer_function(qtbot):
+    from bodeplot.gui.dialogs import TheoryDialog
+    d = TheoryDialog()
+    qtbot.addWidget(d)
+    assert d.circuit.preset.currentData() == "rc_lpf" and d.tf is None
+    d.circuit._edits["r"].setText("997.8")
+    d.circuit._edits["c"].setText("98.2n")
+    d._accept()
+    assert d.tf.name == "rc_lpf" and d.tf.params == pytest.approx({"r": 997.8, "c": 98.2e-9})
+    again = TheoryDialog(d.tf)                                   # reopened on a trace: its values are shown
+    qtbot.addWidget(again)
+    assert again.circuit.preset.currentData() == "rc_lpf" and again.circuit._edits["r"].text() == "997.8"
+    again.circuit.preset.setCurrentIndex(again.circuit.preset.findData("custom"))
+    again.circuit.num.setText("1")
+    again.circuit.den.setText("1e-4, 1")
+    again._accept()
+    assert again.tf.name == "custom" and again.tf.den == (1e-4, 1.0)
+
+
+@pytest.mark.parametrize("preset, edits, word", [
+    ("rc_lpf", {"r": "0"}, "positive"), ("rc_lpf", {"c": "-1n"}, "positive"),
+    ("rc_lpf", {"r": "lots"}, "Invalid"), ("custom", {"den": "0, 0"}, "coefficient"),
+    ("custom", {"num": ""}, "coefficient"), ("custom", {"den": "1, x"}, "Invalid")])
+def test_theory_dialog_refuses_bad_values(qtbot, preset, edits, word):
+    from bodeplot.gui.dialogs import TheoryDialog
+    d = TheoryDialog()
+    qtbot.addWidget(d)
+    d.circuit.preset.setCurrentIndex(d.circuit.preset.findData(preset))
+    for key, text in edits.items():
+        (getattr(d.circuit, key) if preset == "custom" else d.circuit._edits[key]).setText(text)
+    d._accept()
+    assert d.tf is None and word in d.error.text() and d.result() == 0     # still open, nothing made
+
+
+# ---------------------------------------------------------------------- the Traces panel
+@pytest.fixture
+def panel(qtbot, plot):
+    from bodeplot.gui.traces_panel import TracesPanel
+    p = TracesPanel(plot.set)
+    p.interactive = False
+    p.changed.connect(plot.traces_changed)
+    p.messages = []
+    p.message.connect(lambda level, text: p.messages.append((level, text)))
+    qtbot.addWidget(p)
+    p.show()
+    return p
+
+
+def rows(panel):
+    return [(panel.tree.topLevelItem(i).text(0), panel.tree.topLevelItem(i).text(1))
+            for i in range(panel.tree.topLevelItemCount())]
+
+
+def test_panel_lists_traces_and_its_buttons_follow(panel, plot):
+    assert rows(panel) == [("Sweep", "live sweep")]
+    assert not panel.keep_btn.isEnabled() and not panel.remove_btn.isEnabled()
+    plot.set_points(sweep())
+    panel.refresh_buttons()
+    assert panel.keep_btn.isEnabled()
+    panel.keep()
+    panel.add_theory(RC)
+    assert [k for _n, k in rows(panel)] == ["live sweep", "kept sweep", "theory"]
+    assert plot.ref_box.count() == 4                              # the plot was told
+    panel.select(plot.set.live.id)
+    assert not panel.remove_btn.isEnabled()                       # the live sweep stays
+    kept = plot.set.traces[1]
+    panel.select(kept.id)
+    assert panel.selected_id() == kept.id and panel.remove_btn.isEnabled()
+    panel.remove_selected()
+    assert [k for _n, k in rows(panel)] == ["live sweep", "theory"] and plot.ref_box.count() == 3
+
+
+def test_panel_ticks_and_names_edit_the_traces(panel, plot):
+    from PySide6.QtCore import Qt
+    plot.set_points(sweep())
+    panel.add_theory(RC)
+    th = plot.set.traces[1]
+    item = panel.tree.topLevelItem(1)
+    item.setCheckState(0, Qt.Unchecked)
+    assert th.visible is False and len(line_y(plot, th)) == 0
+    item.setCheckState(0, Qt.Checked)
+    item.setText(0, "ideal")
+    assert th.name == "ideal" and plot.ref_box.itemText(2) == "ideal"
+    item.setText(0, "Sweep")                                      # the live trace's name: made unique
+    assert th.name == "Sweep (2)" and panel.tree.topLevelItem(1).text(0) == "Sweep (2)"
+    panel.edit_theory(th.id, TransferFunction.rc_hpf(1e3, 100e-9))
+    assert th.theory.name == "rc_hpf" and th.name == "Sweep (2)"
+    panel.set_unit("v")
+    assert "Voltage" in panel.tree.topLevelItem(1).toolTip(0)
+    panel.set_unit("db")
+    assert "Voltage" not in panel.tree.topLevelItem(1).toolTip(0)
+
+
+def test_loading_files_good_and_bad(panel, plot, tmp_path):
+    from bodeplot.io import export_csv
+    good = export_csv.write_csv(tmp_path / "board A.csv", SweepResult({}, sweep(), {}))
+    old = tmp_path / "old.csv"
+    old.write_text("freq_hz,gain_db,phase_deg\n100,-1.0,-10\n1000,-3.0,-45\n", encoding="utf-8")
+    other = tmp_path / "shopping.csv"
+    other.write_text("item,price\nmilk,1\n", encoding="utf-8")
+    binary = tmp_path / "photo.csv"
+    binary.write_bytes(bytes(range(256)) * 4)
+    empty = tmp_path / "empty.csv"
+    empty.write_text("", encoding="utf-8")
+    errors = panel.load_files([str(good), str(other), str(old), str(binary), str(empty), str(tmp_path / "gone.csv")])
+    assert [n for n, _k in rows(panel)] == ["Sweep", "board A", "old"]
+    assert len(errors) == 4 and all(any(name in e for e in errors)
+                                    for name in ("shopping.csv", "photo.csv", "empty.csv", "gone.csv"))
+    assert any("no sweep points" in e for e in errors)
+    assert ("info", "Loaded 2 traces.") in panel.messages
+    assert sum(1 for level, _t in panel.messages if level == "warn") == 4
+    assert plot.ref_box.count() == 4 and len(line_y(plot, plot.set.traces[1])) == 21
+    assert panel.load_files([]) == [] and len(plot.set.traces) == 3
+
+
+def test_keep_without_a_sweep_says_so(panel):
+    panel.keep()
+    assert panel.messages == [("warn", "Keep sweep: there is no sweep to keep.")] and len(rows(panel)) == 1
+
+
+def test_simulation_settings_still_use_the_same_form(qtbot):
+    from bodeplot.gui.dialogs import SimSettingsPanel
+    p = SimSettingsPanel({"preset": "rlc_bpf", "params": {"r": 50.0, "l": 2e-3, "c": 10e-9}, "noise_vrms": 2e-4,
+                          "latency_ms": 1.0})
+    qtbot.addWidget(p)
+    v = p.values()
+    assert v == {"preset": "rlc_bpf", "params": pytest.approx({"r": 50.0, "l": 2e-3, "c": 10e-9}),
+                 "noise_vrms": pytest.approx(2e-4), "latency_ms": 1.0}
+    p.preset.setCurrentIndex(p.preset.findData("rc_lpf"))
+    p.circuit._edits["r"].setText("0")
+    with pytest.raises(ValueError, match="positive"):
+        p.values()
