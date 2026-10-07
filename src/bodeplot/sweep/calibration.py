@@ -45,28 +45,41 @@ def _gain_db(h: complex) -> float:
     return 20.0 * math.log10(abs(h)) if abs(h) > 0 else float("-inf")
 
 
+def _finite(h: complex) -> bool:
+    return math.isfinite(h.real) and math.isfinite(h.imag)
+
+
 def _unwrapped_deg(cal: ThroughCal) -> list[float]:
+    """Phase of every point, unwrapped along the frequency axis. A point that is not a
+    number stays NaN and does not disturb the unwrapping of the others."""
     out: list[float] = []
+    last = None
     for h in cal.h:
+        if not _finite(h):
+            out.append(float("nan"))
+            continue
         p = math.degrees(cmath.phase(h))
-        if out:
-            p += 360.0 * round((out[-1] - p) / 360.0)
+        if last is not None:
+            p += 360.0 * round((last - p) / 360.0)
+        last = p
         out.append(p)
     return out
 
 
 def fitted_delay_s(cal: ThroughCal) -> float:
     """The delay (DUT minus reference) that fits the phase best: phase = 360 f dt,
-    least squares through the origin."""
-    den = sum(f * f for f in cal.freqs_hz)
+    least squares through the origin, over the points that are numbers."""
+    pairs = [(f, p) for f, p in zip(cal.freqs_hz, _unwrapped_deg(cal)) if math.isfinite(p)]
+    den = sum(f * f for f, _p in pairs)
     if not den:
         return 0.0
-    return sum(f * p for f, p in zip(cal.freqs_hz, _unwrapped_deg(cal))) / (360.0 * den)
+    return sum(f * p for f, p in pairs) / (360.0 * den)
 
 
 def max_gain_db(cal: ThroughCal) -> float:
-    """Largest gain deviation from 0 dB, as a magnitude."""
-    return max(abs(_gain_db(h)) for h in cal.h)
+    """Largest gain deviation from 0 dB, as a magnitude (points that are not numbers left out)."""
+    values = [abs(_gain_db(h)) for h in cal.h if _finite(h)]
+    return max(values) if values else float("nan")
 
 
 def response_at(cal: ThroughCal, freq_hz: float) -> complex | None:

@@ -11,8 +11,8 @@ import math
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QSizePolicy,
+                               QVBoxLayout, QWidget)
 
 from ..io.export_image import ImageSeries
 from ..measure.sinefit import unwrap_deg
@@ -51,12 +51,19 @@ class BodePlot(QWidget):
         self.span_hint: tuple[float, float] | None = None
         self._items: dict[int, _Items] = {}
         self._shown: list[tuple[Drawn, np.ndarray, np.ndarray, np.ndarray]] = []    # trace, f, gain, phase
+        self._painted: dict[int, object] = {}    # per trace: what its items hold now (see refresh)
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         top = QHBoxLayout()
         self.unwrap_box = QCheckBox("Unwrap phase")
         self.readout = QLabel("")
         self.readout.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        # The read-out has a row of its own and no say in the layout: its text changes with
+        # every mouse move, and a text that could widen the plot pushed the docks about
+        # (user report 2026-10-07: the Configuration panel was squeezed and jumped).
+        self.readout.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+        self.readout.setMinimumWidth(0)
+        self.readout.setFixedHeight(self.readout.fontMetrics().height() + 4)
         self.fit_btn = QPushButton("Fit view")
         self.fit_btn.setToolTip("Zoom both plots to the curves (also: double-click a plot)")
         self.unit_box = QComboBox()
@@ -65,8 +72,10 @@ class BodePlot(QWidget):
         self.unit_box.setToolTip("Vertical scale of the upper plot: gain in dB, the DUT output voltage "
                                  "(peak to peak, at the probe tip), or the output as a percentage of the input")
         self.ref_box = QComboBox()
-        self.ref_box.setMinimumWidth(140)
-        self.ref_box.setSizeAdjustPolicy(QComboBox.AdjustToContents)    # trace names are long
+        # a fixed width whatever the traces are called (the list that drops down is as wide as
+        # its longest name, and the tooltip shows the chosen one in full)
+        self.ref_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.ref_box.setMinimumContentsLength(18)
         self.ref_box.setToolTip("Draw every trace divided by this one: the gain difference in dB and the phase "
                                 "difference in degrees. Not available with the vertical unit Voltage.")
         top.addWidget(self.unwrap_box)
@@ -76,8 +85,8 @@ class BodePlot(QWidget):
         top.addWidget(QLabel(" Relative to"))
         top.addWidget(self.ref_box)
         top.addStretch(1)
-        top.addWidget(self.readout)
         lay.addLayout(top)
+        lay.addWidget(self.readout)
 
         self.gain_plot = pg.PlotWidget(axisItems={"bottom": SiAxis("bottom")})
         self.phase_plot = pg.PlotWidget(axisItems={"bottom": SiAxis("bottom")})
@@ -146,6 +155,8 @@ class BodePlot(QWidget):
         i = self.ref_box.findData(self.set.reference_id) if self.set.reference_id is not None else 0
         self.ref_box.setCurrentIndex(max(0, i))
         self.ref_box.blockSignals(False)
+        fm = self.ref_box.fontMetrics()
+        self.ref_box.view().setMinimumWidth(max(fm.horizontalAdvance(t.name) for t in self.set.traces) + 40)
 
     def _ref_chosen(self, index: int) -> None:
         self.set.set_reference(self.ref_box.itemData(index))
@@ -316,6 +327,7 @@ class BodePlot(QWidget):
 
     def _drop_items(self, trace_id: int) -> None:
         it = self._items.pop(trace_id)
+        self._painted.pop(trace_id, None)
         for item in it.all():
             (self.gain_plot if item in (it.gain_line, it.gain_ok, it.gain_bad) else self.phase_plot).removeItem(item)
 
@@ -359,6 +371,13 @@ class BodePlot(QWidget):
             f = np.array(d.freqs, dtype=float)
             gain, phase = self._gain(d), self._phase(d)
             self._shown.append((d, f, gain, phase))
+            # A trace whose numbers did not change keeps its items: while a sweep runs only the
+            # live trace is drawn again, not every loaded one for every new point.
+            state = (f.tobytes(), gain.tobytes(), phase.tobytes(), self.log_x,
+                     None if d.points is None else tuple(int(p.flags.value) for p in d.points))
+            if self._painted.get(d.trace.id) == state:
+                continue
+            self._painted[d.trace.id] = state
             # pyqtgraph applies the log itself to PlotDataItem, but not to ScatterPlotItem
             it.gain_line.setData(f, gain)
             it.phase_line.setData(f, phase)
@@ -372,7 +391,8 @@ class BodePlot(QWidget):
                 sc.setData([dict(pos=(float(x[i]), float(y[i])),
                                  data=(d.trace.id, d.points[i], float(gain[i]), float(phase[i]))) for i in idx])
         for trace_id, it in self._items.items():
-            if trace_id not in seen:                    # hidden, or not drawn in this unit
+            if trace_id not in seen and self._painted.get(trace_id) != "empty":    # hidden, or not drawn in this unit
+                self._painted[trace_id] = "empty"
                 it.gain_line.setData([], [])
                 it.phase_line.setData([], [])
                 for sc in (it.gain_ok, it.phase_ok, it.gain_bad, it.phase_bad):
@@ -413,14 +433,22 @@ class BodePlot(QWidget):
 
     def readout_at(self, freq_hz: float, y: float | None = None, phase_plot: bool = False) -> str:
         """The read-out text for the cursor at freq_hz: the nearest point of the trace that
-        passes closest to y (a value of the gain plot, or of the phase plot)."""
+        passes closest to y (a value of the gain plot, or of the phase plot). A trace that has
+        no point near the cursor's frequency (it ends elsewhere) is left out; with none left,
+        the text is the frequency alone."""
         if not (freq_hz > 0):
             return ""
         best = None
         for d, f, gain, phase in self._shown:
             if not len(f):
                 continue
-            i = int(np.argmin(np.abs(np.log10(f) - math.log10(freq_hz)) if self.log_x else np.abs(f - freq_hz)))
+            x = np.log10(f) if self.log_x else f
+            x0 = math.log10(freq_hz) if self.log_x else freq_hz
+            i = int(np.argmin(np.abs(x - x0)))
+            near = [abs(float(x[k] - x[i])) for k in (i - 1, i + 1) if 0 <= k < len(x)]
+            reach = max(min(near) if near else 0.0, 0.05 if self.log_x else 0.01 * float(f[i]))
+            if abs(float(x[i]) - x0) > reach:           # further away than this trace's own point spacing
+                continue
             dist = 0.0 if y is None else abs(float((phase if phase_plot else gain)[i]) - y)
             if best is None or dist < best[0]:
                 best = (dist, d, i, float(f[i]), float(gain[i]), float(phase[i]))

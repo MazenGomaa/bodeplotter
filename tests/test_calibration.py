@@ -456,3 +456,20 @@ def test_meta_says_whether_the_calibration_covered_the_sweep(make_session, no_sl
     assert part.meta["cal"] is not None and part.meta["cal_covered"] is False
     session.invalidate_cal()
     assert _sweep(session, no_sleep, 1e5, 1e6, 3).run().meta["cal_covered"] is False
+
+
+def test_a_calibration_with_a_nan_point_can_still_be_reported(make_session):
+    """Review of A1 (M1 there): a NaN response made the summary raise, and the dialog stayed
+    on 'Measuring ...' instead of showing why the result cannot be accepted."""
+    from bodeplot.gui.dialogs import cal_report
+    nan = complex(float("nan"), float("nan"))
+    pts = [_point(1e3, 0.1, 1.0), _point(1e4, 0.1, 2.0), _point(1e5, 0.1, 3.0)]
+    pts[1].h = nan
+    cal = calibration.evaluate(pts, ScopeConfig(), 1.0)
+    assert not cal.acceptable
+    assert math.isfinite(calibration.fitted_delay_s(cal))        # fitted from the usable points
+    assert calibration.max_gain_db(cal) == pytest.approx(0.1)
+    text = cal_report(cal)
+    assert "Largest gain deviation" in text and "nan" not in text.lower()
+    assert calibration.response_at(cal, 3e3) is None or True     # no exception between the points
+    assert calibration.correct(1 + 0j, cal, 1e4) is None

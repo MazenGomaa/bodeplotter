@@ -1,7 +1,7 @@
 """Left dock: sweep, stimulus, scope and measurement settings (SPEC.md section 10)."""
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox,
                                QScrollArea, QSpinBox, QVBoxLayout, QWidget)
 
@@ -118,6 +118,8 @@ class ConfigPanel(QScrollArea):
         lay.addWidget(g)
         lay.addStretch(1)
         self.setWidget(body)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._fit_width()
 
         self._base_measure = MeasureSettings()
         self._base_scope = ScopeConfig()
@@ -129,6 +131,18 @@ class ConfigPanel(QScrollArea):
         for w in body.findChildren(QCheckBox):
             w.toggled.connect(self.changed)
         self._sync_enabled()
+
+    def _fit_width(self) -> None:
+        """Never narrower than the fields need: the dock cannot be squeezed below them by
+        its neighbours (user report 2026-10-07), so no horizontal scroll bar is needed."""
+        body = self.widget()
+        if body is not None:
+            self.setMinimumWidth(body.minimumSizeHint().width() + self.verticalScrollBar().sizeHint().width()
+                                 + 2 * self.frameWidth())
+
+    def showEvent(self, event) -> None:
+        self._fit_width()               # fonts and style are final once the panel is shown
+        super().showEvent(event)
 
     def _sync_enabled(self):
         log = self.sweep_type.currentData() is SweepType.LOG

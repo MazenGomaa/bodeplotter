@@ -448,3 +448,84 @@ def test_image_export_needs_no_finished_sweep(win, tmp_path):
     win.plot.traces_changed()
     with pytest.raises(ValueError, match="nothing on the plot"):
         win.export(tmp_path / "empty.png")
+
+
+# ---------------------------------------------------------------------- layout (user report 2026-10-07)
+def test_plot_size_does_not_follow_the_readout_or_the_trace_names(plot):
+    """User: the Configuration panel was squeezed by the plot and its width jumped while it
+    was being resized. Cause: the read-out text and the Relative-to box grew the plot's
+    minimum width as the mouse moved or a trace was named."""
+    plot.set_points(sweep())
+    before = (plot.minimumSizeHint().width(), plot.sizeHint().width())
+    plot.readout.setText("some trace with a long name:   1.23456 MHz   gain difference -12.345 dB   "
+                         "phase difference -123.45°   [LOW_SNR, BELOW_FLOOR]   (relative to another long name)" * 3)
+    t = plot.set.add_theory(RC)
+    plot.set.rename(t.id, "a theory curve with a very long name that the user typed in " * 3)
+    plot.traces_changed()
+    assert (plot.minimumSizeHint().width(), plot.sizeHint().width()) == before
+    assert plot.ref_box.itemText(2).startswith("a theory curve with a very long name")
+    assert plot.ref_box.toolTip() and plot.ref_box.view().minimumWidth() > plot.ref_box.width() - 1
+
+
+def test_configuration_panel_keeps_the_width_its_fields_need(win, qtbot):
+    from PySide6.QtCore import Qt
+    need = win.config.widget().minimumSizeHint().width()
+    assert win.config.minimumWidth() >= need
+    assert win.config.horizontalScrollBarPolicy() == Qt.ScrollBarAlwaysOff
+    dock = win.docks["dock_config"]
+    qtbot.waitUntil(lambda: dock.width() >= need, timeout=2000)
+    width = dock.width()
+    win.plot.readout.setText("x" * 600)
+    win.traces_panel.add_theory(RC)
+    win.traces.rename(win.traces.traces[1].id, "y" * 300)
+    win.traces_panel.reload()
+    win.plot.traces_changed()
+    qtbot.wait(50)
+    assert dock.width() == width and win.config.viewport().width() >= need
+
+
+# ---------------------------------------------------------------------- deferred review items, fixed 2026-10-07
+def test_a_new_live_point_does_not_redraw_the_other_traces(plot):
+    """Review M1: every trace was redrawn for every point of a running sweep."""
+    pts = sweep()
+    plot.set.add_file(SweepResult({}, sweep(scale=0.5), {}), "other.csv")
+    th = plot.set.add_theory(RC)
+    plot.set_span_hint(100.0, 1e6)
+    plot.traces_changed()
+    other = plot.items(plot.set.traces[1])
+    calls = []
+    for item, name in ((other.gain_ok, "scatter"), (other.gain_line, "line"), (plot.items(th).gain_line, "theory")):
+        real = item.setData
+        item.setData = lambda *a, _real=real, _name=name, **k: (calls.append(_name), _real(*a, **k))[1]
+    for p in pts[:5]:
+        plot.add_point(p)
+    assert calls == [] and len(line_y(plot, plot.set.live)) == 5
+    plot.set_unit("pct")                                         # a real change still redraws them
+    assert "scatter" in calls and "theory" in calls
+
+
+def test_readout_ignores_a_trace_that_ends_far_from_the_cursor(plot):
+    """Review M7: the read-out showed the last point of a short trace while the cursor was decades away."""
+    plot.set_points(sweep())                                     # 100 Hz to 1 MHz
+    short = plot.set.add_file(SweepResult({}, sweep(scale=0.1, freqs=FREQS[:6]), {}), "short.csv")   # to 1 kHz
+    plot.traces_changed()
+    last = 20 * math.log10(abs(0.1 * RC.h(FREQS[5])))
+    assert plot.readout_at(FREQS[5], y=last).startswith("short:")
+    far = plot.readout_at(1e5, y=last)                           # the cursor at 100 kHz, at the height of that last point
+    assert far.startswith("Sweep:") and "100 kHz" in far
+    assert plot.readout_at(1e9) == "1 GHz"                       # beyond every trace: the frequency only
+    assert short.points[-1].freq_hz == FREQS[5]
+
+
+def test_reopening_a_theory_curve_keeps_its_values_exactly(qtbot):
+    """Review M5: the form showed 6 significant digits, so OK without a change altered the curve."""
+    from bodeplot.gui.dialogs import TheoryDialog
+    tf = TransferFunction.rc_lpf(1234.5678, 98.19e-9)
+    d = TheoryDialog(tf)
+    qtbot.addWidget(d)
+    d._accept()
+    assert d.tf.params == pytest.approx({"r": 1234.5678, "c": 98.19e-9}, rel=1e-12)
+    custom = TheoryDialog(TransferFunction.custom([1.0], [1.23456789e-4, 1.0]))
+    qtbot.addWidget(custom)
+    custom._accept()
+    assert custom.tf.den == pytest.approx((1.23456789e-4, 1.0), rel=1e-12)

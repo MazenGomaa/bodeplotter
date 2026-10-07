@@ -166,13 +166,14 @@ class TransferFunctionForm(QWidget):
         self._edits = {}
         name = self.preset.currentData()
         if name == "custom":
-            self.num = QLineEdit(", ".join("%g" % x for x in self._params_in.get("num", [1.0])))
-            self.den = QLineEdit(", ".join("%g" % x for x in self._params_in.get("den", [1e-4, 1.0])))
+            # every digit: pressing OK without a change must not alter the curve
+            self.num = QLineEdit(", ".join("%.12g" % x for x in self._params_in.get("num", [1.0])))
+            self.den = QLineEdit(", ".join("%.12g" % x for x in self._params_in.get("den", [1e-4, 1.0])))
             self.param_form.addRow("Numerator (highest power first)", self.num)
             self.param_form.addRow("Denominator", self.den)
             return
         for key, (default, label) in theory.PARAMS[name].items():
-            e = QLineEdit(fmt_si(float(self._params_in.get(key, default))))
+            e = QLineEdit(fmt_si(float(self._params_in.get(key, default)), digits=12))
             e.setToolTip("Accepts SI multipliers: 1k, 100n, 1m (M = mega, m = milli)")
             self._edits[key] = e
             self.param_form.addRow(label, e)
