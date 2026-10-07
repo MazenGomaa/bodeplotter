@@ -347,3 +347,83 @@ def test_marker_items_use_the_marker_colour_and_stay_below_the_live_points(plot)
     assert theme.MARK_INK not in theme.SERIES
     live = plot.items(plot.set.live)
     assert all(item.zValue() < live.gain_ok.zValue() for item in it.lines + it.dots + [it.text])
+
+
+# ---------------------------------------------------------------------- right-click, typed frequency, reference, copy
+def test_right_click_on_the_plot_adds_a_marker_there(plot):
+    plot.set_points(sweep())
+    menu = plot.context_menu(2000.0)
+    assert [a.text() for a in menu.actions()] == ["Add marker here"] and menu.toolTipsVisible()
+    menu.actions()[0].trigger()
+    assert plot.markers.user == {1: 2000.0}
+    for k in range(MAX_USER - 1):
+        plot.add_marker(100.0 * (k + 1))
+    assert not plot.context_menu(2000.0).actions()[0].isEnabled()            # the limit
+
+
+def test_right_click_on_a_user_marker(plot):
+    plot.set_points(sweep())
+    plot.add_marker(1000.0), plot.add_marker(10000.0)
+    menu = plot.context_menu(1000.0, 1)
+    assert [a.text() for a in menu.actions()] == ["Set frequency…", "Reference marker", "Remove"]
+    ref = menu.actions()[1]
+    assert ref.isCheckable() and not ref.isChecked()
+    ref.trigger()
+    assert plot.markers.ref == 1 and plot.context_menu(1000.0, 1).actions()[1].isChecked()
+    assert placed(plot)["M1"].text.endswith("(ref)")
+    second = placed(plot)["M2"].text.split("\n")[1]
+    assert second.startswith("Δ M1  ×10  ") and second.endswith("dB/dec")
+    plot.context_menu(1000.0, 1).actions()[2].trigger()          # Remove
+    assert names(plot) == ["M2"] and plot.markers.ref is None and "\n" not in placed(plot)["M2"].text
+
+
+def test_the_layer_finds_the_marker_under_the_mouse(plot):
+    plot.set_points(sweep())
+    plot.add_marker(1000.0)
+    QApplication.processEvents()
+    vb = plot.gain_plot.getPlotItem().vb
+    from PySide6.QtCore import QPointF
+    on = vb.mapViewToScene(QPointF(math.log10(1000.0), -10.0))
+    off = vb.mapViewToScene(QPointF(math.log10(30000.0), -10.0))
+    assert plot.marker_layer.user_at(plot.gain_plot, on) == 1
+    assert plot.marker_layer.user_at(plot.gain_plot, off) is None
+    plot.marker_actions["cutoff"].setChecked(True)               # an automatic marker has no menu of its own
+    fc = vb.mapViewToScene(QPointF(math.log10(placed(plot)["fc"].marker.freq), -10.0))
+    assert plot.marker_layer.user_at(plot.gain_plot, fc) is None
+
+
+def test_typed_frequency(plot):
+    plot.set_points(sweep())
+    plot.add_marker(1000.0)
+    assert plot.set_marker_frequency(1, "2.5k") and plot.markers.user[1] == 2500.0
+    assert plot.set_marker_frequency(1, "1 MHz") and plot.markers.user[1] == 1e6
+    for bad in ("", "abc", "-5", "0", "1x"):
+        assert not plot.set_marker_frequency(1, bad)
+    assert plot.markers.user[1] == 1e6 and placed(plot)["M1"].text.startswith("M1 1 MHz")
+    assert not plot.set_marker_frequency(7, "1k")                # no such marker
+
+
+def test_copy_marker_values(plot):
+    plot.set_points(sweep())
+    tick(plot, "cutoff", "peak")
+    plot.add_marker(1000.0)
+    text = plot.marker_text()
+    rows = [r.split("\t") for r in text.splitlines()]
+    assert rows[0] == ["Markers on: Sweep"] and [r[0] for r in rows[2:]] == ["fc", "pk", "M1"]
+    assert rows[3] == ["pk", "", "", "", "none"] and float(rows[4][1]) == 1000.0
+    assert float(rows[2][3]) == pytest.approx(-45.0, abs=1.0)
+    plot.act_copy_markers.trigger()
+    assert QApplication.clipboard().text() == text
+    th = plot.set.add_theory(RC)
+    plot.set.set_reference(th.id)
+    plot.traces_changed()
+    assert plot.marker_text().splitlines()[0] == "Markers on: Sweep, relative to " + th.name
+
+
+def test_copied_phase_is_the_phase_shown(plot):
+    plot.set_points(sweep(LOOP))
+    plot.add_marker(50e3)
+    wrapped = float(plot.marker_text().splitlines()[2].split("\t")[3])
+    plot.set_unwrap(True)
+    unwrapped = float(plot.marker_text().splitlines()[2].split("\t")[3])
+    assert wrapped == pytest.approx(164.8, abs=1.0) and unwrapped == pytest.approx(wrapped - 360.0, abs=0.02)

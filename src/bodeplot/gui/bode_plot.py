@@ -11,16 +11,16 @@ import math
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QActionGroup
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QSizePolicy,
-                               QVBoxLayout, QWidget)
+from PySide6.QtGui import QActionGroup, QCursor
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QHBoxLayout, QInputDialog, QLabel, QMenu,
+                               QMessageBox, QPushButton, QSizePolicy, QVBoxLayout, QWidget)
 
 from ..io.export_image import ImageSeries
-from ..markers import KINDS, MAX_USER, MarkerSet, Placed, label
+from ..markers import KINDS, MAX_USER, MarkerSet, Placed, label, table
 from ..measure.sinefit import unwrap_deg
 from ..models import Flag, PointResult
 from ..traces import Drawn, Trace, TraceSet
-from ..units import fmt_si
+from ..units import fmt_si, parse_si
 from . import theme
 from .marker_layer import MarkerLayer
 from .si_widgets import SiAxis
@@ -98,6 +98,7 @@ class BodePlot(QWidget):
         self.markers = MarkerSet()
         self._marks: list = []              # the markers of the last refresh (markers.Marker)
         self._placed: list[Placed] = []     # the same, with texts and positions
+        self._ctx_menu: QMenu | None = None
         self.markers_btn = QPushButton("Markers")
         self.markers_btn.setToolTip("Markers on the curve: the -3 dB points, the peak, the notch, the gain and "
                                     "phase margin, and markers of your own at any frequency")
@@ -144,7 +145,7 @@ class BodePlot(QWidget):
         for p in (self.gain_plot, self.phase_plot):
             p.getPlotItem().vb.sigRangeChangedManually.connect(self._moved_by_user)
             p.getPlotItem().hideButtons()               # the small "A" button is replaced by Fit view
-            p.scene().sigMouseClicked.connect(self._scene_clicked)
+            p.scene().sigMouseClicked.connect(lambda ev, plot=p: self._scene_clicked(plot, ev))
         self.fit_btn.clicked.connect(self.fit_view)
         self.unwrap_box.toggled.connect(self.refresh)
         self.unit_box.currentIndexChanged.connect(lambda _i: self._unit_changed())
@@ -230,6 +231,7 @@ class BodePlot(QWidget):
         self.act_copy_markers = menu.addAction("Copy marker values")
         self.act_copy_markers.setToolTip("Copy the markers as a table (name, frequency, gain, phase, note) "
                                          "for a report or a spreadsheet")
+        self.act_copy_markers.triggered.connect(lambda _checked=False: self.copy_markers())
         self.markers_btn.setMenu(menu)
         self.marker_menu = menu
         self._fill_marker_traces()
@@ -343,6 +345,70 @@ class BodePlot(QWidget):
         self.marker_layer.show(self._placed, self.log_x)
         self.act_add_marker.setEnabled(len(self.markers.user) < MAX_USER)
 
+    def context_menu(self, freq_hz: float, number: int | None = None) -> QMenu:
+        """The right-click menu of the plot at freq_hz (number: the user marker under the
+        mouse). Built here and shown by the caller, so that a test can read it."""
+        if self._ctx_menu is not None:
+            self._ctx_menu.deleteLater()
+        menu = self._ctx_menu = QMenu(self)
+        menu.setToolTipsVisible(True)
+        if number is None:
+            act = menu.addAction("Add marker here")
+            act.setToolTip("Put a marker of your own at this frequency; it reads gain and phase of the "
+                           "chosen trace there")
+            act.setEnabled(len(self.markers.user) < MAX_USER)
+            act.triggered.connect(lambda _checked=False: self.add_marker(freq_hz))
+            return menu
+        act = menu.addAction("Set frequency…")
+        act.setToolTip("Type the frequency this marker stands at, for example 1k or 2.5M")
+        act.triggered.connect(lambda _checked=False: self._ask_frequency(number))
+        act = menu.addAction("Reference marker")
+        act.setCheckable(True)
+        act.setChecked(self.markers.ref == number)
+        act.setToolTip("Make this the reference marker: every other marker of yours also shows its difference "
+                       "to it and the slope in dB per decade")
+        act.triggered.connect(lambda _checked=False: self.toggle_reference_marker(number))
+        act = menu.addAction("Remove")
+        act.setToolTip("Remove this marker from the plot; the others keep their numbers")
+        act.triggered.connect(lambda _checked=False: self.remove_marker(number))
+        return menu
+
+    def set_marker_frequency(self, number: int, text: str) -> bool:
+        """Move a user marker to a typed frequency ('1k', '2.5 MHz'). False, and nothing
+        changes, when the text is not a positive frequency."""
+        try:
+            freq = parse_si(text, "Hz")
+        except ValueError:
+            return False
+        if not self.markers.move(number, freq):
+            return False
+        self._update_markers()
+        return True
+
+    def _ask_frequency(self, number: int) -> None:
+        if number not in self.markers.user:
+            return
+        text, ok = QInputDialog.getText(self, "Marker M%d" % number, "Frequency (for example 1k or 2.5M):",
+                                        text=fmt_si(self.markers.user[number], "Hz"))
+        if ok and not self.set_marker_frequency(number, text):
+            QMessageBox.warning(self, "Marker M%d" % number,
+                                "'%s' is not a frequency. The marker stays where it was." % text)
+
+    def toggle_reference_marker(self, number: int) -> None:
+        self.markers.toggle_ref(number)
+        self._update_markers()
+
+    def marker_text(self) -> str:
+        """The markers as a tab-separated table (the clipboard text)."""
+        t = self.set.get(self.markers.trace_id) or self.set.live
+        title = "Markers on: " + t.name
+        if self.is_relative():
+            title += ", relative to " + self.set.reference().name
+        return table(self._marks, title, lambda m: self._phase_shown(m.deg))
+
+    def copy_markers(self) -> None:
+        QApplication.clipboard().setText(self.marker_text())
+
     def value(self, p: PointResult) -> float:
         """What the upper plot shows for a measured point, in the selected unit (not relative)."""
         if self.unit() == "v":
@@ -372,10 +438,15 @@ class BodePlot(QWidget):
     def _moved_by_user(self, *_):
         self.follow = False
 
-    def _scene_clicked(self, ev):
+    def _scene_clicked(self, plot, ev):
         if ev.double():
             ev.accept()
             self.fit_view()
+        elif ev.button() == Qt.RightButton and plot.sceneBoundingRect().contains(ev.scenePos()):
+            ev.accept()
+            xv = plot.getPlotItem().vb.mapSceneToView(ev.scenePos()).x()
+            number = self.marker_layer.user_at(plot, ev.scenePos())
+            self.context_menu(10.0 ** xv if self.log_x else xv, number).exec(QCursor.pos())
 
     def data_ranges(self):
         """((x0, x1), (gain0, gain1), (phase0, phase1)) of everything plotted, in view
@@ -657,7 +728,6 @@ class BodePlot(QWidget):
             return
         menu = QMenu(self)
         act = menu.addAction("Re-measure %s" % _fmt_hz(p.freq_hz))
-        from PySide6.QtGui import QCursor
         if menu.exec(QCursor.pos()) is act:
             self.remeasure_requested.emit(p.freq_hz)
 

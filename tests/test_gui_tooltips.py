@@ -75,7 +75,8 @@ def test_every_toolbar_item_explains_itself(win):
 
 def test_plot_trace_and_log_options_explain_themselves(win):
     plot, panel, log = win.plot, win.traces_panel, win.status_log
-    named = {"Unwrap phase": plot.unwrap_box, "Fit view": plot.fit_btn, "Vertical": plot.unit_box,
+    named = {"Unwrap phase": plot.unwrap_box, "Fit view": plot.fit_btn, "Markers": plot.markers_btn,
+             "Vertical": plot.unit_box,
              "Relative to": plot.ref_box, "trace list": panel.tree, "Load CSV": panel.load_btn,
              "Add theory": panel.theory_btn, "Keep sweep": panel.keep_btn, "Remove": panel.remove_btn,
              "Copy": log.copy_btn, "Clear": log.clear_btn}
@@ -86,3 +87,19 @@ def test_plot_trace_and_log_options_explain_themselves(win):
         for w in host.findChildren(QPushButton) + host.findChildren(QComboBox) + host.findChildren(QCheckBox):
             assert explains(w.toolTip()), "%s in %s has no explanation" % (
                 w.text() if hasattr(w, "text") else type(w).__name__, type(host).__name__)
+
+
+def test_marker_menus_explain_themselves(win):
+    plot = win.plot
+    plot.add_marker(1000.0)
+    menus = {"Markers": plot.marker_menu, "Markers on": plot.marker_trace_menu,
+             "plot right-click": plot.context_menu(1000.0)}
+    silent = []
+    for where, menu in menus.items():
+        assert menu.toolTipsVisible(), where
+        silent += ["%s > %s" % (where, a.text()) for a in menu.actions()
+                   if not a.isSeparator() and not explains(a.toolTip(), a.text())]
+    marker_menu = plot.context_menu(1000.0, 1)                   # built after the first one: one context menu at a time
+    assert marker_menu.toolTipsVisible()
+    silent += ["marker right-click > %s" % a.text() for a in marker_menu.actions() if not explains(a.toolTip(), a.text())]
+    assert not silent, "marker menu items without an explanation: %s" % silent
