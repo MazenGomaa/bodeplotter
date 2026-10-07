@@ -365,9 +365,9 @@ def test_image_export_draws_what_the_plot_shows(win, qtbot, tmp_path, monkeypatc
     seen = {}
     real = export_image.write_image
 
-    def spy(path, result, opts=None, series=None, labels=None):
+    def spy(path, result, opts=None, series=None, labels=None, **kw):
         seen.update(series=series, labels=labels)
-        return real(path, result, opts, series, labels)
+        return real(path, result, opts, series, labels, **kw)
     monkeypatch.setattr(export_image, "write_image", spy)
     for name in ("t.png", "t.svg", "t.pdf"):
         out = win.export(tmp_path / name)

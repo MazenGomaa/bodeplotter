@@ -1,7 +1,7 @@
 """PNG / SVG / PDF export with matplotlib (SPEC.md section 12).
 
 Gain and phase subplots matching the current view: wrap state, axis type, flagged
-markers. Title, plus a footer with the date and key settings.
+points, markers. Title, plus a footer with the date and key settings.
 """
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ QUIET = Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW | Flag.CALIBRATED    # as 
 PRINT_SERIES = ("#2a78d6", "#c2410c", "#0f8a5f", "#a16207", "#be3a6f", "#15803d", "#6d5bd0", "#c0392b")
 PRINT_MUTED = "#777777"
 PRINT_FLAGGED = "#d62728"
+PRINT_MARKER = "#444444"        # marker lines, dots and labels
 
 
 @dataclass
@@ -50,6 +51,17 @@ class ImageSeries:
     flagged: Any = None         # bool array (a measured trace: markers); None: a line only
 
 
+@dataclass
+class ImageMarker:
+    """One marker as the plot shows it: a line through both plots, a dot where it has a
+    value, its text on one of them."""
+    freq: float
+    text: str
+    y_gain: Any = None          # None: no dot on the gain plot
+    y_phase: Any = None
+    label_on: str = "gain"      # the plot that carries the text: "gain" | "phase"
+
+
 # unit -> (axis label, value of a point); the same three as gui/bode_plot.py UNITS
 UNITS = {"db": ("Gain (dB)", lambda p: p.gain_db),
          "v": ("Output (Vpp)", lambda p: 2.0 * p.vdut_amp),
@@ -57,11 +69,12 @@ UNITS = {"db": ("Gain (dB)", lambda p: p.gain_db),
 
 
 def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
-                series: list[ImageSeries] | None = None, labels: tuple[str, str, str] | None = None) -> Path:
+                series: list[ImageSeries] | None = None, labels: tuple[str, str, str] | None = None,
+                markers: list[ImageMarker] | None = None) -> Path:
     """The Bode plot as an image. Without `series` it draws the sweep of `result` (as it
     always did). With `series` (BodePlot.export_series) it draws exactly what the plot
     shows: every visible trace, absolute or relative, with `labels` = (gain axis, phase
-    axis, note for the footer)."""
+    axis, note for the footer). `markers` (BodePlot.export_markers) are drawn on top."""
     import matplotlib
     matplotlib.use("Agg")               # no display needed
     import matplotlib.pyplot as plt
@@ -99,6 +112,23 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
                 ax.plot(f[bad], y[bad], "x", color=PRINT_FLAGGED, markersize=6,
                         label="flagged" if ax is axes[0] and not any_flagged else None)
                 any_flagged = True
+        row = 0
+        for mk in markers or []:
+            ax.axvline(mk.freq, color=PRINT_MARKER, linewidth=0.7, linestyle="--")
+            y = mk.y_gain if key == "gain" else mk.y_phase
+            if y is not None:
+                ax.plot([mk.freq], [y], "D", color=PRINT_MARKER, markersize=4)
+            if mk.label_on != key or not mk.text:
+                continue
+            # labels are staggered by rows so that neighbours do not sit on each other
+            if y is None:
+                ax.annotate(mk.text, xy=(mk.freq, 1.0), xycoords=("data", "axes fraction"),
+                            xytext=(4, -4 - 9 * row), textcoords="offset points", va="top",
+                            fontsize=7, color=PRINT_MARKER)
+            else:
+                ax.annotate(mk.text, xy=(mk.freq, y), xytext=(4, 4 + 9 * row), textcoords="offset points",
+                            va="bottom", fontsize=7, color=PRINT_MARKER)
+            row = (row + mk.text.count("\n") + 1) % 6
         ax.set_ylabel(label)
         ax.grid(True, which="both", linewidth=0.4, alpha=0.6)
         if opts.log_x:

@@ -427,3 +427,89 @@ def test_copied_phase_is_the_phase_shown(plot):
     plot.set_unwrap(True)
     unwrapped = float(plot.marker_text().splitlines()[2].split("\t")[3])
     assert wrapped == pytest.approx(164.8, abs=1.0) and unwrapped == pytest.approx(wrapped - 360.0, abs=0.02)
+
+
+# ---------------------------------------------------------------------- the main window: export and settings
+from bodeplot.gui.main_window import MainWindow
+from bodeplot.io.settings import AppSettings
+from bodeplot.models import EngineState, SweepConfig, SweepType
+
+SIM = {"preset": "rc_lpf", "params": {"r": 1e3, "c": 100e-9}, "noise_vrms": 2e-4, "latency_ms": 0.0}
+
+
+def window(qtbot, settings):
+    w = MainWindow(simulate=True, settings=settings, sim_seed=7)
+    w.interactive = False
+    qtbot.addWidget(w)
+    w.show()
+    return w
+
+
+@pytest.fixture
+def win(qtbot, tmp_path, monkeypatch):
+    monkeypatch.setenv("BODEPLOT_CONFIG_DIR", str(tmp_path / "cfg"))
+    w = window(qtbot, AppSettings(simulate=True, sim=dict(SIM)))
+    yield w
+    w.close()
+
+
+def run_sweep(win, qtbot, lo=100.0, hi=1e5, ppd=10):
+    if not win.info.connected:
+        with qtbot.waitSignal(win.engine.session_changed, timeout=5000):
+            win.toggle_connection()
+        qtbot.waitUntil(lambda: win.info.connected, timeout=5000)
+    p = win.config.preset()
+    p.sweep = SweepConfig(SweepType.LOG, lo, hi, ppd)
+    p.measure.settle_ms, p.measure.settle_cycles = 0.0, 0.0
+    win.config.set_preset(p)
+    with qtbot.waitSignal(win.engine.finished, timeout=30000):
+        assert win.start_sweep(check_skew=False)
+    qtbot.waitUntil(lambda: win.state is EngineState.DONE, timeout=5000)
+
+
+def test_export_markers_is_what_the_plot_shows(plot):
+    plot.set_points(sweep(LOOP))
+    tick(plot, "cutoff", "peak", "margins")
+    plot.add_marker(1000.0), plot.add_marker(5e9)
+    marks = plot.export_markers()
+    shown = {p.text: p for p in plot.placed() if p.marker.found}
+    assert [m.text for m in marks] == list(shown) and len(marks) == len(names(plot))
+    for m in marks:
+        p = shown[m.text]
+        assert (m.freq, m.y_gain, m.y_phase) == (p.marker.freq, p.y_gain, p.y_phase)
+        assert m.label_on == ("phase" if p.marker.kind == "pm" else "gain")
+
+
+def test_a_swept_cutoff_and_the_image_with_markers(win, qtbot, tmp_path, monkeypatch):
+    from bodeplot.io import export_image
+    run_sweep(win, qtbot)
+    win.plot.marker_actions["cutoff"].setChecked(True)
+    win.plot.add_marker(1000.0)
+    fc = {p.marker.name: p for p in win.plot.placed()}["fc"].marker.freq
+    assert fc == pytest.approx(FC, rel=0.03)                     # the simulated RC low-pass, with its noise
+    seen = {}
+    real = export_image.write_image
+
+    def spy(path, result, opts=None, series=None, labels=None, markers=None):
+        seen.update(markers=markers)
+        return real(path, result, opts, series, labels, markers)
+    monkeypatch.setattr(export_image, "write_image", spy)
+    for name in ("m.png", "m.svg", "m.pdf"):
+        assert win.export(tmp_path / name).stat().st_size > 500
+    assert [m.text.split()[0] for m in seen["markers"]] == ["fc", "M1"]
+    assert export_image.PRINT_MARKER.lower() in (tmp_path / "m.svg").read_text(encoding="utf-8").lower()
+
+
+def test_marker_ticks_survive_a_restart(win, qtbot):
+    assert win.plot.marker_kinds() == []                         # a first start: all four off
+    win.plot.marker_actions["peak"].setChecked(True)
+    win.plot.marker_actions["cutoff"].setChecked(True)
+    win.plot.add_marker(1000.0)
+    win._save_ui_state()
+    assert win.settings.markers == ["cutoff", "peak"]
+    again = window(qtbot, AppSettings.from_dict(win.settings.to_dict()))
+    try:
+        assert again.plot.marker_kinds() == ["cutoff", "peak"]
+        assert again.plot.markers.user == {}                     # the user's markers are not kept
+    finally:
+        again.close()

@@ -381,6 +381,7 @@ class MainWindow(QMainWindow):
             self.preset_box.setCurrentText(s.last_preset)
         self.plot.set_unwrap(s.unwrap_phase)
         self.plot.set_unit(s.vertical_unit)
+        self.plot.set_marker_kinds(s.markers)
         self.traces_panel.set_unit(self.plot.unit())
         self.act_unwrap.setChecked(s.unwrap_phase)
         try:
@@ -403,6 +404,7 @@ class MainWindow(QMainWindow):
         s.last_preset = self.preset_box.currentText()
         s.unwrap_phase = self.plot.unwrap()
         s.vertical_unit = self.plot.unit()
+        s.markers = self.plot.marker_kinds()
         s.window_geometry = bytes(self.saveGeometry().toBase64()).decode("ascii")
         s.window_state = bytes(self.saveState().toBase64()).decode("ascii")
         self._save_settings()
@@ -801,7 +803,8 @@ class MainWindow(QMainWindow):
             o = image_opts or self._image_opts
             o = export_image.ImageOptions(o.title, o.dpi, o.width_in, o.height_in, self.plot.unwrap(),
                                           self.config.sweep().sweep_type is SweepType.LOG, self.info.has_phase, self.plot.unit())
-            out = export_image.write_image(path, self.result or SweepResult({}, [], {}), o, series, labels)
+            out = export_image.write_image(path, self.result or SweepResult({}, [], {}), o, series, labels,
+                                           markers=self.plot.export_markers())
         elif fmt not in ("csv", "s2p"):
             raise ValueError("unknown export format %r" % fmt)
         elif self.result is None:

@@ -264,3 +264,31 @@ def test_image_with_several_series_and_a_legend(tmp_path, result):
     one = export_image.write_image(tmp_path / "one.svg", result, export_image.ImageOptions()).read_text(encoding="utf-8")
     assert export_image.PRINT_SERIES[0].lower() in one.lower()               # without series: as before
     assert export_image.PRINT_SERIES[1].lower() not in one.lower()
+
+
+def test_image_with_markers(tmp_path, result):
+    from bodeplot.io.export_image import ImageMarker
+    marks = [ImageMarker(1591.5, "fc 1.59 kHz  -3.01 dB  -45.0°", -3.01, -45.0),
+             ImageMarker(3100.0, "PM 48.3° at 3.1 kHz", None, -131.7, "phase"),
+             ImageMarker(5e7, "M1 50 MHz  outside the trace"),
+             ImageMarker(2000.0, "fH 2 kHz  -3.00 dB\nBW 820 Hz  Q 1.94", -3.0, -50.0)]
+    for ext in ("png", "svg", "pdf"):
+        out = export_image.write_image(tmp_path / ("m." + ext), result, export_image.ImageOptions(), markers=marks)
+        assert out.stat().st_size > 500
+    svg = (tmp_path / "m.svg").read_text(encoding="utf-8")
+    assert export_image.PRINT_MARKER.lower() in svg.lower()
+    plain = export_image.write_image(tmp_path / "plain.svg", result).read_text(encoding="utf-8")
+    assert export_image.PRINT_MARKER.lower() not in plain.lower()            # without markers: as before
+    one = export_image.write_image(tmp_path / "gain_only.svg", result, export_image.ImageOptions(show_phase=False),
+                                   markers=marks)
+    assert one.stat().st_size > 500                              # a phase-plot label with no phase plot is left out
+
+
+def test_marker_ticks_in_the_settings():
+    from bodeplot import markers
+    assert settings.MARKER_KINDS == markers.KINDS
+    assert settings.AppSettings().markers == []
+    s = settings.AppSettings.from_dict({"markers": ["peak", "bogus", 3, "cutoff"]})
+    assert s.markers == ["cutoff", "peak"]                       # known kinds only, in menu order
+    assert settings.AppSettings.from_dict({"markers": "peak"}).markers == []
+    assert settings.AppSettings.from_dict(s.to_dict()).markers == ["cutoff", "peak"]

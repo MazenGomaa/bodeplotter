@@ -50,6 +50,7 @@ def write_json(path: Path, data: dict) -> None:
 STARTUP_MODES = ("instruments", "simulation", "last")
 SCOPE_MIN_GAP_MS = (100.0, 2000.0)      # 100 ms is the pacing proven on the bench; never below it
 TOOLTIP_DELAY_MS = (0.0, 10000.0)
+MARKER_KINDS = ("cutoff", "peak", "notch", "margins")   # as markers.KINDS; a test keeps the two equal
 AUTO_KEEP_MAX = 6                       # with the live sweep, seven of the eight trace colours
 PANELS = ("dock_config", "dock_waveform", "dock_traces", "dock_log")
 SKEW_DEFAULTS = (10e6, 20e6, 3)         # check frequencies and captures per frequency (SPEC.md section 8.6)
@@ -96,6 +97,7 @@ class AppSettings:
     last_preset: str = ""
     unwrap_phase: bool = False
     vertical_unit: str = "db"           # "db" | "v" | "pct" (gui/bode_plot.py UNITS)
+    markers: list = field(default_factory=list)     # the automatic markers switched on (MARKER_KINDS)
     window_geometry: str = ""           # base64 of QByteArray
     window_state: str = ""
     sim: dict = field(default_factory=lambda: {"preset": "rc_lpf", "params": {}, "noise_vrms": 1e-4,
@@ -143,6 +145,8 @@ class AppSettings:
                 setattr(s, key, v if isinstance(v, str) else default)
             elif isinstance(default, dict):
                 setattr(s, key, v if isinstance(v, dict) else default)
+            elif isinstance(default, list):
+                setattr(s, key, list(v) if isinstance(v, list) else default)
         if s.backend not in BACKENDS:
             s.backend = DEFAULT_BACKEND
         if s.startup_mode not in STARTUP_MODES:
@@ -157,6 +161,7 @@ class AppSettings:
         if not (0 < s.skew_freq_lo_hz < s.skew_freq_hi_hz):
             s.skew_freq_lo_hz, s.skew_freq_hi_hz = SKEW_DEFAULTS[0], SKEW_DEFAULTS[1]
         s.skew_captures = min(max(s.skew_captures, 1), SKEW_CAPTURES_MAX)
+        s.markers = [k for k in MARKER_KINDS if k in s.markers]
         return s
 
 

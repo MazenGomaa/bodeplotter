@@ -15,7 +15,7 @@ from PySide6.QtGui import QActionGroup, QCursor
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QHBoxLayout, QInputDialog, QLabel, QMenu,
                                QMessageBox, QPushButton, QSizePolicy, QVBoxLayout, QWidget)
 
-from ..io.export_image import ImageSeries
+from ..io.export_image import ImageMarker, ImageSeries
 from ..markers import KINDS, MAX_USER, MarkerSet, Placed, label, table
 from ..measure.sinefit import unwrap_deg
 from ..models import Flag, PointResult
@@ -662,6 +662,11 @@ class BodePlot(QWidget):
             series.append(ImageSeries(d.trace.name, d.trace.slot, f, gain, phase, flagged))
         gain_label, unit, phase_label, note = self._labels()
         return series, ("%s (%s)" % (gain_label, unit), "%s (deg)" % phase_label, note)
+
+    def export_markers(self) -> list[ImageMarker]:
+        """The markers as shown, for the image export."""
+        return [ImageMarker(p.marker.freq, p.text, p.y_gain, p.y_phase, "phase" if p.marker.kind == "pm" else "gain")
+                for p in self._placed if p.marker.found]
 
     # ---- interaction
     def _tip(self, x, y, data) -> str:
