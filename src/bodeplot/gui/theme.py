@@ -211,12 +211,35 @@ QToolButton::menu-indicator {{{{ image: url({u}/down.png); subcontrol-position: 
 """.replace("{{", "{").replace("}}", "}")
 
 
+# Design rule (user, 2026-10-07): every option explains itself in a tooltip, and the
+# tooltip appears after the mouse has rested on the option for this long. Qt's own delay
+# is 0.7 s, which makes the explanations flicker up while the mouse merely passes.
+TOOLTIP_DELAY_MS = 3000
+_style = None                   # the application style; kept so that it is not collected
+
+
+def _make_style():
+    from PySide6.QtWidgets import QProxyStyle, QStyle
+
+    class AppStyle(QProxyStyle):
+        """Fusion, with the tooltip delay of the design rule."""
+
+        def styleHint(self, hint, option=None, widget=None, returnData=None):
+            if hint == QStyle.SH_ToolTip_WakeUpDelay:
+                return TOOLTIP_DELAY_MS
+            return super().styleHint(hint, option, widget, returnData)
+
+    return AppStyle("Fusion")
+
+
 def apply(app) -> None:
     """Apply the dark theme to a QApplication and to pyqtgraph. Safe to call twice."""
     import pyqtgraph as pg
     from PySide6.QtGui import QColor, QPalette
 
-    app.setStyle("Fusion")              # one base style on every OS, so the stylesheet lands the same
+    global _style
+    _style = _make_style()              # Fusion on every OS, so the stylesheet lands the same
+    app.setStyle(_style)
     pal = QPalette()
     for role, color in ((QPalette.Window, PAGE), (QPalette.WindowText, INK), (QPalette.Base, RAISED),
                         (QPalette.AlternateBase, SURFACE), (QPalette.Text, INK), (QPalette.Button, RAISED),

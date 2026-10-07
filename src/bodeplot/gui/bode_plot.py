@@ -56,6 +56,8 @@ class BodePlot(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         top = QHBoxLayout()
         self.unwrap_box = QCheckBox("Unwrap phase")
+        self.unwrap_box.setToolTip("Draw the phase as one continuous curve. Without it the phase is shown "
+                                   "between -180° and +180° and jumps where it passes either limit.")
         self.readout = QLabel("")
         self.readout.setTextInteractionFlags(Qt.TextSelectableByMouse)
         # The read-out has a row of its own and no say in the layout: its text changes with

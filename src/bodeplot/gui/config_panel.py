@@ -13,6 +13,42 @@ PROBES = (1.0, 10.0, 100.0)
 # Every number field and box may shrink to this width. Their natural minimum follows the
 # longest value they could ever hold (1e9 Hz, 100000 points), which made the panel much wider
 # than what is in it (user report 2026-10-07).
+# What each option does, shown when the mouse rests on the option or on its label (design
+# rule: every option explains itself; tests/test_gui_tooltips.py fails for one that does not).
+TIPS = {
+    "sweep_type": "Logarithmic: the same number of points in every decade, the usual choice for a Bode plot. "
+                  "Linear: evenly spaced frequencies.",
+    "start_hz": "Lowest frequency of the sweep. You can type k and M (1.5k, 20M). The generator and the scope "
+                "limit the range; a sweep outside it is refused before anything is switched on.",
+    "stop_hz": "Highest frequency of the sweep. You can type k and M (1.5k, 20M). The generator and the scope "
+               "limit the range; a sweep outside it is refused before anything is switched on.",
+    "ppd": "Points measured in each decade of a logarithmic sweep. More points give a finer curve and a "
+           "longer sweep (about 1 second per point on the instruments).",
+    "n_points": "Number of points of a linear sweep, the two ends included.",
+    "descending": "Measure from the stop frequency down to the start frequency.",
+    "gen_channel": "The generator output that feeds the circuit under test.",
+    "amp_vpp": "Amplitude of the sine, peak to peak, as it appears across the load selected below.",
+    "offset_v": "DC voltage added to the sine. Leave it at 0 V unless the circuit needs a bias.",
+    "load": "The load the generator assumes when it sets the amplitude: High-Z for a scope probe or a "
+            "high-impedance circuit, 50 Ω for a terminated line.",
+    "ref_channel": "The scope channel on the input of the circuit under test: the reference the output is compared with.",
+    "dut_channel": "The scope channel on the output of the circuit under test.",
+    "ref_probe": "Attenuation of the probe on the reference channel. Use 10X by default and the same setting "
+                 "on both probes.",
+    "dut_probe": "Attenuation of the probe on the DUT channel. Use 10X by default and the same setting on both probes.",
+    "coupling": "Input coupling of both scope channels. DC is the default; AC removes a DC level that sits on the signal.",
+    "bw_limit": "Switch on the scope's 20 MHz filter for both channels: less noise, but the readings fall off "
+                "towards 20 MHz.",
+    "target_cycles": "How many periods of the signal one capture should show. The scope's timebase is chosen from it.",
+    "method": "Sine fit: a sine is fitted to both captured waveforms; accurate gain and phase (the default). "
+              "Fast preview reads the scope while it runs: about twice as fast, the same gain, but the phase is "
+              "rough (about 1° below 1 MHz, up to about 10° at 20 MHz). Scope built-in: the scope's own "
+              "measurements; in Simulation only.",
+    "averages": "Captures averaged for every point. More averages mean less noise and a proportionally longer sweep.",
+    "settle_ms": "Shortest wait after each frequency change before the capture, so the circuit has settled.",
+    "settle_cycles": "The wait after a frequency change is at least this many periods of the new frequency "
+                     "(or the settle time, whichever is longer).",
+}
 FIELD_MIN_WIDTH = 100          # "1.000 Vpp" and "Logarithmic" still fit
 
 
@@ -123,6 +159,13 @@ class ConfigPanel(QScrollArea):
         lay.addStretch(1)
         for field in body.findChildren(QAbstractSpinBox) + body.findChildren(QComboBox):
             field.setMinimumWidth(FIELD_MIN_WIDTH)
+        for name, tip in TIPS.items():
+            field = getattr(self, name)
+            field.setToolTip(tip)
+            for form in body.findChildren(QFormLayout):
+                label = form.labelForField(field)
+                if label is not None:
+                    label.setToolTip(tip)
         self.setWidget(body)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._fit_width()

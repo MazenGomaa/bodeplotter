@@ -60,6 +60,8 @@ class TracesPanel(QWidget):
         self.load_btn.setToolTip("Add sweeps saved with Export > CSV as traces")
         self.theory_btn.setToolTip("Add the ideal response of a circuit")
         self.keep_btn.setToolTip("Keep the current sweep on the plot when the next one starts")
+        self.remove_btn.setToolTip("Take the selected trace off the plot. The live sweep cannot be removed; "
+                                   "untick it to hide it.")
         for b in (self.load_btn, self.theory_btn, self.keep_btn, self.remove_btn):
             row.addWidget(b)
         row.addStretch(1)

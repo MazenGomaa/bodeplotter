@@ -82,6 +82,7 @@ Not a clean stack, and known: `drivers/connect.py` imports `sweep/core.py` (it r
 | Qt (PySide6, pyqtgraph) only in `gui/`, `app.py` and `sweep/engine.py` | `tests/test_docs.py` |
 | pyvisa only in `drivers/visa_util.py`; pyusb only in `drivers/transport.py` | `tests/test_docs.py` |
 | the app never imports `hwcheck/` (the dependency runs the other way) | `tests/test_docs.py` |
+| every option of the GUI has a tooltip that explains it; tooltips wait 3 s | `tests/test_gui_tooltips.py` |
 | no `:RUN` and no `subprocess` anywhere in `src/` | `tests/test_drivers.py` |
 | no test reaches a real instrument (`BODEPLOT_NO_HARDWARE` in `tests/conftest.py`) | `tests/conftest.py`, `drivers/visa_util.py` |
 
@@ -101,6 +102,7 @@ Not a clean stack, and known: `drivers/connect.py` imports `sweep/core.py` (it r
 | Single-shot capture, stale-record check, resync | `drivers/uni_t_upo1000.py` (`acquire`, `acquire_running`) |
 | Negative generator offset | `UniTUTG900E._set_level` in `drivers/uni_t_utg900e.py` |
 | Bad-capture files | `save_bad_capture` in `sweep/core.py`, called from `measure/meters.py` |
+| Tooltip texts and their delay | the texts next to each widget (`TIPS` in `gui/config_panel.py` for the Configuration panel); the 3 s delay in `gui/theme.py` (`TOOLTIP_DELAY_MS`) |
 | Colours | `gui/theme.py` only (the white-background image export is the one exception) |
 | Settings and presets on disk | `io/settings.py`, `io/presets.py`, `models.from_dict` |
 | Opening a VISA resource | `drivers/transport.py` (`VisaTransport`) through `drivers/visa_util.py`, nowhere else |

@@ -148,12 +148,21 @@ class MainWindow(QMainWindow):
                                  "Disconnect to change it. The mode at start-up is in File > Settings.")
         self.mode_box.activated.connect(lambda i: self.set_mode(bool(self.mode_box.itemData(i))))
         tb.addWidget(self.mode_box)
-        self.act_connect = act("Connect", self.toggle_connection)
-        self.act_connections = act("Connections…", self.edit_connections)
+        self.act_connect = act("Connect", self.toggle_connection,
+                               "Open the generator and the scope (or the simulation), or close them again. "
+                               "With no addresses set, both instruments are found by themselves.")
+        self.act_connections = act("Connections…", self.edit_connections,
+                                   "Choose the backend and the addresses of the generator and the scope. "
+                                   "Only while disconnected.")
         tb.addSeparator()
-        self.act_start = act("Start", self.start_sweep)
-        self.act_pause = act("Pause", self.toggle_pause)
-        self.act_abort = act("Abort", self.abort)
+        self.act_start = act("Start", self.start_sweep,
+                             "Run a sweep with the settings of the Configuration panel. It replaces the live "
+                             "sweep on the plot; kept and loaded traces stay.")
+        self.act_pause = act("Pause", self.toggle_pause,
+                             "Hold the sweep after the point being measured, and go on from there later.")
+        self.act_abort = act("Abort", self.abort,
+                             "Stop the sweep now. The generator is switched off and the points measured so far "
+                             "are kept.")
         tb.addSeparator()
         self.act_skew = act("Skew check", self.open_skew_wizard,
                             "Measure and correct the delay between the two scope channels")
@@ -166,6 +175,8 @@ class MainWindow(QMainWindow):
         export = QToolButton()
         export.setText("Export")
         export.setPopupMode(QToolButton.InstantPopup)
+        export.setToolTip("Save the result: CSV (can be loaded again as a trace) and Touchstone hold the live "
+                          "sweep; PNG, SVG and PDF show the plot as it is, with every visible trace.")
         menu = QMenu(export)
         for label, fmt in (("CSV…", "csv"), ("PNG…", "png"), ("SVG…", "svg"), ("PDF…", "pdf"),
                            ("Touchstone .s2p…", "s2p")):
@@ -177,14 +188,20 @@ class MainWindow(QMainWindow):
         tb.addWidget(QLabel(" Preset "))
         self.preset_box = QComboBox()
         self.preset_box.setMinimumWidth(160)
+        self.preset_box.setToolTip("A preset is a saved set of the Configuration panel's settings. Choose one "
+                                   "to load it.")
         tb.addWidget(self.preset_box)
-        self.act_preset_save = act("Save", self.save_preset)
-        self.act_preset_save_as = act("Save As…", self.save_preset_as)
-        self.act_preset_delete = act("Delete", self.delete_preset)
+        self.act_preset_save = act("Save", self.save_preset,
+                                   "Store the current settings in the preset that is selected.")
+        self.act_preset_save_as = act("Save As…", self.save_preset_as,
+                                      "Store the current settings as a new preset with a name of your choice.")
+        self.act_preset_delete = act("Delete", self.delete_preset,
+                                     "Delete the selected preset. The settings on screen stay as they are.")
         tb.addSeparator()
         # File menu only: the toolbar has no room for it, and it is a tab of Settings
         self.act_sim = QAction("Sim settings…", self)
         self.act_sim.triggered.connect(self.edit_sim_settings)
+        self.act_sim.setToolTip("The simulated circuit and its noise, for Simulation mode. Only while disconnected.")
         self.act_settings = act("Settings…", self.edit_settings,
                                 "Start-up mode, instruments, simulation and the other stored settings")
         self.act_settings.setShortcut("Ctrl+,")
@@ -200,6 +217,7 @@ class MainWindow(QMainWindow):
         mb = self.menuBar()
 
         m = mb.addMenu("&File")
+        m.setToolTipsVisible(True)      # the explanations of the toolbar show in the menus too
         m.addAction(self.act_connect)
         m.addAction(self.act_connections)
         m.addAction(self.act_sim)
@@ -209,10 +227,12 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_cal)
         m.addSeparator()
         self.export_menu = m.addMenu("&Export")
+        self.export_menu.setToolTipsVisible(True)
         for label, fmt in (("CSV\u2026", "csv"), ("PNG\u2026", "png"), ("SVG\u2026", "svg"), ("PDF\u2026", "pdf"),
                            ("Touchstone .s2p\u2026", "s2p")):
             self.export_menu.addAction(label, lambda fmt=fmt: self.export_dialog(fmt))
         p = m.addMenu("&Preset")
+        p.setToolTipsVisible(True)
         p.addAction(self.act_preset_save)
         p.addAction(self.act_preset_save_as)
         p.addAction(self.act_preset_delete)
@@ -221,6 +241,7 @@ class MainWindow(QMainWindow):
         self.act_quit.setShortcut("Ctrl+Q")
 
         m = mb.addMenu("&View")
+        m.setToolTipsVisible(True)
         self.view_actions = {}
         for name, text in (("dock_config", "&Configuration"), ("dock_waveform", "&Waveform"), ("dock_traces", "&Traces"),
                            ("dock_log", "&Status log")):
@@ -243,6 +264,7 @@ class MainWindow(QMainWindow):
         self.act_reset_layout = m.addAction("&Reset layout", self.reset_layout)
 
         m = mb.addMenu("&Help")
+        m.setToolTipsVisible(True)
         self.act_open_logs = m.addAction("Open &log folder", self.open_log_folder)
         self.act_open_config = m.addAction("Open &settings folder", self.open_config_folder)
         m.addSeparator()

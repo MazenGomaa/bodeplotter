@@ -37,6 +37,10 @@ class StatusLog(QWidget):
         row = QHBoxLayout()
         self.copy_btn = QPushButton("Copy")
         self.clear_btn = QPushButton("Clear")
+        self.copy_btn.setToolTip("Copy the table of measured points and the messages to the clipboard, "
+                                 "tab-separated: it pastes into a spreadsheet.")
+        self.clear_btn.setToolTip("Empty the table of measured points and the messages. The plot and the "
+                                  "sweep result are not touched.")
         row.addStretch(1)
         row.addWidget(self.copy_btn)
         row.addWidget(self.clear_btn)
