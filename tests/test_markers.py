@@ -282,3 +282,14 @@ def test_texts_without_phase():
     rows = [r.split("\t") for r in table([m1, m2], "t", with_phase=False).splitlines()]
     assert [r[3] for r in rows[2:]] == ["", ""] and rows[3][4] == "rel. M1: x10, -20.0 dB, -20.0 dB/dec"
     assert "deg" not in rows[3][4] and all(len(r) == 5 for r in rows[1:])
+
+
+def test_a_large_frequency_ratio_is_written_in_full():
+    """Seen in a render: a marker 3333 times above the reference read 'x3.33e+03'."""
+    c = by_hand([100.0, 1e7], [0.0, -100.0])
+    ms = MarkerSet()
+    ms.add(300.0), ms.add(1e6), ms.add(150.0)
+    ms.toggle_ref(1)
+    _m1, m2, m3 = ms.evaluate(c)
+    assert delta_text(m2.delta, with_phase=False).startswith("Δ M1  ×3333  ")
+    assert "x3333," in table([m2], "t") and delta_text(m3.delta, with_phase=False).startswith("Δ M1  ×0.5  ")

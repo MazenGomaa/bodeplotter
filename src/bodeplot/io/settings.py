@@ -99,7 +99,7 @@ class AppSettings:
     vertical_unit: str = "db"           # "db" | "v" | "pct" (gui/bode_plot.py UNITS)
     markers: list = field(default_factory=list)     # the automatic markers switched on (MARKER_KINDS)
     marker_values: bool = True          # write the values next to each marker on the plot (off: its name only)
-    marker_color: str = ""              # "#rrggbb" for the markers of the plot; "" = the theme's
+    marker_colors: dict = field(default_factory=dict)   # marker name -> palette name, where the user chose one
     window_geometry: str = ""           # base64 of QByteArray
     window_state: str = ""
     sim: dict = field(default_factory=lambda: {"preset": "rc_lpf", "params": {}, "noise_vrms": 1e-4,
@@ -158,8 +158,7 @@ class AppSettings:
         s.auto_keep_sweeps = min(max(s.auto_keep_sweeps, 0), AUTO_KEEP_MAX)
         if not re.fullmatch(r"#[0-9a-fA-F]{6}", s.grid_color):
             s.grid_color = ""
-        if not re.fullmatch(r"#[0-9a-fA-F]{6}", s.marker_color):
-            s.marker_color = ""
+        s.marker_colors = {k: v for k, v in s.marker_colors.items() if isinstance(k, str) and isinstance(v, str)}
         s.startup_panels = {name: bool(s.startup_panels.get(name, True)) for name in PANELS}
         s.advanced = {k: v for k, v in s.advanced.items() if k in ADVANCED}
         if not (0 < s.skew_freq_lo_hz < s.skew_freq_hi_hz):

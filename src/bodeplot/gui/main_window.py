@@ -408,7 +408,7 @@ class MainWindow(QMainWindow):
         self.plot.set_unit(s.vertical_unit)
         self.plot.set_marker_kinds(s.markers)
         self.plot.set_marker_values(s.marker_values)
-        self.plot.set_marker_color(s.marker_color)
+        self.plot.set_marker_colors(s.marker_colors)
         self.traces_panel.set_unit(self.plot.unit())
         self.act_unwrap.setChecked(s.unwrap_phase)
         try:
@@ -434,7 +434,7 @@ class MainWindow(QMainWindow):
         s.vertical_unit = self.plot.unit()
         s.markers = self.plot.marker_kinds()
         s.marker_values = self.plot.marker_values()
-        s.marker_color = self.plot.marker_color()
+        s.marker_colors = self.plot.marker_colors()
         s.window_geometry = bytes(self.saveGeometry().toBase64()).decode("ascii")
         s.window_state = bytes(self.saveState(LAYOUT_VERSION).toBase64()).decode("ascii")
         self._save_settings()

@@ -7,7 +7,6 @@ themselves; it asks the set what is to be drawn.
 from __future__ import annotations
 
 import math
-import re
 
 import numpy as np
 import pyqtgraph as pg
@@ -23,6 +22,7 @@ from ..models import Flag, PointResult
 from ..traces import Drawn, Trace, TraceSet
 from ..units import fmt_si, parse_si
 from . import theme
+from .color_menu import palette_menu
 from .marker_layer import MarkerLayer
 from .si_widgets import SiAxis
 
@@ -103,7 +103,7 @@ class BodePlot(QWidget):
         self._placed: list[Placed] = []     # the same, with texts and positions
         self._ctx_menu: QMenu | None = None
         self._marker_values = True          # write the values next to each marker (off: its name only)
-        self._marker_color = ""             # "#rrggbb" chosen by the user; "": the theme's
+        self._marker_colors: dict[str, str] = {}    # marker name -> palette name, where the user chose one
         top.addWidget(self.unwrap_box)
         top.addWidget(self.fit_btn)
         top.addWidget(QLabel(" Vertical"))
@@ -230,18 +230,34 @@ class BodePlot(QWidget):
         self._marker_values = bool(on)
         self._update_markers()
 
-    def marker_color(self) -> str:
-        """The marker colour the user chose ("#rrggbb"), or "" for the theme's."""
-        return self._marker_color
+    def marker_color_of(self, name: str) -> str:
+        """The palette name a marker is drawn in: the user's choice, or its default."""
+        return self._marker_colors.get(name) or theme.MARKER_DEFAULTS.get(name, "Grey")
 
-    def set_marker_color(self, color) -> bool:
-        """"#rrggbb", or "" for the theme's colour. Anything else changes nothing (False)."""
-        if color != "" and not (isinstance(color, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", color)):
+    def marker_colors(self) -> dict[str, str]:
+        """The colours the user chose, by marker name (the defaults are not in it)."""
+        return dict(self._marker_colors)
+
+    def set_marker_color(self, name: str, color: str) -> bool:
+        """Draw the marker called name (fc, pk, M1 ...) in a colour of the palette, by its
+        name there. Choosing a marker's default colour forgets the choice. False, and nothing
+        changes, for a marker or a colour that does not exist."""
+        if name not in theme.MARKER_NAMES or color not in dict(theme.MARKER_PALETTE):
             return False
-        self._marker_color = color.lower()
-        self.marker_layer.set_color(self._marker_color or theme.MARK_INK)
+        if color == theme.MARKER_DEFAULTS.get(name, "Grey"):
+            self._marker_colors.pop(name, None)
+        else:
+            self._marker_colors[name] = color
         self._update_markers()
         return True
+
+    def set_marker_colors(self, colors) -> None:
+        """The stored choices at start-up; entries that make no sense are left out."""
+        self._marker_colors = {}
+        for name, color in (colors.items() if isinstance(colors, dict) else ()):
+            if isinstance(name, str) and isinstance(color, str):
+                self.set_marker_color(name, color)
+        self._update_markers()
 
     def can_add_marker(self) -> bool:
         """A marker of the user's can be added: the chosen trace is on the plot (a marker on
@@ -309,9 +325,10 @@ class BodePlot(QWidget):
     def _place(self, m, curve, points) -> Placed:
         """Text and dot positions of one marker in what the plots show now."""
         if not m.found:
-            return Placed(m, "", None, None)
+            return Placed(m, "", None, None, color=self.marker_color_of(m.name))
         if not m.has_value:
-            return Placed(m, label(m) if self._marker_values else m.name, None, None)
+            return Placed(m, label(m) if self._marker_values else m.name, None, None,
+                          color=self.marker_color_of(m.name))
         if self.unit() == "v":
             # the output voltage between two points, by the curve's own rule (log over log frequency)
             logs = [math.log10(2.0 * p.vdut_amp) if p.vdut_amp > 0 and math.isfinite(p.vdut_amp) else float("nan")
@@ -331,7 +348,8 @@ class BodePlot(QWidget):
         rising = here is not None and beyond is not None and beyond[k] > here[k]
         text = label(m, value, phase) if self._marker_values else m.name
         return Placed(m, text, None if m.kind == "pm" else y, None if m.kind == "gm" else phase, left=rising,
-                      value=value, phase="%+.1f°" % phase if phase is not None else "")
+                      value=value, phase="%+.1f°" % phase if phase is not None else "",
+                      color=self.marker_color_of(m.name))
 
     def _update_markers(self) -> None:
         got = self._marker_curve()
@@ -366,6 +384,11 @@ class BodePlot(QWidget):
         act.setToolTip("Make this the reference marker: every other marker of yours also shows its difference "
                        "to it and the slope in dB per decade")
         act.triggered.connect(lambda _checked=False: self.toggle_reference_marker(number))
+        name = "M%d" % number
+        sub = palette_menu(menu, self.marker_color_of(name), lambda color, n=name: self.set_marker_color(n, color))
+        sub.marker = name
+        sub.menuAction().setToolTip("Choose the colour of this marker's line and dot from the palette")
+        menu.addMenu(sub)
         act = menu.addAction("Remove")
         act.setToolTip("Remove this marker from the plot; the others keep their numbers")
         act.triggered.connect(lambda _checked=False: self.remove_marker(number))
@@ -664,7 +687,7 @@ class BodePlot(QWidget):
     def export_markers(self) -> list[ImageMarker]:
         """The markers as shown, for the image export."""
         return [ImageMarker(p.marker.freq, p.text, p.y_gain, p.y_phase, "phase" if p.marker.kind == "pm" else "gain",
-                            p.left)
+                            p.left, p.color)
                 for p in self._placed if p.marker.found]
 
     # ---- interaction

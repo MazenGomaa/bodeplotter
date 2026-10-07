@@ -180,26 +180,6 @@ def test_values_on_the_plot_can_be_switched_off(plot, panel):
     assert panel.values_box.isChecked() and "dB" in plot.placed()[0].text
 
 
-# ---------------------------------------------------------------------- colour
-def test_marker_colour_can_be_chosen(plot, panel):
-    plot.set_points(sweep())
-    plot.set_marker_kinds(["cutoff"])
-    assert plot.marker_color() == "" and panel.color == ""
-    panel.set_color("#FF8800")
-    assert plot.marker_color() == "#ff8800"
-    it = plot.marker_layer.items("fc")
-    assert it.lines[0].pen.color().name() == "#ff8800" and it.lines[1].pen.color().name() == "#ff8800"
-    assert it.dots[0].opts["brush"].color().name() == "#ff8800" and it.text.color.name() == "#ff8800"
-    plot.add_marker(1000.0)
-    assert plot.marker_layer.items("M1").lines[0].pen.color().name() == "#ff8800"    # a new marker too
-    for bad in ("orange", "#12", None, 7):
-        panel.set_color(bad)
-        assert plot.marker_color() == "#ff8800"                  # not a colour: nothing changes
-    panel.act_default_color.trigger()
-    assert plot.marker_color() == "" and plot.marker_layer.items("fc").lines[0].pen.color().name() == theme.MARK_INK
-    assert export_image.PRINT_MARKER == "#444444"                # the image on white keeps its own grey
-
-
 def test_every_option_of_the_panel_explains_itself(panel):
     for w in panel.findChildren(QPushButton) + panel.findChildren(QComboBox) + panel.findChildren(QCheckBox):
         tip, text = w.toolTip().strip(), w.text() if hasattr(w, "text") else type(w).__name__
@@ -231,36 +211,21 @@ def test_window_has_a_markers_panel_tabbed_with_the_traces(win):
 
 def test_marker_look_survives_a_restart(win, qtbot):
     win.markers_panel.values_box.setChecked(False)
-    win.markers_panel.set_color("#22cc88")
     win._save_ui_state()
-    assert win.settings.marker_values is False and win.settings.marker_color == "#22cc88"
+    assert win.settings.marker_values is False
     again = MainWindow(simulate=True, settings=AppSettings.from_dict(win.settings.to_dict()), sim_seed=7)
     again.interactive = False
     qtbot.addWidget(again)
     try:
-        assert not again.plot.marker_values() and again.plot.marker_color() == "#22cc88"
-        assert not again.markers_panel.values_box.isChecked() and again.markers_panel.color == "#22cc88"
+        assert not again.plot.marker_values() and not again.markers_panel.values_box.isChecked()
     finally:
         again.close()
-    damaged = AppSettings.from_dict({"marker_color": "red", "marker_values": "x"})
-    assert damaged.marker_color == "" and damaged.marker_values is True
+    assert AppSettings.from_dict({"marker_values": "x"}).marker_values is True
 
 
 # ---------------------------------------------------------------------- layout (user's review, 2026-10-07)
 # "the waveform and the markers are squashed": the window is now set up | measure | read, with
 # what is watched during a sweep (log, waveform) in a low strip underneath.
-def test_colour_is_one_swatch_button_with_a_menu(plot, panel):
-    assert not hasattr(panel, "default_color_btn")
-    menu = panel.color_btn.menu()
-    assert [a.text() for a in menu.actions()] == ["Choose…", "Theme default"] and menu.toolTipsVisible()
-    assert all(len(a.toolTip()) >= 25 and a.toolTip() != a.text() for a in menu.actions())
-    assert not panel.act_default_color.isEnabled()               # it is the theme's colour already
-    panel.set_color("#ff8800")
-    assert panel.act_default_color.isEnabled()
-    panel.act_default_color.trigger()
-    assert plot.marker_color() == ""
-
-
 def test_the_panel_gives_its_height_to_the_table(plot, panel):
     plot.set_points(sweep())
     plot.set_marker_kinds(["cutoff"])

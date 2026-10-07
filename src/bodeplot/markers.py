@@ -66,6 +66,7 @@ class Placed:
     left: bool = False          # the label goes to the left of the dot: the curve rises to the right there
     value: str = ""             # the gain as the plot's unit writes it (the Markers panel's table)
     phase: str = ""             # the phase as the phase plot shows it; "" without a phase plot
+    color: str = "Grey"         # the palette name of its line and dot (gui/theme.py MARKER_PALETTE)
 
 
 class MarkerSet:
@@ -237,10 +238,15 @@ def freq_text(f: float) -> str:
     return fmt_si(f, "Hz", 3)
 
 
+def _ratio(r: float) -> str:
+    """A frequency ratio as a plain number: 0.5, 10, 3333."""
+    return "%.0f" % r if r >= 1000 else "%.3g" % r
+
+
 def delta_text(d: Delta | None, with_phase: bool = True) -> str:
     if d is None:
         return ""
-    text = "Δ %s  ×%.3g  %+.1f dB" % (d.ref, d.ratio, d.db) + ("  %+.1f°" % d.deg if with_phase else "")
+    text = "Δ %s  ×%s  %+.1f dB" % (d.ref, _ratio(d.ratio), d.db) + ("  %+.1f°" % d.deg if with_phase else "")
     return text + ("  %+.1f dB/dec" % d.slope if d.slope is not None else "")
 
 
@@ -275,7 +281,7 @@ def notes(m: Marker, with_phase: bool = True) -> str:
         out.append("reference marker")
     if m.delta is not None:
         d = m.delta
-        out.append("rel. %s: x%.3g, %+.1f dB" % (d.ref, d.ratio, d.db)
+        out.append("rel. %s: x%s, %+.1f dB" % (d.ref, _ratio(d.ratio), d.db)
                    + (", %+.1f deg" % d.deg if with_phase else "")
                    + (", %+.1f dB/dec" % d.slope if d.slope is not None else ""))
     if m.note:

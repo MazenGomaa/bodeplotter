@@ -335,8 +335,8 @@ def test_marker_items_use_the_marker_colour_and_stay_below_the_live_points(plot)
     plot.set_points(sweep())
     tick(plot, "cutoff")
     it = plot.marker_layer.items("fc")
-    assert it.lines[0].pen.color().name() == theme.MARK_INK.lower()
-    assert theme.MARK_INK not in theme.SERIES
+    assert it.lines[0].pen.color().name() == theme.marker_hex(theme.MARKER_DEFAULTS["fc"])
+    assert it.text.color.name() == theme.MARK_INK and theme.MARK_INK not in theme.SERIES
     live = plot.items(plot.set.live)
     assert all(item.zValue() < live.gain_ok.zValue() for item in it.lines + it.dots + [it.text])
 
@@ -357,7 +357,7 @@ def test_right_click_on_a_user_marker(plot):
     plot.set_points(sweep())
     plot.add_marker(1000.0), plot.add_marker(10000.0)
     menu = plot.context_menu(1000.0, 1)
-    assert [a.text() for a in menu.actions()] == ["Set frequency…", "Reference marker", "Remove"]
+    assert [a.text() for a in menu.actions()] == ["Set frequency…", "Reference marker", "Colour", "Remove"]
     ref = menu.actions()[1]
     assert ref.isCheckable() and not ref.isChecked()
     ref.trigger()
@@ -365,7 +365,7 @@ def test_right_click_on_a_user_marker(plot):
     assert placed(plot)["M1"].text.endswith("(ref)")
     second = placed(plot)["M2"].text.split("\n")[1]
     assert second.startswith("Δ M1  ×10  ") and second.endswith("dB/dec")
-    plot.context_menu(1000.0, 1).actions()[2].trigger()          # Remove
+    plot.context_menu(1000.0, 1).actions()[3].trigger()          # Remove
     assert names(plot) == ["M2"] and plot.markers.ref is None and "\n" not in placed(plot)["M2"].text
 
 

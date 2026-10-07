@@ -27,6 +27,7 @@ class _Items:
         self.lines: list = []       # [gain plot, phase plot]
         self.dots: list = []
         self.text = None
+        self.color = ""             # the palette name the line and the dot were made in
         self.host = 0               # 0: the label is on the gain plot; 1: on the phase plot
 
 
@@ -35,7 +36,6 @@ class MarkerLayer:
         self.plots = (gain_plot, phase_plot)
         self.on_moved = on_moved    # (number, freq_hz) while a user marker is dragged
         self.log_x = True
-        self.color = theme.MARK_INK     # the user may choose another (set_color)
         self._items: dict[str, _Items] = {}
         self._placed: list[Placed] = []
         self._rects: dict[str, QRectF] = {}
@@ -78,18 +78,20 @@ class MarkerLayer:
         return None
 
     # ---- drawing
-    def _make(self, m) -> _Items:
+    def _make(self, m, color: str) -> _Items:
         it = _Items()
+        it.color = color
+        ink = theme.marker_hex(color)
         it.host = 1 if m.kind == "pm" else 0
         movable = m.kind == "user"
         for plot in self.plots:
             line = pg.InfiniteLine(angle=90, movable=movable,
-                                   pen=pg.mkPen(self.color, width=1, style=Qt.DashLine),
+                                   pen=pg.mkPen(ink, width=1, style=Qt.DashLine),
                                    hoverPen=pg.mkPen(theme.INK, width=1.5, style=Qt.DashLine))
             if movable:
                 line.sigDragged.connect(lambda ln, n=m.number: self.on_moved(n, self.freq(ln.value())))
             dot = pg.ScatterPlotItem(size=theme.MARKER, symbol="d", pen=pg.mkPen(theme.SURFACE, width=theme.RING),
-                                     brush=pg.mkBrush(self.color))
+                                     brush=pg.mkBrush(ink))
             for item in (line, dot):
                 item.setZValue(Z)
                 plot.addItem(item, ignoreBounds=True)        # a marker never widens "Fit view"
@@ -97,7 +99,8 @@ class MarkerLayer:
             it.dots.append(dot)
         fill = pg.mkColor(theme.SURFACE)
         fill.setAlpha(190)              # the curve shows through a label that lies on it
-        it.text = pg.TextItem(color=self.color, anchor=(0, 0), fill=pg.mkBrush(fill))
+        # the label stays in ink whatever the marker's colour: coloured text is hard to read
+        it.text = pg.TextItem(color=theme.MARK_INK, anchor=(0, 0), fill=pg.mkBrush(fill))
         it.text.setZValue(Z)
         self.plots[it.host].addItem(it.text, ignoreBounds=True)
         self._items[m.name] = it
@@ -111,12 +114,6 @@ class MarkerLayer:
             plot.removeItem(dot)
         self.plots[it.host].removeItem(it.text)
 
-    def set_color(self, color: str) -> None:
-        """Another colour for lines, dots and labels. The items are built again at the next show()."""
-        self.color = color
-        for name in list(self._items):
-            self._drop(name)
-
     def show(self, placed: list[Placed], log_x: bool) -> None:
         """Draw these markers and nothing else. A marker that is switched on but was not
         found on the curve is not drawn. Items of a marker that stays are kept, so a line
@@ -127,7 +124,12 @@ class MarkerLayer:
         for name in [n for n in self._items if n not in keep]:
             self._drop(name)
         for p in self._placed:
-            it = self._items.get(p.marker.name) or self._make(p.marker)
+            it = self._items.get(p.marker.name)
+            if it is not None and it.color != p.color:      # another colour was chosen: drawn again
+                self._drop(p.marker.name)
+                it = None
+            if it is None:
+                it = self._make(p.marker, p.color)
             x = self.x(p.marker.freq)
             for line in it.lines:
                 if line.value() != x:

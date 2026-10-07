@@ -25,7 +25,15 @@ QUIET = Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW | Flag.CALIBRATED    # as 
 PRINT_SERIES = ("#2a78d6", "#c2410c", "#0f8a5f", "#a16207", "#be3a6f", "#15803d", "#6d5bd0", "#c0392b")
 PRINT_MUTED = "#777777"
 PRINT_FLAGGED = "#d62728"
-PRINT_MARKER = "#444444"        # marker lines, dots and labels
+PRINT_MARKER = "#444444"        # marker labels, and a marker with no colour of its own
+# The marker palette on white, by the names of gui/theme.py MARKER_PALETTE (a test keeps the two in
+# step): the same hues, darkened for print.
+PRINT_MARKERS = {
+    "Grey": "#444444", "White": "#111111", "Red": "#bc4945", "Deep red": "#8d1a1e", "Orange": "#af5b0b",
+    "Deep orange": "#753b07", "Amber": "#926e10", "Deep amber": "#624902", "Lime": "#628202", "Deep lime":
+    "#405601", "Green": "#098b47", "Deep green": "#015d2d", "Teal": "#038586", "Deep teal": "#055959",
+    "Sky": "#0d7cb6", "Deep sky": "#03527b", "Violet": "#7c5ec2", "Deep violet": "#553494", "Pink":
+    "#af4a88", "Deep pink": "#811e5f"}
 
 
 @dataclass
@@ -61,6 +69,7 @@ class ImageMarker:
     y_phase: Any = None
     label_on: str = "gain"      # the plot that carries the text: "gain" | "phase"
     left: bool = False          # the text goes to the left of the dot (the curve rises to the right)
+    color: str = "Grey"         # the palette name of its line and dot (PRINT_MARKERS)
 
 
 # unit -> (axis label, value of a point); the same three as gui/bode_plot.py UNITS
@@ -124,10 +133,11 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
         for mk in (markers or []):      # and one beyond it is left out (on screen Fit view ignores markers too)
             if not (min(xlim) <= mk.freq <= max(xlim)):
                 continue
-            ax.axvline(mk.freq, color=PRINT_MARKER, linewidth=0.7, linestyle="--")
+            ink = PRINT_MARKERS.get(mk.color, PRINT_MARKER)
+            ax.axvline(mk.freq, color=ink, linewidth=0.7, linestyle="--")
             y = mk.y_gain if key == "gain" else mk.y_phase
             if y is not None:
-                ax.plot([mk.freq], [y], "D", color=PRINT_MARKER, markersize=4)
+                ax.plot([mk.freq], [y], "D", color=ink, markersize=4)
             if mk.label_on == key and mk.text:
                 texts.append((mk, y))
         if markers:

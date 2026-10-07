@@ -9,26 +9,25 @@ rows below it leave (user's review of 2026-10-07: the table had been squeezed to
 """
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QIcon, QPixmap
-from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton,
-                               QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QPushButton, QTreeWidget,
+                               QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from ..markers import KINDS, MAX_USER
 from . import theme
 from .bode_plot import MARKER_TEXT
+from .color_menu import palette_menu, swatch
 
 COLUMNS = ("Marker", "Frequency", "Gain", "Phase", "Note")
 FIGURES = (1, 2, 3)                     # the columns of numbers: right-aligned, so that digits line up
 
 
 class MarkersPanel(QWidget):
-    color_changed = Signal(str)         # "#rrggbb", or "" for the theme's colour
-
     def __init__(self, plot, parent=None):
         super().__init__(parent)
         self.plot = plot
-        self.color = plot.marker_color()
+        self.open_menu = None           # the palette that a click on a colour square opened last
         lay = QVBoxLayout(self)
 
         row = QHBoxLayout()
@@ -63,8 +62,10 @@ class MarkersPanel(QWidget):
         self.table.setMinimumWidth(0)
         for c in FIGURES:
             self.table.headerItem().setTextAlignment(c, Qt.AlignRight | Qt.AlignVCenter)
-        self.table.setToolTip("Every marker with its frequency, gain and phase on the chosen trace. 'none': the "
-                              "marker is switched on, and this curve has none.")
+        self.table.setToolTip("Every marker with its frequency, gain and phase on the chosen trace. Click a "
+                              "marker's colour square to choose its colour. 'none': the marker is switched "
+                              "on, and this curve has none.")
+        self.table.itemClicked.connect(self._item_clicked)
         lay.addWidget(self.table, 1)
 
         row = QHBoxLayout()
@@ -82,25 +83,14 @@ class MarkersPanel(QWidget):
         row.addStretch(1)
         lay.addLayout(row)
 
-        # how the markers look: changed once in a while, so one quiet row at the bottom
+        # how the labels look: changed once in a while, so one quiet row at the bottom
         row = QHBoxLayout()
         self.values_box = QCheckBox("Values on the plot")
         self.values_box.setChecked(plot.marker_values())
         self.values_box.setToolTip("Write frequency, gain and phase next to each marker on the plot. Without it a "
                                    "marker carries its name only and the numbers are read in this table.")
-        self.color_btn = QPushButton("Colour")
-        self.color_btn.setToolTip("The colour of the marker lines, dots and labels on the plot. The exported image "
-                                  "keeps its own dark grey for the white background.")
-        menu = QMenu(self.color_btn)
-        menu.setToolTipsVisible(True)
-        self.act_choose_color = menu.addAction("Choose…")
-        self.act_choose_color.setToolTip("Pick the colour of the markers on the plot from the colour dialog")
-        self.act_default_color = menu.addAction("Theme default")
-        self.act_default_color.setToolTip("Go back to the theme's own marker colour, a neutral light grey")
-        self.color_btn.setMenu(menu)
         row.addWidget(self.values_box)
         row.addStretch(1)
-        row.addWidget(self.color_btn)
         lay.addLayout(row)
 
         self.trace_box.activated.connect(lambda i: self.plot.set_marker_trace(self.trace_box.itemData(i)))
@@ -108,34 +98,28 @@ class MarkersPanel(QWidget):
         self.clear_btn.clicked.connect(lambda _checked=False: self.plot.clear_markers())
         self.copy_btn.clicked.connect(lambda _checked=False: self.plot.copy_markers())
         self.values_box.toggled.connect(lambda on: self.plot.set_marker_values(on))
-        self.act_choose_color.triggered.connect(lambda _checked=False: self._choose_color())
-        self.act_default_color.triggered.connect(lambda _checked=False: self.set_color(""))
         plot.markers_changed.connect(self.refresh)
         self.refresh()
 
-    # ---- colour
-    def set_color(self, color) -> None:
-        """"#rrggbb", or "" for the theme's colour; anything else is ignored."""
-        if not self.plot.set_marker_color(color):
-            return
-        self.color = self.plot.marker_color()
-        self.color_changed.emit(self.color)
+    # ---- colour: one per marker, from the palette
+    def color_menu(self, marker: str):
+        """The palette for the marker of that name, its present colour pressed."""
+        menu = palette_menu(self, self.plot.marker_color_of(marker),
+                            lambda color, m=marker: self.plot.set_marker_color(m, color))
+        menu.marker = marker
+        return menu
 
-    def _choose_color(self) -> None:
-        c = QColorDialog.getColor(QColor(self.color or theme.MARK_INK), self, "Marker colour")
-        if c.isValid():
-            self.set_color(c.name())
+    def _item_clicked(self, item, column: int) -> None:
+        if column != 0:
+            return
+        self.open_menu = self.color_menu(item.text(0))
+        self.open_menu.popup(QCursor.pos())
 
     # ---- following the plot
     def refresh(self) -> None:
         """Show what the plot holds now: the trace, the ticks, the look, the table."""
         plot = self.plot
-        self.color = plot.marker_color()
-        side = self.fontMetrics().height()              # the swatch grows with the font, on any screen scale
-        pix = QPixmap(side, side)
-        pix.fill(QColor(self.color or theme.MARK_INK))
-        self.color_btn.setIcon(QIcon(pix))
-        self.act_default_color.setEnabled(bool(self.color))
+        side = self.fontMetrics().height()      # the squares grow with the font, on any screen scale
         self.trace_box.blockSignals(True)
         self.trace_box.clear()
         for t in plot.set.traces:
@@ -159,6 +143,7 @@ class MarkersPanel(QWidget):
         self.table.clear()
         for r in plot.marker_rows():
             item = QTreeWidgetItem(list(r))
+            item.setIcon(0, swatch(theme.marker_hex(plot.marker_color_of(r[0])), side))
             item.setToolTip(len(COLUMNS) - 1, r[-1])    # the note in full, when the column is cut short
             for c in FIGURES:
                 item.setTextAlignment(c, Qt.AlignRight | Qt.AlignVCenter)

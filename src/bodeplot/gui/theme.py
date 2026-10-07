@@ -42,7 +42,46 @@ WARNING = "#fab219"
 SERIOUS = "#ec835a"
 CRITICAL = "#d03b3b"
 FLAGGED = WARNING           # a flagged point: warning colour + cross marker + tooltip text
-MARK_INK = INK_2            # the markers of the Bode plot (lines, dots, labels): neutral, never a series colour
+MARK_INK = INK_2            # marker labels, and the neutral marker colour: never a series colour
+
+# ---- marker palette (user's request of 2026-10-07): a colour for each marker's line and dot, chosen
+# from these twenty. Two neutrals, then nine hues of the theme's families in a bright and a deep
+# step (OKLCH lightness 0.82 and 0.66), each at least 4.5 : 1 on SURFACE so that a thin dashed
+# line stays visible. Neighbouring hues are close: a marker's name, in its label and in the
+# table, tells two markers apart, never the colour alone. The labels stay in MARK_INK (the
+# user: coloured text is hard to read). The image export has a print twin for each name.
+MARKER_PALETTE = (
+    ("Grey", "#c3c2b7"),
+    ("White", "#ffffff"),
+    ("Red", "#ffaba3"),
+    ("Deep red", "#e8605b"),
+    ("Orange", "#feb07a"),
+    ("Deep orange", "#da720d"),
+    ("Amber", "#f0bb3b"),
+    ("Deep amber", "#b88a01"),
+    ("Lime", "#aed561"),
+    ("Deep lime", "#7ba204"),
+    ("Green", "#70e093"),
+    ("Deep green", "#11ae5b"),
+    ("Teal", "#25dfdf"),
+    ("Deep teal", "#12a7a7"),
+    ("Sky", "#86cdff"),
+    ("Deep sky", "#069ce4"),
+    ("Violet", "#c8b7ff"),
+    ("Deep violet", "#9b79ee"),
+    ("Pink", "#fea3d7"),
+    ("Deep pink", "#d861aa"))
+# What a marker is drawn in until the user chooses: -3 dB, peak and notch each their own, the
+# user's eight markers eight different ones, anything else (the margins) Grey.
+MARKER_DEFAULTS = {"fc": "White", "fL": "White", "fH": "White", "pk": "Amber", "nt": "Deep violet",
+                   "M1": "Sky", "M2": "Orange", "M3": "Green", "M4": "Pink", "M5": "Teal", "M6": "Violet",
+                   "M7": "Lime", "M8": "Red"}
+MARKER_NAMES = ("fc", "fL", "fH", "pk", "nt", "GM", "PM") + tuple("M%d" % k for k in range(1, 9))
+
+
+def marker_hex(color_name: str) -> str:
+    """The screen colour of a palette name; the neutral one for a name the palette does not have."""
+    return dict(MARKER_PALETTE).get(color_name, MARK_INK)
 
 # ---- mark sizes (px)
 LINE_WIDTH = 2

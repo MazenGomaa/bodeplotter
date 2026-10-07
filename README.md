@@ -146,7 +146,7 @@ The **Markers** panel (on the right, a tab behind the Traces panel; View > Marke
 - **Margins** reads the trace as a loop gain: the phase margin where the gain passes 0 dB (180° + phase) and the gain margin where the phase passes −180°.
 - **Your own markers:** right-click the plot > **Add marker here**, then drag it, or right-click it to type a frequency (1k, 2.5M), to remove it, or to make it the **reference marker**; the others then show their difference to it and the slope in dB per decade. Up to eight.
 
-Between two measured points the values are interpolated. With **Difference to trace** set, the markers measure the difference curve. **Copy values** puts a table on the clipboard, and the image export shows the markers. Untick **Values on the plot** to keep only the names on the plot and read the numbers in the table; the **Colour** button changes the marker colour on screen. The ticks, that choice and the colour are remembered; your own markers are not.
+Between two measured points the values are interpolated. With **Difference to trace** set, the markers measure the difference curve. **Copy values** puts a table on the clipboard, and the image export shows the markers. Untick **Values on the plot** to keep only the names on the plot and read the numbers in the table; Every marker has a colour square in the table: click it (or right-click one of your own markers > **Colour**) to pick another of the twenty palette colours for its line and dot. The image export uses the same colours, darkened for the white background. The ticks, that choice and the colours are remembered; your own markers are not.
 
 ## Instrument rules that matter
 
