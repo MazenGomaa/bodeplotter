@@ -27,7 +27,7 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | Scope channels | CH1 / CH2 and CH3 / CH4 |
 | Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
 
-**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay, auto markers), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
+**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay and theory curves, built on 2026-10-07; auto markers), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
 
 Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; LAN is not supported.
 
@@ -88,6 +88,7 @@ Everything below runs in simulation; on the real instruments all of it does exce
 - **Per point:** timebase from the scope's real step table, auto-range on both channels, averaging as a complex mean, sine fit at the generator frequency or the scope's built-in measurement.
 - **Control:** pause, resume, abort (partial result kept, generator switched off on every exit path), re-measure a single point by clicking it.
 - **Channel skew check and correction** (see below).
+- **Traces**: keep a sweep, load saved CSV sweeps and add theory curves (RC, RLC, Butterworth, or your own H(s)) next to the live sweep; show or hide each; draw everything relative to one of them to read the difference directly.
 - **Through calibration** (see below): removes the gain and phase difference between the two probes and channels at every frequency.
 - **Waveform view** of the last capture with the fitted sines, and a status log table.
 - **Presets and settings** as JSON in the user config folder; old or damaged files load with defaults.
@@ -120,6 +121,18 @@ The skew check removes one thing, the delay between the two scope channels. The 
 Later sweeps with the same channels, probe settings, coupling and bandwidth limit are divided by it; their points carry the `CALIBRATED` flag, and the CSV holds what was removed (`cal_gain_db`, `cal_phase_deg`), so the raw measurement can be recovered. With a calibration that covers the sweep, no skew check is needed. Outside the calibrated range the skew check is used as before.
 
 The calibration belongs to one connection and is not saved: a reconnect, a resync or **Front panel was used** drops it. It is refused when it does not look like a through connection (more than 1 dB anywhere, or a reference far below the generator setting). It does not correct the small gain differences between the scope's V/div steps (up to about 0.09 dB).
+
+## Comparing traces
+
+The **Traces** panel lists what is on the plot. The live sweep is always there; a new sweep replaces only it.
+
+- **Keep sweep** keeps the current sweep on the plot when the next one starts.
+- **Load CSV…** adds sweeps saved earlier with Export > CSV, one or several at once.
+- **Add theory…** adds the ideal response of a circuit: pick RC low-pass, RC high-pass, RLC band-pass, RLC notch or a 2nd-order Butterworth and enter the parts (1k, 100n), or enter the coefficients of H(s). Double-click the kind of a theory trace to change its values.
+
+Tick a trace to show it, double-click its name to rename it. **Relative to** above the plot draws every trace divided by the one you choose: gain difference in dB and phase difference in degrees. With a theory curve as the reference this shows how far the measurement is from the ideal circuit. A theory curve is the ideal circuit only: no component losses, no lead inductance, no probe loading.
+
+Traces are kept for this run of the app only. The image export shows every visible trace; CSV and Touchstone hold the live sweep.
 
 ## Instrument rules that matter
 

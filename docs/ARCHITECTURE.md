@@ -17,6 +17,8 @@ One measurement goes down this chain; each layer talks to the one below it.
 
 Persistence (`io/`): settings and presets are JSON in the user config folder, loaded through `models.from_dict`, which falls back to defaults field by field; exports are CSV (round-trips), image, Touchstone.
 
+**Traces on the plot** are outside that chain. `traces.py` holds results for display (the live sweep, kept sweeps, CSV files, theory curves from `measure/theory.py`) and the maths of the relative display; the plot and the image export ask it what is to be drawn. Nothing below the GUI knows it.
+
 ## Two levels of simulation
 
 - `drivers/mock.py` replaces the drivers. Used by `--sim`, the GUI tests and the sweep / skew tests (`make_session` fixture in `tests/conftest.py`).

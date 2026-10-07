@@ -223,6 +223,8 @@ It follows the same rules as the app: no `:RUN`, no table walk by default, gener
 6. `--walk-tables` measures the scope's own timebase and V/div steps with `UP` / `DOWN`. It prints a warning (the 2026-10-06 freeze), asks for confirmation unless `--yes`, pauses `--gap-ms` (default 250, minimum 100) after every step, never goes to 50 ms/div or slower, restores both settings, and saves the tables to `step_tables.json` in the settings folder.
 
 ### 9.5 Mock instruments (`drivers/mock.py`)
+
+The transfer functions of the simulated DUT live in `measure/theory.py` (`TransferFunction`); `SimulatedDUT` adds the load on the source. The same module supplies the plot's theory curves (section 10).
 - `SimulatedDUT` supports:
   - Presets: RC LPF, RC HPF, RLC band-pass, RLC notch, 2nd-order Butterworth LPF.
   - A custom H(s) via numerator/denominator coefficients.

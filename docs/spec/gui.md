@@ -32,6 +32,7 @@ Part of the design spec. Overview and the index of all sections: `docs/SPEC.md`.
   - "Test" button: `*IDN?` of the chosen resources and which driver each one gets. Only while disconnected.
 - **Skew check wizard** (§8.6): toolbar button "Skew check", status-bar indicator (Δt and age, or "skew: unchecked"), and a toolbar action "Front panel was used" that invalidates the current check.
 - **Through calibration** (§8.7): toolbar button and File menu entry "Calibrate" next to "Skew check"; a dialog with the instruction, a progress bar, the summary (range, points, largest gain deviation, delay found, warnings) and Accept / Measure again / Cancel / Discard calibration. The status bar shows `cal: HH:MM, range` when a through calibration applies to the current scope settings, otherwise the skew state. A sweep that a calibration covers does not ask for the skew check.
+- **Traces** (v2, milestone A3; design `docs/superpowers/specs/2026-10-07-trace-overlay-design.md`): the plot shows any number of traces: the live sweep, kept sweeps, CSV files and theory curves. A dock "Traces" lists them (visibility tick, colour, name, kind) with the buttons Load CSV…, Add theory…, Keep sweep, Remove. A new sweep replaces only the live trace. A theory curve is a circuit of `measure/theory.py` with entered part values, or H(s) as coefficients; it is drawn at 50 points per decade over the range of the other traces and of the sweep settings. A box "Relative to" draws every visible trace divided by one reference trace (gain difference in dB, phase difference in degrees; a measured reference is interpolated in log frequency, a theory reference is evaluated exactly; nothing is drawn outside the reference's range). With the vertical unit Voltage, theory curves and the relative display are off. The first eight traces take the theme's eight series colours; further ones are drawn muted. Traces live for one run of the app; they are not stored. The read-out names the trace under the cursor; re-measure works on the live sweep only.
 - **Sim settings:** DUT preset and parameters, noise level.
 - **Export:** format options (image DPI, size, title).
 
@@ -59,7 +60,7 @@ All exports include metadata: app version, timestamp, instrument IDNs, and the f
   - Must round-trip: a loader exists in v1, because v2 overlay needs it.
 - **PNG / SVG / PDF** (matplotlib):
   - Gain and phase subplots matching the current view: wrap state, axis type, flagged markers.
-  - Title, plus a footer with the date and key settings. DPI and size configurable.
+  - Title, plus a footer with the date and key settings. DPI and size configurable. With several traces the image shows every visible one, in its colour and with a legend, relative or absolute as the plot does. CSV and Touchstone hold the live sweep only.
 - **Touchstone `.s2p`**
   - Header `# Hz S RI R 50`.
   - S21 = H; S11, S12, S22 = 0.

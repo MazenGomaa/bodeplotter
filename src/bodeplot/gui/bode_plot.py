@@ -66,6 +66,7 @@ class BodePlot(QWidget):
                                  "(peak to peak, at the probe tip), or the output as a percentage of the input")
         self.ref_box = QComboBox()
         self.ref_box.setMinimumWidth(140)
+        self.ref_box.setSizeAdjustPolicy(QComboBox.AdjustToContents)    # trace names are long
         self.ref_box.setToolTip("Draw every trace divided by this one: the gain difference in dB and the phase "
                                 "difference in degrees. Not available with the vertical unit Voltage.")
         top.addWidget(self.unwrap_box)
