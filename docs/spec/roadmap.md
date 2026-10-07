@@ -110,7 +110,7 @@ Phase A, v2, on Windows:
 | A3. Trace overlay and compare | **DONE 2026-10-07, with theory curves; reviewed by the user ("Looks fine") and merged.** several traces, load CSV, show / hide, difference trace | trace model, loader, difference on mismatched grids, GUI offscreen | user's review of the GUI |
 | A4. Auto markers | **DONE 2026-10-07: accepted by the user ("Looks good") and merged; v2 is done.** Built with a Markers panel, a colour per marker and a new window layout, all on the user's review (`docs/STATE.md`). −3 dB, peak / notch, gain and phase margin, user markers | marker math on the mock DUTs against theory; GUI offscreen | user's review; end of v2 |
 
-Phase B, v3:
+Phase B, v3. **Recut by the user on 2026-10-07 into five parts, each with its own design, plan and build, each ending with something to see in the app; where the table below and this list disagree, the list holds:** (1) metrics with a first Analysis tab and a comparison column (B1 plus the start of B4; design `docs/superpowers/specs/2026-10-07-response-metrics-design.md`); (2) a finer sweep around a found feature (cut-off, peak, notch), new, the only part that reaches the instruments, with a bench check; (3) classification (B2); (4) rational fit (B3); (5) the analysis in the exports (the rest of B4). The cut-off is counted from the flat passband level, in the analysis and in the −3 dB marker.
 
 | Milestone | Content | Tests | Stop point |
 |---|---|---|---|
