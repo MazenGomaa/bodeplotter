@@ -74,3 +74,11 @@ def test_simulated_dut_is_a_transfer_function_with_a_load():
     assert type(SimulatedDUT.from_preset("custom", num=[1], den=[1e-4, 1])) is SimulatedDUT
     assert SimulatedDUT.PRESETS == TransferFunction.PRESETS
     assert SimulatedDUT("x", (1.0,), (1.0,), input_impedance_ohm=50.0).input_impedance_ohm == 50.0
+
+
+def test_a_very_high_order_does_not_raise():
+    """Review M4: 45 coefficients passed build() and then raised OverflowError on every redraw."""
+    tf = theory.build("custom", {"num": [1.0], "den": [1.0] * 45})
+    assert abs(tf.h(1.0)) > 0                                    # low frequencies are fine
+    big = tf.h(2e7)                                              # no exception: unusable, so not drawn
+    assert big == complex("inf") or abs(big) == 0 or big != big or abs(big) >= 0

@@ -95,7 +95,8 @@ def load_csv(path) -> SweepResult:
     meta: dict = {}
     config: dict = {}
     data_lines: list[str] = []
-    with open(path, "r", encoding="utf-8", newline="") as f:
+    # utf-8-sig: a spreadsheet saves "CSV UTF-8" with a byte-order mark
+    with open(path, "r", encoding="utf-8-sig", newline="") as f:
         for line in f:
             if line.startswith("#"):
                 key, _, value = line[1:].partition(":")

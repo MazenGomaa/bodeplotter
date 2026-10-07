@@ -2,12 +2,13 @@
 that add and remove them. It changes the TraceSet and says so; it draws nothing."""
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QPixmap
-from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QMessageBox, QPushButton, QTreeWidget, QTreeWidgetItem,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QMessageBox, QPushButton, QStyledItemDelegate, QTreeWidget,
+                               QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from ..io import export_csv
 from ..measure.theory import TransferFunction
@@ -16,6 +17,14 @@ from . import theme
 from .dialogs import TheoryDialog
 
 NO_VOLTAGE = "Not drawn while the vertical unit is Voltage: a theory curve has no voltage."
+NO_VOLTAGE_FILE = "Not drawn while the vertical unit is Voltage: this file holds no voltages."
+
+
+class _NoEdit(QStyledItemDelegate):
+    """For the Kind column: the item is editable for its name only."""
+
+    def createEditor(self, parent, option, index):
+        return None
 
 
 def _swatch(color: str) -> QIcon:
@@ -38,6 +47,8 @@ class TracesPanel(QWidget):
         self.tree.setColumnCount(2)
         self.tree.setHeaderLabels(["Trace", "Kind"])
         self.tree.setRootIsDecorated(False)
+        self._no_edit = _NoEdit(self.tree)
+        self.tree.setItemDelegateForColumn(1, self._no_edit)
         self.tree.setToolTip("Tick a trace to show it. Double-click a name to change it; double-click the kind "
                              "of a theory curve to change its values.")
         lay.addWidget(self.tree, 1)
@@ -74,8 +85,9 @@ class TracesPanel(QWidget):
             item.setCheckState(0, Qt.Checked if t.visible else Qt.Unchecked)
             item.setIcon(0, _swatch(theme.SERIES[t.slot] if t.slot is not None else theme.MUTED))
             tip = t.path or ""
-            if self.unit == "v" and t.kind == "theory":
-                tip = NO_VOLTAGE
+            no_voltage = t.kind == "theory" or (bool(t.points) and not any(math.isfinite(p.vdut_amp) for p in t.points))
+            if self.unit == "v" and no_voltage:
+                tip = NO_VOLTAGE if t.kind == "theory" else NO_VOLTAGE_FILE
                 for col in (0, 1):
                     item.setForeground(col, QBrush(QColor(theme.MUTED)))
             for col in (0, 1):

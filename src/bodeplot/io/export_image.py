@@ -115,6 +115,8 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
         "   phase unwrapped" if opts.unwrap else "",
         "   " + note if note else "",
         "   ABORTED (partial)" if result.meta.get("aborted") else "")
+    if not result.points:               # no live sweep (only loaded or theory traces): nothing to describe
+        footer = note
     fig.text(0.01, 0.005, footer, fontsize=7, ha="left", va="bottom")
     fig.tight_layout(rect=(0, 0.03, 1, 1))
     fig.savefig(path, dpi=opts.dpi)

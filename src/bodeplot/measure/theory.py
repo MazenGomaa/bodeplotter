@@ -37,9 +37,12 @@ class TransferFunction:
 
     def h(self, freq_hz: float) -> complex:
         s = 2j * math.pi * freq_hz
-        n = sum(c * s ** (len(self.num) - 1 - i) for i, c in enumerate(self.num))
-        d = sum(c * s ** (len(self.den) - 1 - i) for i, c in enumerate(self.den))
-        return n / d if d != 0 else complex("inf")
+        try:
+            n = sum(c * s ** (len(self.num) - 1 - i) for i, c in enumerate(self.num))
+            d = sum(c * s ** (len(self.den) - 1 - i) for i, c in enumerate(self.den))
+            return n / d if d != 0 else complex("inf")
+        except OverflowError:               # a very high order at a high frequency: no usable value
+            return complex("inf")
 
     def label(self) -> str:
         """Name for a trace: the circuit and its part values, e.g. 'RC low-pass 1 kΩ 100 nF'."""

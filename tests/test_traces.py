@@ -169,19 +169,58 @@ def test_relative_phase_across_the_wrap():
 
 
 def test_relative_skips_unusable_reference_values():
-    ts = TraceSet()
+    """Review I1: a dead reference point gives no difference at its frequency, and is not
+    bridged by interpolating between its neighbours."""
     nan = complex(float("nan"), 0.0)
-    ref = ts.add_file(result_of([point(100.0, 1 + 0j), point(200.0, 0j), point(300.0, nan), point(400.0, 1 + 0j)]),
-                      "ref.csv")
-    assert [p.freq_hz for p in ref.points] == [100.0, 400.0]       # unusable points are not kept at all
+    grid = [100.0, 200.0, 300.0, 400.0, 500.0]
+    for make_ref in ("file", "live"):
+        ts = TraceSet()
+        dead = [point(100.0, 1 + 0j), point(200.0, 0j), point(300.0, nan), point(400.0, 1 + 0j), point(500.0, 1 + 0j)]
+        other = [point(f, 2 + 0j) for f in grid + [150.0, 250.0, 350.0, 450.0]]
+        if make_ref == "file":
+            ref = ts.add_file(result_of(dead), "ref.csv")
+            assert [p.freq_hz for p in ref.points] == grid           # dead rows are kept: they mark a gap
+            ts.live.points = sorted(other, key=lambda p: p.freq_hz)
+            shown = lambda: ts.drawn()[0]
+        else:
+            ts.live.points = dead
+            ref = ts.live
+            ts.add_file(result_of(other), "other.csv")
+            shown = lambda: ts.drawn()[1]
+        ts.set_reference(ref.id)
+        # at the dead points nothing; between a dead point and a neighbour nothing; 450 Hz has two good neighbours
+        assert shown().freqs == [100.0, 400.0, 450.0, 500.0], make_ref
+        assert all(h == pytest.approx(2.0) for h in shown().h)
+        zero = [d for d in ts.drawn() if d.trace is ref][0]
+        assert zero.freqs == [100.0, 400.0, 500.0]                   # the reference's own line has the gap too
+    ts = TraceSet()
     ts.live.points = [point(150.0, 1 + 0j), point(250.0, 2 + 0j)]
-    ts.set_reference(ref.id)
-    assert ts.drawn()[0].freqs == [150.0, 250.0] and ts.drawn()[0].h[1] == pytest.approx(2.0)
     no_h = ts.add_theory(TransferFunction.custom([1.0], [0.0]))    # a denominator of zero: H is infinite everywhere
     ts.set_reference(no_h.id)
     live = ts.drawn()[0]
     assert live.trace is ts.live and live.freqs == [] and live.h == []      # nothing to divide by: nothing drawn
     assert ts.drawn()[-1].freqs == []                              # and the reference has no line of its own
+
+
+def test_reference_at_the_edge_of_its_tolerance_does_not_raise():
+    """Review M2: the range test and the match test rounded differently; a frequency within
+    an ulp of the 0.1 % boundary divided by zero."""
+    ts = TraceSet()
+    ref = ts.add_file(result_of([point(2350.6230252399873, 1 + 0j)]), "one.csv")
+    ts.live.points = [point(2348.272402214747, 3 + 0j), point(2350.6230252399873 * 1.0009999999, 3 + 0j)]
+    ts.set_reference(ref.id)
+    d = ts.drawn()[0]
+    assert all(h == pytest.approx(3.0) for h in d.h) and len(d.freqs) <= 2
+
+
+def test_file_rows_with_impossible_frequencies_are_dropped():
+    """Review M3: freq = inf was accepted and then broke the grid of every theory curve."""
+    ts = TraceSet()
+    t = ts.add_file(result_of([point(100.0, 1 + 0j), point(float("inf"), 1 + 0j), point(float("nan"), 1 + 0j),
+                               point(-5.0, 1 + 0j)]), "odd.csv")
+    assert [p.freq_hz for p in t.points] == [100.0]
+    ts.add_theory(RC)
+    assert ts.span() == (100.0, 100.0) and ts.drawn()[2].freqs == [100.0]
 
 
 def test_reference_follows_removal_and_hiding():

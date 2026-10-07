@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
         e.point_remeasured.connect(self._on_remeasured)
         self.plot.remeasure_requested.connect(self.remeasure)
         self.traces_panel.changed.connect(self.plot.traces_changed)
+        self.traces_panel.changed.connect(self._update_actions)     # after the plot: Export follows what is drawn
         self.traces_panel.message.connect(self._say)
         self.plot.unit_box.currentIndexChanged.connect(lambda _i: self.traces_panel.set_unit(self.plot.unit()))
 
@@ -424,7 +425,8 @@ class MainWindow(QMainWindow):
         self.act_skew.setEnabled(connected and not busy)
         self.act_cal.setEnabled(connected and not busy)
         self.act_panel.setEnabled(connected and not busy)
-        can_export = bool(self.result and self.result.points) and not busy
+        # an image shows whatever is on the plot; CSV and Touchstone need the live sweep (export says so)
+        can_export = (bool(self.result and self.result.points) or self.plot.has_data()) and not busy
         self.export_button.setEnabled(can_export)
         self.export_menu.setEnabled(can_export)
         self.config.setEnabled(not busy)                # inputs are disabled while a sweep runs
@@ -707,28 +709,33 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------------ export
     def export(self, path, fmt: str | None = None, image_opts: export_image.ImageOptions | None = None) -> Path:
-        """Write the current result. fmt is taken from the file extension when omitted."""
-        if self.result is None:
-            raise ValueError("there is no result to export")
+        """Write an export. fmt is taken from the file extension when omitted. An image shows
+        what the plot shows (any trace, with or without a sweep); CSV and Touchstone hold the
+        live sweep."""
         path = Path(path)
         fmt = (fmt or path.suffix.lstrip(".")).lower()
-        if fmt == "csv":
-            out = export_csv.write_csv(path, self.result)
-        elif fmt == "s2p":
-            out = export_touchstone.write_touchstone(path, self.result)
-        elif fmt in export_image.FORMATS:
+        if fmt in export_image.FORMATS:
+            series, labels = self.plot.export_series()
+            if not any(len(s.freqs) for s in series):
+                raise ValueError("there is nothing on the plot to export")
             o = image_opts or self._image_opts
             o = export_image.ImageOptions(o.title, o.dpi, o.width_in, o.height_in, self.plot.unwrap(),
                                           self.config.sweep().sweep_type is SweepType.LOG, self.info.has_phase, self.plot.unit())
-            series, labels = self.plot.export_series()
-            out = export_image.write_image(path, self.result, o, series, labels)
-        else:
+            out = export_image.write_image(path, self.result or SweepResult({}, [], {}), o, series, labels)
+        elif fmt not in ("csv", "s2p"):
             raise ValueError("unknown export format %r" % fmt)
+        elif self.result is None:
+            raise ValueError("there is no sweep to export: CSV and Touchstone hold the live sweep")
+        elif fmt == "csv":
+            out = export_csv.write_csv(path, self.result)
+        else:
+            out = export_touchstone.write_touchstone(path, self.result)
         self._say("info", "Exported %s" % out)
         return out
 
     def export_dialog(self, fmt: str) -> None:
-        if self.result is None:
+        if self.result is None and fmt not in export_image.FORMATS:
+            self._warn_box("Export", "There is no sweep to export: CSV and Touchstone hold the live sweep.")
             return
         opts = None
         if fmt in export_image.FORMATS:

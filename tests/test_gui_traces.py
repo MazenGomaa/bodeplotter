@@ -376,3 +376,75 @@ def test_image_export_draws_what_the_plot_shows(win, qtbot, tmp_path, monkeypatc
     assert seen["labels"] == ("Gain difference (dB)", "Phase difference (deg)", "relative to RC low-pass 1 kΩ 100 nF")
     csv = win.export(tmp_path / "t.csv").read_text(encoding="utf-8")
     assert "RC low-pass" not in csv and "# bodeplot_csv: 1" in csv        # the CSV is the live sweep only
+
+
+# ---------------------------------------------------------------------- found by the branch review
+def test_live_points_stay_on_top_for_the_re_measure_click(plot):
+    """Review I2: a kept or loaded trace drawn over the live sweep took the click, so
+    re-measure stopped working exactly when two similar sweeps were compared."""
+    plot.set_points(sweep())
+    kept = plot.set.keep_live()
+    plot.traces_changed()
+    live, other = plot.items(plot.set.live), plot.items(kept)
+    for name in ("gain_ok", "gain_bad", "phase_ok", "phase_bad"):
+        assert getattr(live, name).zValue() > getattr(other, name).zValue(), name
+    assert live.gain_line.zValue() > other.gain_line.zValue()
+    seen = []
+    plot.remeasure_enabled = True
+    plot.remeasure_requested.connect(seen.append)
+    spot = type("Spot", (), {"data": lambda self: (kept.id, kept.points[3], 0.0, 0.0)})()
+    plot._clicked(None, [spot])                                  # a click that does reach another trace: no menu
+    assert seen == []
+
+
+def test_voltage_unit_with_a_file_that_has_no_voltages(panel, plot, tmp_path):
+    """Review I4: such a file was drawn as NaN and not marked in the list."""
+    old = tmp_path / "old.csv"
+    old.write_text("freq_hz,gain_db,phase_deg\n100,-1.0,-10\n1000,-3.0,-45\n", encoding="utf-8")
+    plot.set_points(sweep())
+    assert panel.load_files([str(old)]) == []
+    t = plot.set.traces[1]
+    assert len(line_y(plot, t)) == 2
+    plot.set_unit("v")
+    panel.set_unit("v")
+    assert len(line_y(plot, t)) == 0 and len(line_y(plot, plot.set.live)) == 21
+    assert "Vpp" in plot.readout_at(1000.0) and plot.readout_at(1000.0).startswith("Sweep:")
+    assert "Voltage" in panel.tree.topLevelItem(1).toolTip(0)
+    assert "Voltage" not in panel.tree.topLevelItem(0).toolTip(0)
+    plot.set_unit("db")
+    assert len(line_y(plot, t)) == 2
+
+
+def test_the_kind_column_cannot_be_edited(panel, plot):
+    """Review M6: double-clicking a kind opened an inline editor on the word 'file'."""
+    delegate = panel.tree.itemDelegateForColumn(1)
+    assert delegate is not None and delegate.createEditor(None, None, None) is None
+    assert panel.tree.itemDelegateForColumn(0) is None           # names stay editable
+
+
+def test_a_csv_saved_by_a_spreadsheet_with_a_byte_order_mark_loads(panel, plot, tmp_path):
+    """Review M8."""
+    from bodeplot.io import export_csv
+    path = export_csv.write_csv(tmp_path / "excel.csv", SweepResult({}, sweep(), {}))
+    path.write_bytes(b"\xef\xbb\xbf" + path.read_bytes())
+    assert panel.load_files([str(path)]) == [] and len(plot.set.traces[1].points) == 21
+
+
+def test_image_export_needs_no_finished_sweep(win, tmp_path):
+    """Review I3: with a loaded file and a theory curve but no sweep, the Export button was
+    disabled and the export raised; that is the design's own acceptance case."""
+    from bodeplot.io import export_csv
+    assert not win.export_button.isEnabled()
+    path = export_csv.write_csv(tmp_path / "saved.csv", SweepResult({}, sweep(), {}))
+    win.traces_panel.load_files([str(path)])
+    win.traces_panel.add_theory(RC)
+    assert win.result is None and win.export_button.isEnabled() and win.export_menu.isEnabled()
+    for name in ("only.png", "only.svg", "only.pdf"):
+        assert win.export(tmp_path / name).stat().st_size > 500
+    with pytest.raises(ValueError, match="no sweep"):
+        win.export(tmp_path / "only.csv")                        # CSV and Touchstone are the live sweep
+    win.traces.set_visible(win.traces.traces[1].id, False)
+    win.traces.set_visible(win.traces.traces[2].id, False)
+    win.plot.traces_changed()
+    with pytest.raises(ValueError, match="nothing on the plot"):
+        win.export(tmp_path / "empty.png")

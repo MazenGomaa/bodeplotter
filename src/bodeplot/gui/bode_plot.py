@@ -306,6 +306,11 @@ class BodePlot(QWidget):
                 sc.sigClicked.connect(self._clicked)
                 plot.addItem(sc)
                 setattr(it, attr, sc)
+        if trace.kind == "live":
+            # The live sweep is drawn on top: its points take the hover and the re-measure
+            # click also where a kept or loaded trace lies over them.
+            for item in it.all():
+                item.setZValue(11 if item not in (it.gain_line, it.phase_line) else 10)
         self._items[trace.id] = it
         return it
 
@@ -330,9 +335,17 @@ class BodePlot(QWidget):
     def _drawn(self) -> list[Drawn]:
         """What the set says is to be drawn, for the unit selected: with Voltage only the
         measured traces, as they are (a theory curve and a ratio have no voltage)."""
-        if self.unit() == "v":
-            return [d for d in self.set.drawn(self.span_hint, relative=False) if d.points is not None]
-        return self.set.drawn(self.span_hint, relative=True)
+        if self.unit() != "v":
+            return self.set.drawn(self.span_hint, relative=True)
+        out = []
+        for d in self.set.drawn(self.span_hint, relative=False):
+            if d.points is None:
+                continue
+            # a file without voltage columns has none to show (the Traces panel says so)
+            keep = [i for i, p in enumerate(d.points) if math.isfinite(p.vdut_amp)]
+            out.append(Drawn(d.trace, [d.freqs[i] for i in keep], [d.h[i] for i in keep],
+                             [d.points[i] for i in keep]))
+        return out
 
     def refresh(self) -> None:
         alive = {t.id for t in self.set.traces}
@@ -374,6 +387,10 @@ class BodePlot(QWidget):
                 (x0, x1), (g0, g1), (p0, p1) = r
                 self.gain_plot.getPlotItem().vb.setRange(xRange=(x0, x1), yRange=(g0, g1), padding=0)
                 self.phase_plot.getPlotItem().vb.setRange(xRange=(x0, x1), yRange=(p0, p1), padding=0)
+
+    def has_data(self) -> bool:
+        """True when at least one trace is drawn with at least one point."""
+        return any(len(f) for _d, f, _gain, _phase in self._shown)
 
     def export_series(self) -> tuple[list[ImageSeries], tuple[str, str, str]]:
         """What the plot shows, for the image export: the series with their final numbers,

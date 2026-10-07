@@ -66,21 +66,30 @@ def theory_grid(lo: float, hi: float, per_decade: int = THEORY_POINTS_PER_DECADE
 class _Reference:
     """A trace as the thing the others are divided by. A theory curve is evaluated at
     the frequency asked for. A measured trace is interpolated in log frequency (gain in dB
-    and unwrapped phase, both linearly) and says nothing outside its own range."""
+    and unwrapped phase, both linearly) and says nothing outside its own range. A point of
+    it that is dead (|H| zero or not finite) says nothing either, and neither does the
+    stretch between a dead point and its neighbours: a gap is not bridged."""
 
     def __init__(self, trace: Trace):
         self.theory = trace.theory
-        pts = [p for p in trace.points if p.freq_hz > 0 and _usable(p.h)]
+        pts = sorted((p for p in trace.points if p.freq_hz > 0 and math.isfinite(p.freq_hz)),
+                     key=lambda p: p.freq_hz)
         self.f = [p.freq_hz for p in pts]
-        self.db = [20.0 * math.log10(abs(p.h)) for p in pts]
+        self.ok = [_usable(p.h) for p in pts]
+        self.db = [20.0 * math.log10(abs(p.h)) if ok else 0.0 for p, ok in zip(pts, self.ok)]
         self.deg: list[float] = []
-        for p in pts:
-            d = math.degrees(cmath.phase(p.h))
-            if self.deg:
-                d += 360.0 * round((self.deg[-1] - d) / 360.0)
+        last = None
+        for p, ok in zip(pts, self.ok):
+            d = math.degrees(cmath.phase(p.h)) if ok else 0.0
+            if ok and last is not None:
+                d += 360.0 * round((last - d) / 360.0)
+            if ok:
+                last = d
             self.deg.append(d)
 
-    def _at_point(self, k: int) -> complex:
+    def _at_point(self, k: int) -> complex | None:
+        if not self.ok[k]:
+            return None
         return cmath.rect(10 ** (self.db[k] / 20.0), math.radians(self.deg[k]))
 
     def at(self, f: float) -> complex | None:
@@ -94,6 +103,10 @@ class _Reference:
         for k in (i - 1, i):
             if 0 <= k < len(fs) and abs(f - fs[k]) <= EDGE_TOL * fs[k]:
                 return self._at_point(k)
+        if i == 0 or i == len(fs):                      # inside the range test, a rounding away from the end point
+            return self._at_point(0 if i == 0 else -1)
+        if not (self.ok[i - 1] and self.ok[i]):
+            return None
         x = math.log(f / fs[i - 1]) / math.log(fs[i] / fs[i - 1])
         db = self.db[i - 1] + x * (self.db[i] - self.db[i - 1])
         deg = self.deg[i - 1] + x * (self.deg[i] - self.deg[i - 1])
@@ -135,18 +148,16 @@ class TraceSet:
 
     def add_file(self, result: SweepResult, path) -> Trace:
         """A loaded sweep as a trace. Points with no usable complex value get it from their
-        gain and phase (an old or hand-made file); points with neither are dropped.
-        Raises ValueError when nothing is left."""
+        gain and phase (an old or hand-made file). Rows with an impossible frequency are
+        dropped. Raises ValueError when no point can be drawn."""
         points = []
         for p in result.points:
-            if not (p.freq_hz > 0):
+            if not (p.freq_hz > 0 and math.isfinite(p.freq_hz)):
                 continue
-            if not _usable(p.h):
-                if not (math.isfinite(p.gain_db) and math.isfinite(p.phase_deg)):
-                    continue
+            if not _usable(p.h) and math.isfinite(p.gain_db) and math.isfinite(p.phase_deg):
                 p = replace(p, h=cmath.rect(10 ** (p.gain_db / 20.0), math.radians(p.phase_deg)))
-            points.append(p)
-        if not points:
+            points.append(p)                # a dead point stays: it is not drawn, and it marks a gap
+        if not any(_usable(p.h) for p in points):
             raise ValueError("it holds no sweep points")
         points.sort(key=lambda p: p.freq_hz)
         return self._add("file", PureWindowsPath(str(path)).stem or "file", points=points, path=str(path))
@@ -203,7 +214,7 @@ class TraceSet:
             los.append(min(hint))
             his.append(max(hint))
         for t in self.traces:
-            fs = [p.freq_hz for p in t.points if p.freq_hz > 0]
+            fs = [p.freq_hz for p in t.points if p.freq_hz > 0 and math.isfinite(p.freq_hz)]
             if fs:
                 los.append(min(fs))
                 his.append(max(fs))
