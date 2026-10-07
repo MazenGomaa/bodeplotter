@@ -42,6 +42,7 @@ WARNING = "#fab219"
 SERIOUS = "#ec835a"
 CRITICAL = "#d03b3b"
 FLAGGED = WARNING           # a flagged point: warning colour + cross marker + tooltip text
+MARK_INK = INK_2            # the markers of the Bode plot (lines, dots, labels): neutral, never a series colour
 
 # ---- mark sizes (px)
 LINE_WIDTH = 2

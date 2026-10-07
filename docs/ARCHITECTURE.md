@@ -48,10 +48,11 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `drivers/uni_t_upo1000.py` | scope driver `UniTUPO1000`: single shot, running read, resync, panel lock, save / restore of the settings | `drivers/base.py`, `drivers/scpi.py`, `drivers/step_tables.py`, `drivers/transport.py` |
 | `drivers/uni_t_utg900e.py` | generator driver `UniTUTG900E` | `drivers/base.py`, `drivers/scpi.py`, `drivers/transport.py` |
 | `drivers/visa_util.py` | the only pyvisa import: resource manager, discovery, the `BODEPLOT_NO_HARDWARE` guard | - |
-| `gui/bode_plot.py` | gain and phase plots of a trace set, relative display, follow / fit view, vertical unit, re-measure request | `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `measure/sinefit.py`, `models.py`, `traces.py`, `units.py` |
+| `gui/bode_plot.py` | gain and phase plots of a trace set, relative display, follow / fit view, vertical unit, re-measure request; the Markers menu, marker texts and positions | `gui/marker_layer.py`, `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `markers.py`, `measure/sinefit.py`, `models.py`, `traces.py`, `units.py` |
 | `gui/config_panel.py` | the input panel; builds the config dataclasses and presets | `gui/si_widgets.py`, `io/presets.py`, `models.py` |
 | `gui/dialogs.py` | settings, connections, simulation settings, the circuit form and theory dialog, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
 | `gui/main_window.py` | toolbar, menus, status bar, sweep control, exports; the engine's only client | `__init__.py`, `gui/bode_plot.py`, `gui/config_panel.py`, `gui/dialogs.py`, `gui/status_log.py`, `gui/theme.py`, `gui/traces_panel.py`, `gui/waveform_view.py`, `io/export_csv.py`, `io/export_image.py`, `io/export_touchstone.py`, `io/presets.py`, `io/settings.py`, `logging_setup.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py`, `sweep/engine.py`, `sweep/plan.py`, `traces.py`, `units.py` |
+| `gui/marker_layer.py` | the markers as graphics on both plots: lines, dots, labels that do not overlap, dragging | `gui/theme.py`, `markers.py` |
 | `gui/si_widgets.py` | k / M number entry, SI axis | `units.py` |
 | `gui/status_log.py` | point table and log text | `models.py`, `units.py` |
 | `gui/theme.py` | every colour of the app, `status_html` | - |

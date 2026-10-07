@@ -11,15 +11,18 @@ import math
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QActionGroup
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QSizePolicy,
                                QVBoxLayout, QWidget)
 
 from ..io.export_image import ImageSeries
+from ..markers import KINDS, MAX_USER, MarkerSet, Placed, label
 from ..measure.sinefit import unwrap_deg
 from ..models import Flag, PointResult
 from ..traces import Drawn, Trace, TraceSet
 from ..units import fmt_si
 from . import theme
+from .marker_layer import MarkerLayer
 from .si_widgets import SiAxis
 
 QUIET = Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW | Flag.CALIBRATED   # flags that do not mark a point as suspect
@@ -30,6 +33,18 @@ UNITS = {"db": ("dB", "Gain", "dB", 1.0),
 # the same axis when every trace is divided by a reference
 RELATIVE_LABEL = {"db": "Gain difference", "pct": "Output / reference"}
 COLORS = theme.SERIES                    # fixed order, one per colour slot; never cycled
+# The automatic markers of the Markers menu: kind -> (menu text, explanation)
+MARKER_MENU = {
+    "cutoff": ("-3 dB", "Mark where the gain has fallen 3 dB below the highest gain of the trace: the cut-off of "
+                        "a low-pass or high-pass, or both edges of a band-pass with its bandwidth and Q"),
+    "peak": ("Peak", "Mark the highest gain of the trace when it is a real peak: not at an end of the trace and "
+                     "at least 1 dB above both ends"),
+    "notch": ("Notch", "Mark the lowest gain of the trace when it is a real notch: not at an end of the trace and "
+                       "at least 1 dB below both ends"),
+    "margins": ("Margins", "For a trace that is a loop gain: the gain margin where the phase passes -180° and the "
+                           "phase margin where the gain passes 0 dB. Not shown in the relative display or "
+                           "without phase"),
+}
 
 
 class _Items:
@@ -80,8 +95,16 @@ class BodePlot(QWidget):
         self.ref_box.setMinimumContentsLength(18)
         self.ref_box.setToolTip("Draw every trace divided by this one: the gain difference in dB and the phase "
                                 "difference in degrees. Not available with the vertical unit Voltage.")
+        self.markers = MarkerSet()
+        self._marks: list = []              # the markers of the last refresh (markers.Marker)
+        self._placed: list[Placed] = []     # the same, with texts and positions
+        self.markers_btn = QPushButton("Markers")
+        self.markers_btn.setToolTip("Markers on the curve: the -3 dB points, the peak, the notch, the gain and "
+                                    "phase margin, and markers of your own at any frequency")
+        self._build_marker_menu()
         top.addWidget(self.unwrap_box)
         top.addWidget(self.fit_btn)
+        top.addWidget(self.markers_btn)
         top.addWidget(QLabel(" Vertical"))
         top.addWidget(self.unit_box)
         top.addWidget(QLabel(" Relative to"))
@@ -114,6 +137,7 @@ class BodePlot(QWidget):
             p.addItem(v, ignoreBounds=True)
             self._vlines.append(v)
             p.scene().sigMouseMoved.connect(lambda pos, plot=p: self._mouse_moved(plot, pos))
+        self.marker_layer = MarkerLayer(self.gain_plot, self.phase_plot, self.move_marker)
         # Follow mode: the view tracks the data until the user pans or zooms by hand.
         # "Fit view", a double-click, or a new sweep switch it back on.
         self.follow = True
@@ -168,6 +192,7 @@ class BodePlot(QWidget):
     def traces_changed(self) -> None:
         """The set was changed from outside (the Traces panel): names, order, visibility."""
         self._fill_ref_box()
+        self._fill_marker_traces()
         self.refresh()
 
     def set_span_hint(self, lo: float, hi: float) -> None:
@@ -176,6 +201,147 @@ class BodePlot(QWidget):
         if hint != self.span_hint:
             self.span_hint = hint
             self.refresh()
+
+    # ---- markers (rules in markers.py, graphics in gui/marker_layer.py)
+    def _build_marker_menu(self) -> None:
+        menu = QMenu(self.markers_btn)
+        menu.setToolTipsVisible(True)
+        self.marker_actions = {}
+        for kind in KINDS:
+            text, tip = MARKER_MENU[kind]
+            act = menu.addAction(text)
+            act.setCheckable(True)
+            act.setToolTip(tip)
+            act.toggled.connect(lambda on, k=kind: self.set_marker_kind(k, on))
+            self.marker_actions[kind] = act
+        menu.addSeparator()
+        self.marker_trace_menu = menu.addMenu("Markers on")
+        self.marker_trace_menu.setToolTipsVisible(True)
+        self.marker_trace_menu.menuAction().setToolTip("The trace the markers measure: all automatic markers and "
+                                                       "your own read this one trace, as it is drawn")
+        menu.addSeparator()
+        self.act_add_marker = menu.addAction("Add marker")
+        self.act_add_marker.setToolTip("Put a marker of your own in the middle of the visible frequency range; "
+                                       "drag it, or right-click it to type its frequency (up to %d)" % MAX_USER)
+        self.act_add_marker.triggered.connect(lambda _checked=False: self.add_marker())
+        self.act_clear_markers = menu.addAction("Remove all markers")
+        self.act_clear_markers.setToolTip("Remove every marker of your own; the automatic markers stay as ticked")
+        self.act_clear_markers.triggered.connect(lambda _checked=False: self.clear_markers())
+        self.act_copy_markers = menu.addAction("Copy marker values")
+        self.act_copy_markers.setToolTip("Copy the markers as a table (name, frequency, gain, phase, note) "
+                                         "for a report or a spreadsheet")
+        self.markers_btn.setMenu(menu)
+        self.marker_menu = menu
+        self._fill_marker_traces()
+
+    def _fill_marker_traces(self) -> None:
+        if self.set.get(self.markers.trace_id) is None:     # the chosen trace was removed
+            self.markers.trace_id = self.set.live.id
+        self.marker_trace_menu.clear()
+        group = QActionGroup(self.marker_trace_menu)
+        for t in self.set.traces:
+            act = self.marker_trace_menu.addAction(t.name)
+            act.setCheckable(True)
+            act.setChecked(t.id == self.markers.trace_id)
+            act.setToolTip("Measure the trace '%s' with the markers" % t.name)
+            act.triggered.connect(lambda _checked=False, i=t.id: self.set_marker_trace(i))
+            group.addAction(act)
+
+    def marker_kinds(self) -> list[str]:
+        """The automatic markers that are switched on, in menu order."""
+        return [k for k in KINDS if k in self.markers.kinds]
+
+    def set_marker_kinds(self, kinds) -> None:
+        for kind, act in self.marker_actions.items():
+            act.setChecked(kind in kinds)                   # toggled -> set_marker_kind
+
+    def set_marker_kind(self, kind: str, on: bool) -> None:
+        self.markers.set_kind(kind, on)
+        if self.marker_actions[kind].isChecked() != on:
+            self.marker_actions[kind].setChecked(on)
+        self._update_markers()
+
+    def set_marker_trace(self, trace_id: int) -> None:
+        self.markers.trace_id = trace_id
+        self._fill_marker_traces()
+        self._update_markers()
+
+    def placed(self) -> list[Placed]:
+        """The markers of the chosen trace as shown, switched-on ones that were not found included."""
+        return list(self._placed)
+
+    def add_marker(self, freq_hz: float | None = None) -> int | None:
+        """A marker of the user's at freq_hz (None: the middle of the visible range).
+        Returns its number, or None when there are MAX_USER already."""
+        if freq_hz is None:
+            x0, x1 = self.gain_plot.getPlotItem().vb.viewRange()[0]
+            mid = (x0 + x1) / 2.0
+            freq_hz = 10.0 ** mid if self.log_x else mid
+        n = self.markers.add(freq_hz)
+        self._update_markers()
+        return n
+
+    def move_marker(self, number: int, freq_hz: float) -> None:
+        if self.markers.move(number, freq_hz):
+            self._update_markers()
+
+    def remove_marker(self, number: int) -> None:
+        self.markers.remove(number)
+        self._update_markers()
+
+    def clear_markers(self) -> None:
+        self.markers.clear_user()
+        self._update_markers()
+
+    def _phase_shown(self, deg: float) -> float:
+        """A phase of the unwrapped curve as the phase plot shows it."""
+        return deg if self.unwrap() else (deg + 180.0) % 360.0 - 180.0
+
+    def _marker_curve(self):
+        """(curve, the measured points behind it or None) of the chosen trace as it is drawn;
+        None when that trace is not on the plot (hidden, empty, or not drawn in this unit)."""
+        t = self.set.get(self.markers.trace_id)
+        if t is None:
+            self.markers.trace_id = self.set.live.id
+            t = self.set.live
+        if not any(d.trace is t and len(f) for d, f, _gain, _phase in self._shown):
+            return None
+        curve, points = self.set.curve(t.id, self.span_hint, relative=self.is_relative())
+        if points is not None:
+            curve.flagged = [bool(p.flags & ~QUIET) for p in points]
+        return curve, points
+
+    def _place(self, m, curve, points) -> Placed:
+        """Text and dot positions of one marker in what the plots show now."""
+        if not m.found:
+            return Placed(m, "", None, None)
+        if not m.has_value:
+            return Placed(m, label(m), None, None)
+        if self.unit() == "v":
+            # the output voltage between two points, by the curve's own rule (log over log frequency)
+            logs = [math.log10(2.0 * p.vdut_amp) if p.vdut_amp > 0 and math.isfinite(p.vdut_amp) else float("nan")
+                    for p in points]
+            lg = curve.interp(m.freq, logs)
+            y = 10.0 ** lg if lg is not None else None
+            value = fmt_si(y, "Vpp", 3) if y is not None else ""
+        elif self.unit() == "pct":
+            y = 100.0 * 10.0 ** (m.db / 20.0)
+            value = "%.3g %%" % y
+        else:
+            y = m.db
+            value = "%+.2f dB" % y
+        phase = self._phase_shown(m.deg) if self.has_phase else None
+        return Placed(m, label(m, value, phase), None if m.kind == "pm" else y, None if m.kind == "gm" else phase)
+
+    def _update_markers(self) -> None:
+        got = self._marker_curve()
+        self._marks, self._placed = [], []
+        if got is not None:
+            curve, points = got
+            self._marks = self.markers.evaluate(curve, margins=self.has_phase and not self.is_relative())
+            self._placed = [self._place(m, curve, points) for m in self._marks]
+        self.marker_layer.show(self._placed, self.log_x)
+        self.act_add_marker.setEnabled(len(self.markers.user) < MAX_USER)
 
     def value(self, p: PointResult) -> float:
         """What the upper plot shows for a measured point, in the selected unit (not relative)."""
@@ -265,6 +431,7 @@ class BodePlot(QWidget):
         if not has:
             self.gain_plot.setLabel("bottom", "Frequency", units="Hz")
         self.unwrap_box.setVisible(has)
+        self._update_markers()
 
     def unwrap(self) -> bool:
         return self.unwrap_box.isChecked()
@@ -409,6 +576,7 @@ class BodePlot(QWidget):
                 (x0, x1), (g0, g1), (p0, p1) = r
                 self.gain_plot.getPlotItem().vb.setRange(xRange=(x0, x1), yRange=(g0, g1), padding=0)
                 self.phase_plot.getPlotItem().vb.setRange(xRange=(x0, x1), yRange=(p0, p1), padding=0)
+        self._update_markers()
 
     def has_data(self) -> bool:
         """True when at least one trace is drawn with at least one point."""
