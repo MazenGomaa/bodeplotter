@@ -333,7 +333,11 @@ class BodePlot(QWidget):
             y = m.db
             value = "%+.2f dB" % y
         phase = self._phase_shown(m.deg) if self.has_phase else None
-        return Placed(m, label(m, value, phase), None if m.kind == "pm" else y, None if m.kind == "gm" else phase)
+        here, beyond = curve.at(m.freq), curve.at(m.freq * 1.02)
+        k = 1 if m.kind == "pm" else 0      # the label sits on the phase plot, or on the gain plot
+        rising = here is not None and beyond is not None and beyond[k] > here[k]
+        return Placed(m, label(m, value, phase), None if m.kind == "pm" else y, None if m.kind == "gm" else phase,
+                      left=rising)
 
     def _update_markers(self) -> None:
         got = self._marker_curve()
@@ -665,7 +669,8 @@ class BodePlot(QWidget):
 
     def export_markers(self) -> list[ImageMarker]:
         """The markers as shown, for the image export."""
-        return [ImageMarker(p.marker.freq, p.text, p.y_gain, p.y_phase, "phase" if p.marker.kind == "pm" else "gain")
+        return [ImageMarker(p.marker.freq, p.text, p.y_gain, p.y_phase, "phase" if p.marker.kind == "pm" else "gain",
+                            p.left)
                 for p in self._placed if p.marker.found]
 
     # ---- interaction

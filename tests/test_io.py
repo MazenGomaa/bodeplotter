@@ -292,3 +292,27 @@ def test_marker_ticks_in_the_settings():
     assert s.markers == ["cutoff", "peak"]                       # known kinds only, in menu order
     assert settings.AppSettings.from_dict({"markers": "peak"}).markers == []
     assert settings.AppSettings.from_dict(s.to_dict()).markers == ["cutoff", "peak"]
+
+
+def test_marker_labels_in_the_image_do_not_overlap_or_leave_the_plot(tmp_path, result, monkeypatch):
+    """Found in the first render: staggered labels climbed over the title and over each other."""
+    from bodeplot.io.export_image import ImageMarker
+    top = max(p.gain_db for p in result.points)
+    marks = [ImageMarker(1500.0 + 100.0 * k, "M%d 1.5 kHz  -3.00 dB  -45.0°" % k, -3.0, -45.0) for k in range(4)]
+    marks += [ImageMarker(200.0, "pk 200 Hz  +0.00 dB\nBW 820 Hz  Q 1.94", top, 0.0, left=True),
+              ImageMarker(1.9e7, "M7 19 MHz  -60.00 dB  -90.0°", -60.0, -89.0),
+              ImageMarker(5e7, "M8 50 MHz  outside the trace")]
+    seen = []
+    real = export_image._place_labels
+
+    def spy(ax, items):
+        boxes = real(ax, items)
+        seen.append((ax.get_window_extent(), boxes))
+        return boxes
+    monkeypatch.setattr(export_image, "_place_labels", spy)
+    export_image.write_image(tmp_path / "m.png", result, export_image.ImageOptions(), markers=marks)
+    area, boxes = seen[0]                                        # the gain plot carries every label here
+    assert len(boxes) == len(marks) and len(seen) == 2 and seen[1][1] == []
+    assert not any(a.overlaps(b) for i, a in enumerate(boxes) for b in boxes[i + 1:])
+    for b in boxes:
+        assert area.y0 - 1 <= b.y0 and b.y1 <= area.y1 + 1 and area.x0 - 1 <= b.x0 and b.x1 <= area.x1 + 1

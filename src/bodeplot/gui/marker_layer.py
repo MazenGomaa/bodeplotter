@@ -94,7 +94,9 @@ class MarkerLayer:
                 plot.addItem(item, ignoreBounds=True)        # a marker never widens "Fit view"
             it.lines.append(line)
             it.dots.append(dot)
-        it.text = pg.TextItem(color=theme.MARK_INK, anchor=(0, 0), fill=pg.mkBrush(theme.SURFACE))
+        fill = pg.mkColor(theme.SURFACE)
+        fill.setAlpha(190)              # the curve shows through a label that lies on it
+        it.text = pg.TextItem(color=theme.MARK_INK, anchor=(0, 0), fill=pg.mkBrush(fill))
         it.text.setZValue(Z)
         self.plots[it.host].addItem(it.text, ignoreBounds=True)
         self._items[m.name] = it
@@ -133,8 +135,8 @@ class MarkerLayer:
         self.layout()
 
     def layout(self) -> None:
-        """Put every label next to its dot (at the top of the plot when it has none), to the
-        left of it when the right edge is near, and below any label already there."""
+        """Put every label next to its dot (at the top of the plot when it has none), on the
+        side the marker asks for unless the plot ends there, and below any label already there."""
         if self._busy:
             return
         self._busy = True
@@ -153,9 +155,11 @@ class MarkerLayer:
                 else:
                     dot = vb.mapViewToScene(QPointF(self.x(p.marker.freq), vb.viewRange()[1][1]))
                     top = box.top()
-                left = dot.x() + GAP
-                if left + w > box.right():
-                    left = dot.x() - GAP - w
+                right_of, left_of = dot.x() + GAP, dot.x() - GAP - w
+                if p.left:
+                    left = left_of if left_of >= box.left() else right_of
+                else:
+                    left = right_of if right_of + w <= box.right() else left_of
                 rect = QRectF(left, top, w, h)
                 for _ in range(MAX_ROWS):
                     if not any(rect.intersects(r) for r in taken[it.host]):

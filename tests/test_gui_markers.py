@@ -513,3 +513,21 @@ def test_marker_ticks_survive_a_restart(win, qtbot):
         assert again.plot.markers.user == {}                     # the user's markers are not kept
     finally:
         again.close()
+
+
+def test_a_label_stands_on_the_free_side_of_the_curve(plot):
+    """Found in the offscreen render: a label to the right of a rising curve sat on the curve."""
+    from PySide6.QtCore import QPointF
+    plot.set_points(sweep(BPF))
+    tick(plot, "cutoff", "peak")
+    QApplication.processEvents()
+    plot.refresh()
+    p = placed(plot)
+    assert p["fL"].left and not p["fH"].left and not p["pk"].left
+    vb = plot.gain_plot.getPlotItem().vb
+    for name in ("fL", "fH"):
+        dot_x = vb.mapViewToScene(QPointF(math.log10(p[name].marker.freq), p[name].y_gain)).x()
+        rect = plot.marker_layer.label_rect(name)
+        assert (rect.right() < dot_x) == p[name].left and (rect.left() > dot_x) == (not p[name].left)
+    assert [m.left for m in plot.export_markers()] == [x.left for x in plot.placed() if x.marker.found]
+    assert plot.marker_layer.items("fL").text.fill.color().alpha() < 255         # the curve shows through a label

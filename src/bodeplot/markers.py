@@ -63,6 +63,7 @@ class Placed:
     text: str
     y_gain: float | None
     y_phase: float | None
+    left: bool = False          # the label goes to the left of the dot: the curve rises to the right there
 
 
 class MarkerSet:

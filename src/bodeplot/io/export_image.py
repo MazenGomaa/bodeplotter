@@ -60,6 +60,7 @@ class ImageMarker:
     y_gain: Any = None          # None: no dot on the gain plot
     y_phase: Any = None
     label_on: str = "gain"      # the plot that carries the text: "gain" | "phase"
+    left: bool = False          # the text goes to the left of the dot (the curve rises to the right)
 
 
 # unit -> (axis label, value of a point); the same three as gui/bode_plot.py UNITS
@@ -99,6 +100,7 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
     fig, axes = plt.subplots(rows, 1, sharex=True, figsize=(opts.width_in, opts.height_in))
     axes = np.atleast_1d(axes)
     any_flagged = False
+    labels_to_place = []                # per plot: the marker texts, written once the layout is final
     for ax, key, label in zip(axes, ("gain", "phase"), (gain_label, phase_label)):
         for s in series:
             colour = PRINT_SERIES[s.slot] if s.slot is not None and s.slot < len(PRINT_SERIES) else PRINT_MUTED
@@ -112,23 +114,15 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
                 ax.plot(f[bad], y[bad], "x", color=PRINT_FLAGGED, markersize=6,
                         label="flagged" if ax is axes[0] and not any_flagged else None)
                 any_flagged = True
-        row = 0
+        texts = []
         for mk in markers or []:
             ax.axvline(mk.freq, color=PRINT_MARKER, linewidth=0.7, linestyle="--")
             y = mk.y_gain if key == "gain" else mk.y_phase
             if y is not None:
                 ax.plot([mk.freq], [y], "D", color=PRINT_MARKER, markersize=4)
-            if mk.label_on != key or not mk.text:
-                continue
-            # labels are staggered by rows so that neighbours do not sit on each other
-            if y is None:
-                ax.annotate(mk.text, xy=(mk.freq, 1.0), xycoords=("data", "axes fraction"),
-                            xytext=(4, -4 - 9 * row), textcoords="offset points", va="top",
-                            fontsize=7, color=PRINT_MARKER)
-            else:
-                ax.annotate(mk.text, xy=(mk.freq, y), xytext=(4, 4 + 9 * row), textcoords="offset points",
-                            va="bottom", fontsize=7, color=PRINT_MARKER)
-            row = (row + mk.text.count("\n") + 1) % 6
+            if mk.label_on == key and mk.text:
+                texts.append((mk, y))
+        labels_to_place.append((ax, texts))
         ax.set_ylabel(label)
         ax.grid(True, which="both", linewidth=0.4, alpha=0.6)
         if opts.log_x:
@@ -149,9 +143,47 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
         footer = note
     fig.text(0.01, 0.005, footer, fontsize=7, ha="left", va="bottom")
     fig.tight_layout(rect=(0, 0.03, 1, 1))
+    for ax, texts in labels_to_place:
+        _place_labels(ax, texts)
     fig.savefig(path, dpi=opts.dpi)
     plt.close(fig)
     return path
+
+
+def _place_labels(ax, items) -> list:
+    """Write the marker texts of one plot: next to the dot (at the top of the plot for a
+    marker with no value), on the side that is free of the curve, moved down until no text
+    covers another, and kept inside the plot. items: (ImageMarker, y or None). Returns the
+    boxes of the texts in pixels. Called when the layout of the figure is final."""
+    fig = ax.figure
+    renderer = fig.canvas.get_renderer()
+    area = ax.get_window_extent(renderer)
+    pt = 72.0 / fig.dpi                 # points per pixel
+    taken = []
+    for mk, y in sorted(items, key=lambda it: it[0].freq):
+        xy, coords = ((mk.freq, 1.0), ("data", "axes fraction")) if y is None else ((mk.freq, y), "data")
+        ann = ax.annotate(mk.text, xy=xy, xycoords=coords, xytext=(4, 4), textcoords="offset points",
+                          va="bottom", ha="left", fontsize=7, color=PRINT_MARKER, annotation_clip=False,
+                          bbox=dict(facecolor="white", alpha=0.75, edgecolor="none", pad=0.8))
+
+        def put(left: bool, down_px: float, ann=ann):
+            ann.set_ha("right" if left else "left")
+            ann.xyann = (-4 if left else 4, 4 - down_px * pt)
+            return ann.get_window_extent(renderer)
+        left = mk.left
+        box = put(left, 0.0)
+        if (box.x0 < area.x0) if left else (box.x1 > area.x1):      # no room on that side
+            left = not left
+            box = put(left, 0.0)
+        down = max(0.0, box.y1 - area.y1)
+        box = put(left, down)
+        for _ in range(40):
+            if not any(box.overlaps(b) for b in taken):
+                break
+            down += box.height + 2.0
+            box = put(left, down)
+        taken.append(box)
+    return taken
 
 
 def _g(x) -> str:
