@@ -240,3 +240,62 @@ def test_reference_follows_removal_and_hiding():
     ts.set_reference(ts.live.id)                                   # the live sweep as reference, half measured
     ts.live.points = ts.live.points[:5]
     assert ts.drawn()[1].trace is kept and len(ts.drawn()[1].freqs) == 5
+
+
+# ---------------------------------------------------------------------- a trace as a curve (markers)
+def _pt(f, h):
+    import cmath as _c
+    import math as _m
+    from bodeplot.models import Flag, PointResult
+    dead = not (_m.isfinite(abs(h)) and abs(h) > 0)
+    return PointResult(freq_hz=f, h=h, gain_db=float("nan") if dead else 20 * _m.log10(abs(h)),
+                       phase_deg=float("nan") if dead else _m.degrees(_c.phase(h)), vref_amp=0.5,
+                       vdut_amp=0.5 * abs(h), vdiv_ref=0.02, vdiv_dut=0.02, timebase=1e-3, n_avg=1,
+                       snr_ref_db=50.0, snr_dut_db=50.0, flags=Flag.NONE, duration_s=0.1)
+
+
+def test_curve_of_a_measured_trace_keeps_dead_points():
+    import pytest
+    from bodeplot.traces import TraceSet
+    ts = TraceSet()
+    ts.live.points = [_pt(100.0, 1 + 0j), _pt(1000.0, 0j), _pt(10000.0, 0.1 + 0j)]
+    c, points = ts.curve(ts.live.id)
+    assert c.f == [100.0, 1000.0, 10000.0] and c.ok == [True, False, True]
+    assert points == ts.live.points and len(c.flagged) == 3
+    assert c.at(300.0) is None                                   # the gap is not bridged
+    assert c.db[2] == pytest.approx(-20.0)
+    assert ts.curve(99) is None
+
+
+def test_curve_of_a_theory_trace_and_relative_to_a_reference():
+    import math
+    import pytest
+    from bodeplot.measure.theory import TransferFunction
+    from bodeplot.traces import TraceSet
+    rc = TransferFunction.rc_lpf(1e3, 100e-9)
+    ts = TraceSet()
+    ts.live.points = [_pt(f, 0.5 * rc.h(f)) for f in (100.0, 1000.0, 10000.0)]
+    th = ts.add_theory(rc)
+    c, points = ts.curve(th.id)
+    assert points is None and c.f[0] == pytest.approx(100.0) and c.f[-1] == pytest.approx(10000.0)
+    assert c.db[0] == pytest.approx(20 * math.log10(abs(rc.h(100.0))))
+    assert ts.curve(th.id, (50.0, 2e7))[0].f[0] == pytest.approx(50.0)      # the span hint widens it
+    ts.set_reference(th.id)
+    c, points = ts.curve(ts.live.id)
+    assert c.db == pytest.approx([-6.0206] * 3, abs=1e-3) and c.deg == pytest.approx([0.0] * 3, abs=1e-6)
+    assert len(points) == 3
+    own, _ = ts.curve(th.id)
+    assert set(own.db) == {0.0} and all(own.ok)                  # the reference against itself
+    absolute, _ = ts.curve(ts.live.id, relative=False)
+    assert absolute.db[0] == pytest.approx(20 * math.log10(abs(0.5 * rc.h(100.0))))
+
+
+def test_relative_curve_has_no_value_outside_the_reference():
+    from bodeplot.models import SweepResult
+    from bodeplot.traces import TraceSet
+    ts = TraceSet()
+    ts.live.points = [_pt(f, 1 + 0j) for f in (10.0, 100.0, 1000.0, 10000.0)]
+    ref = ts.add_file(SweepResult({}, [_pt(100.0, 1 + 0j), _pt(1000.0, 1 + 0j)], {}), "ref.csv")
+    ts.set_reference(ref.id)
+    c, points = ts.curve(ts.live.id)
+    assert c.ok == [False, True, True, False] and len(points) == 4

@@ -7,19 +7,18 @@ draw that answer, so the maths is in one place and is tested without a display.
 """
 from __future__ import annotations
 
-import bisect
 import cmath
 import math
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import PureWindowsPath
 
+from .measure import response
 from .measure.theory import TransferFunction
 from .models import PointResult, SweepResult
 
 SLOTS = 8                       # colour slots (theme.SERIES); a trace beyond them is drawn muted
 THEORY_POINTS_PER_DECADE = 50
-EDGE_TOL = 1e-3                 # a frequency within 0.1 % of a reference point is that point
 KIND_TEXT = {"live": "live sweep", "kept": "kept sweep", "file": "file", "theory": "theory"}
 
 
@@ -49,8 +48,7 @@ class Drawn:
     points: list[PointResult] | None = None     # the measured point behind each value; None: theory
 
 
-def _usable(h: complex) -> bool:
-    return math.isfinite(h.real) and math.isfinite(h.imag) and abs(h) > 0
+_usable = response.usable
 
 
 def theory_grid(lo: float, hi: float, per_decade: int = THEORY_POINTS_PER_DECADE) -> list[float]:
@@ -65,52 +63,19 @@ def theory_grid(lo: float, hi: float, per_decade: int = THEORY_POINTS_PER_DECADE
 
 class _Reference:
     """A trace as the thing the others are divided by. A theory curve is evaluated at
-    the frequency asked for. A measured trace is interpolated in log frequency (gain in dB
-    and unwrapped phase, both linearly) and says nothing outside its own range. A point of
-    it that is dead (|H| zero or not finite) says nothing either, and neither does the
-    stretch between a dead point and its neighbours: a gap is not bridged."""
+    the frequency asked for. A measured trace is a response curve (measure/response.py):
+    interpolated in log frequency, nothing outside its own range, and a gap is not bridged."""
 
     def __init__(self, trace: Trace):
         self.theory = trace.theory
-        pts = sorted((p for p in trace.points if p.freq_hz > 0 and math.isfinite(p.freq_hz)),
-                     key=lambda p: p.freq_hz)
-        self.f = [p.freq_hz for p in pts]
-        self.ok = [_usable(p.h) for p in pts]
-        self.db = [20.0 * math.log10(abs(p.h)) if ok else 0.0 for p, ok in zip(pts, self.ok)]
-        self.deg: list[float] = []
-        last = None
-        for p, ok in zip(pts, self.ok):
-            d = math.degrees(cmath.phase(p.h)) if ok else 0.0
-            if ok and last is not None:
-                d += 360.0 * round((last - d) / 360.0)
-            if ok:
-                last = d
-            self.deg.append(d)
-
-    def _at_point(self, k: int) -> complex | None:
-        if not self.ok[k]:
-            return None
-        return cmath.rect(10 ** (self.db[k] / 20.0), math.radians(self.deg[k]))
+        self.curve = response.curve([p.freq_hz for p in trace.points], [p.h for p in trace.points])
 
     def at(self, f: float) -> complex | None:
         if self.theory is not None:
             h = self.theory.h(f)
             return h if _usable(h) else None
-        fs = self.f
-        if not fs or f < fs[0] * (1 - EDGE_TOL) or f > fs[-1] * (1 + EDGE_TOL):
-            return None
-        i = bisect.bisect_left(fs, f)
-        for k in (i - 1, i):
-            if 0 <= k < len(fs) and abs(f - fs[k]) <= EDGE_TOL * fs[k]:
-                return self._at_point(k)
-        if i == 0 or i == len(fs):                      # inside the range test, a rounding away from the end point
-            return self._at_point(0 if i == 0 else -1)
-        if not (self.ok[i - 1] and self.ok[i]):
-            return None
-        x = math.log(f / fs[i - 1]) / math.log(fs[i] / fs[i - 1])
-        db = self.db[i - 1] + x * (self.db[i] - self.db[i - 1])
-        deg = self.deg[i - 1] + x * (self.deg[i] - self.deg[i - 1])
-        return cmath.rect(10 ** (db / 20.0), math.radians(deg))
+        v = self.curve.at(f)
+        return None if v is None else cmath.rect(10 ** (v[0] / 20.0), math.radians(v[1]))
 
 
 class TraceSet:
@@ -261,3 +226,29 @@ class TraceSet:
                     pts.append(d.points[i])
             out.append(Drawn(t, freqs, hs, pts))
         return out
+
+    def curve(self, trace_id: int, span_hint: tuple[float, float] | None = None, relative: bool = True):
+        """One trace as a response curve, for the markers: (curve, the measured point behind
+        each curve point or None for a theory curve). As it is, or divided by the reference
+        like drawn(). Unlike drawn() it keeps dead points, so that a gap stays a gap. None:
+        there is no such trace."""
+        t = self.get(trace_id)
+        if t is None:
+            return None
+        if t.theory is not None:
+            span = self.span(span_hint)
+            freqs = theory_grid(*span) if span else []
+            hs, points = [t.theory.h(f) for f in freqs], None
+        else:
+            points = sorted((p for p in t.points if p.freq_hz > 0 and math.isfinite(p.freq_hz)),
+                            key=lambda p: p.freq_hz)
+            freqs, hs = [p.freq_hz for p in points], [p.h for p in points]
+        ref_trace = self.reference() if relative else None
+        if ref_trace is t:
+            hs = [1 + 0j if _usable(h) else h for h in hs]
+        elif ref_trace is not None:
+            ref = _Reference(ref_trace)
+            dead = complex("nan")
+            rs = [ref.at(f) for f in freqs]
+            hs = [h / r if r is not None and _usable(r) and _usable(h) else dead for h, r in zip(hs, rs)]
+        return response.curve(freqs, hs), points
