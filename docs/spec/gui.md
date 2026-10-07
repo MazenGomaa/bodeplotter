@@ -45,6 +45,12 @@ Part of the design spec. Overview and the index of all sections: `docs/SPEC.md`.
 
 ## 11. Presets & settings
 
+**Settings dialog (extended 2026-10-07 on the user's request).** Tabs General, Advanced, Instruments, Simulation. Everything is stored in `settings.json` (`io/settings.py`: out-of-range values are limited, wrong ones fall back to the default) and takes effect at once through `MainWindow.apply_settings`.
+
+- *General:* start-up mode; pause after a scope range change; unwrap phase; open the skew wizard after every connect (off by default: the pop-up on every connect was removed on 2026-10-06); show explanations, and after how long (0 to 10 s, default 3 s); keep previous sweeps as traces (off, or 1 to 6; older ones are removed, sweeps the user kept stay); the folder for Export and Load CSV (empty: the folder used last, which is remembered); grid colour of the plots (a colour, or the theme's own); which panels are shown at start-up (all four by default; a panel not shown is in the View menu); log every instrument command (as `--debug`).
+- *Advanced:* limits that apply to every sweep, whatever a preset holds: how much of the screen the signal should fill (60 to 80 %), auto-range retries (3), noise floor (10 %), capture timeout (5 s), the SNR below which a point is flagged LOW_SNR (20 dB), bad-capture retries (2); a Defaults button. Only values that differ from the defaults are stored.
+- *The skew check's own settings* are in the wizard, not in this dialog: the two check frequencies (10 and 20 MHz) and the captures per frequency (3), with a Defaults button; the upper frequency is limited to what both instruments reach.
+
 - Location: `platformdirs.user_config_dir("bodeplot")`
   - `settings.json`: connections, backend, window state, last preset.
   - `presets/<name>.json`: `SweepConfig`, `StimulusConfig`, `ScopeConfig`, `MeasureSettings`. No connection info.

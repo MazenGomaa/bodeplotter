@@ -6,6 +6,7 @@ from pathlib import Path
 from platformdirs import user_log_dir
 
 APP = "bodeplot"
+_cli_debug = False          # started with --debug: the setting cannot switch that off
 
 
 def log_path() -> Path:
@@ -13,6 +14,8 @@ def log_path() -> Path:
 
 
 def setup_logging(debug: bool = False, to_file: bool = True) -> logging.Logger:
+    global _cli_debug
+    _cli_debug = bool(debug)
     root = logging.getLogger(APP)
     root.setLevel(logging.DEBUG if debug else logging.INFO)
     root.handlers.clear()
@@ -31,3 +34,9 @@ def setup_logging(debug: bool = False, to_file: bool = True) -> logging.Logger:
         s.setFormatter(fmt)
         root.addHandler(s)
     return root
+
+
+def set_debug(on: bool) -> None:
+    """The 'debug logging' setting: every instrument command goes into the log file, as
+    with --debug (which stays on whatever the setting says)."""
+    logging.getLogger(APP).setLevel(logging.DEBUG if (on or _cli_debug) else logging.INFO)

@@ -49,7 +49,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `drivers/visa_util.py` | the only pyvisa import: resource manager, discovery, the `BODEPLOT_NO_HARDWARE` guard | - |
 | `gui/bode_plot.py` | gain and phase plots of a trace set, relative display, follow / fit view, vertical unit, re-measure request | `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `measure/sinefit.py`, `models.py`, `traces.py`, `units.py` |
 | `gui/config_panel.py` | the input panel; builds the config dataclasses and presets | `gui/si_widgets.py`, `io/presets.py`, `models.py` |
-| `gui/dialogs.py` | settings, connections, simulation settings, the circuit form and theory dialog, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
+| `gui/dialogs.py` | settings, connections, simulation settings, the circuit form and theory dialog, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
 | `gui/main_window.py` | toolbar, menus, status bar, sweep control, exports; the engine's only client | `__init__.py`, `gui/bode_plot.py`, `gui/config_panel.py`, `gui/dialogs.py`, `gui/status_log.py`, `gui/theme.py`, `gui/traces_panel.py`, `gui/waveform_view.py`, `io/export_csv.py`, `io/export_image.py`, `io/export_touchstone.py`, `io/presets.py`, `io/settings.py`, `logging_setup.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py`, `sweep/engine.py`, `sweep/plan.py`, `traces.py`, `units.py` |
 | `gui/si_widgets.py` | k / M number entry, SI axis | `units.py` |
 | `gui/status_log.py` | point table and log text | `models.py`, `units.py` |
@@ -105,6 +105,7 @@ Not a clean stack, and known: `drivers/connect.py` imports `sweep/core.py` (it r
 | Tooltip texts and their delay | the texts next to each widget (`TIPS` in `gui/config_panel.py` for the Configuration panel); the 3 s delay in `gui/theme.py` (`TOOLTIP_DELAY_MS`) |
 | Colours | `gui/theme.py` only (the white-background image export is the one exception) |
 | Settings and presets on disk | `io/settings.py`, `io/presets.py`, `models.from_dict` |
+| Settings taking effect | `MainWindow.apply_settings` in `gui/main_window.py` (explanations and grid colour through `gui/theme.py`, debug logging through `logging_setup.set_debug`, the advanced measurement limits through `ConfigPanel.advanced`); `settings.measure_overrides` checks the advanced values; the skew check's own settings travel in `Configs.skew_freqs` / `skew_captures` to `core.run_skew_check` |
 | Opening a VISA resource | `drivers/transport.py` (`VisaTransport`) through `drivers/visa_util.py`, nowhere else |
 
 ## Outside the package

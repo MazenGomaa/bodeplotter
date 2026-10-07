@@ -214,8 +214,44 @@ QToolButton::menu-indicator {{{{ image: url({u}/down.png); subcontrol-position: 
 # Design rule (user, 2026-10-07): every option explains itself in a tooltip, and the
 # tooltip appears after the mouse has rested on the option for this long. Qt's own delay
 # is 0.7 s, which makes the explanations flicker up while the mouse merely passes.
-TOOLTIP_DELAY_MS = 3000
+TOOLTIP_DELAY_MS = 3000         # the default; the Settings dialog can change it (set_tooltips)
 _style = None                   # the application style; kept so that it is not collected
+_tooltip_delay_ms = TOOLTIP_DELAY_MS
+_tooltips_on = True
+_tip_filter = None
+_grid_color = ""                # "" = BORDER; set by the user in the Settings dialog (set_grid_color)
+
+
+def set_tooltips(enabled: bool, delay_ms: float) -> None:
+    """Switch the explanations on or off, and set how long the mouse must rest first."""
+    global _tooltips_on, _tooltip_delay_ms
+    _tooltips_on, _tooltip_delay_ms = bool(enabled), int(max(0, delay_ms))
+
+
+def tooltips_enabled() -> bool:
+    return _tooltips_on
+
+
+def tip_filter():
+    """The application-wide event filter that swallows tooltips while they are switched off."""
+    global _tip_filter
+    if _tip_filter is None:
+        from PySide6.QtCore import QEvent, QObject
+
+        class TipFilter(QObject):
+            def eventFilter(self, obj, event):
+                return event.type() == QEvent.ToolTip and not _tooltips_on
+
+        _tip_filter = TipFilter()
+    return _tip_filter
+
+
+def set_grid_color(color: str) -> None:
+    """Colour of the plots' grid and axis lines ("#rrggbb"); anything else: the theme's own.
+    Call style_plot() on each plot afterwards."""
+    import re
+    global _grid_color
+    _grid_color = color if isinstance(color, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", color) else ""
 
 
 def _make_style():
@@ -226,7 +262,7 @@ def _make_style():
 
         def styleHint(self, hint, option=None, widget=None, returnData=None):
             if hint == QStyle.SH_ToolTip_WakeUpDelay:
-                return TOOLTIP_DELAY_MS
+                return _tooltip_delay_ms
             return super().styleHint(hint, option, widget, returnData)
 
     return AppStyle("Fusion")
@@ -240,6 +276,8 @@ def apply(app) -> None:
     global _style
     _style = _make_style()              # Fusion on every OS, so the stylesheet lands the same
     app.setStyle(_style)
+    app.removeEventFilter(tip_filter())
+    app.installEventFilter(tip_filter())
     pal = QPalette()
     for role, color in ((QPalette.Window, PAGE), (QPalette.WindowText, INK), (QPalette.Base, RAISED),
                         (QPalette.AlternateBase, SURFACE), (QPalette.Text, INK), (QPalette.Button, RAISED),
@@ -261,6 +299,7 @@ def style_plot(plot_widget) -> None:
     item = plot_widget.getPlotItem()
     for name in ("left", "bottom"):
         ax = item.getAxis(name)
-        ax.setPen(pg.mkPen(BORDER))
+        ax.setPen(pg.mkPen(_grid_color or BORDER))      # pyqtgraph draws the grid with the axis pen
         ax.setTextPen(pg.mkPen(MUTED))
-    item.showGrid(x=True, y=True, alpha=0.18)
+    # a colour the user chose is meant to be seen: drawn stronger than the recessive default
+    item.showGrid(x=True, y=True, alpha=0.5 if _grid_color else 0.18)

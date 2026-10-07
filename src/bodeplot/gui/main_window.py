@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QComboBox, QDockWidget, QFileDialog, QInputDialog
 
 from .. import __version__
 from ..io import export_csv, export_image, export_touchstone, presets
-from ..io.settings import AppSettings, load_settings, save_settings
+from ..io.settings import AppSettings, load_settings, measure_overrides, save_settings
 from ..measure import skew
 from ..models import EngineState, LogEntry, Method, PointResult, SweepResult, SweepType, ThroughCal
 from ..sweep import calibration
@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
         self._pending_sweep = False
         self._last_reason: str | None = None
         self._image_opts = export_image.ImageOptions()
+        self._auto_kept: list[int] = []     # traces kept by the 'keep previous sweeps' setting, oldest first
 
         app = QApplication.instance()
         if app is not None:
@@ -99,6 +100,7 @@ class MainWindow(QMainWindow):
         self.traces_panel.changed.connect(self.plot.traces_changed)
         self.traces_panel.changed.connect(self._update_actions)     # after the plot: Export follows what is drawn
         self.traces_panel.message.connect(self._say)
+        self.traces_panel.folder_used.connect(lambda folder: self.remember_folder(Path(folder) / "x"))
         self.plot.unit_box.currentIndexChanged.connect(lambda _i: self.traces_panel.set_unit(self.plot.unit()))
 
         self._build_toolbar()
@@ -106,6 +108,7 @@ class MainWindow(QMainWindow):
         self._build_statusbar()
         self._default_state = self.saveState()      # the layout "Reset layout" goes back to
         self._load_ui_state()
+        self.apply_settings()
         self.config.changed.connect(self._on_config_changed)
         self._on_config_changed()
         self._tick = QTimer(self)
@@ -380,10 +383,11 @@ class MainWindow(QMainWindow):
                 self.restoreState(QByteArray.fromBase64(s.window_state.encode("ascii")))
         except Exception:                           # a bad saved layout must not stop the app
             log.warning("could not restore the window layout")
-        # Every panel and the toolbar are shown at start-up, whatever was closed last time.
-        # The saved layout still decides where they sit and how big they are.
-        for dock in self.docks.values():
-            dock.show()
+        # The panels ticked in Settings > General are shown at start-up (all of them unless the
+        # user unticked one), whatever was closed last time; so is the toolbar. The saved layout
+        # still decides where they sit and how big they are.
+        for name, dock in self.docks.items():
+            dock.setVisible(bool(s.startup_panels.get(name, True)))
         self.toolbar.show()
 
     def _save_ui_state(self) -> None:
@@ -409,8 +413,32 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------------ helpers
     def configs(self) -> Configs:
-        c = self.config
-        return Configs(c.sweep(), c.stimulus(), c.scope(), c.measure())
+        c, s = self.config, self.settings
+        return Configs(c.sweep(), c.stimulus(), c.scope(), c.measure(),
+                       (s.skew_freq_lo_hz, s.skew_freq_hi_hz), int(s.skew_captures))
+
+    def apply_settings(self) -> None:
+        """Put the stored settings into effect: explanations, grid colour, debug logging, the
+        advanced measurement limits, the folder for files. Called at start and after the
+        Settings dialog."""
+        from ..logging_setup import set_debug
+        s = self.settings
+        theme.set_tooltips(s.tooltips, s.tooltip_delay_ms)
+        theme.set_grid_color(s.grid_color)
+        for plot in (self.plot.gain_plot, self.plot.phase_plot, self.waveform.plot):
+            theme.style_plot(plot)
+        set_debug(s.debug_logging)
+        self.config.advanced = measure_overrides(s.advanced)
+        self.traces_panel.folder = self.start_folder()
+
+    def start_folder(self) -> str:
+        """Where Export and Load CSV open: the folder set in the settings, else the one used last."""
+        return self.settings.export_folder or self.settings.last_folder
+
+    def remember_folder(self, path) -> None:
+        """A file was written to or read from this path: its folder is the one used last."""
+        self.settings.last_folder = str(Path(path).parent)
+        self.traces_panel.folder = self.start_folder()
 
     def _say(self, level: str, text: str) -> None:
         self.status_log.add_log(LogEntry(level, text, time.strftime("%Y-%m-%dT%H:%M:%S")))
@@ -504,6 +532,7 @@ class MainWindow(QMainWindow):
                                          ("Open log folder", self.open_log_folder)))
         if d.exec():
             d.apply_to(self.settings)
+            self.apply_settings()
             if self.settings.simulate != was:
                 self._stored_simulate = None
             self.act_unwrap.setChecked(self.settings.unwrap_phase)
@@ -518,13 +547,14 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------------ skew
     def skew_freqs_hint(self) -> tuple[float, float]:
-        # the check does not follow the sweep range (core.skew_check_frequencies)
-        return skew.DEFAULT_FREQS_HZ
+        # the check does not follow the sweep range; its frequencies are a setting of the wizard
+        return (self.settings.skew_freq_lo_hz, self.settings.skew_freq_hi_hz)
 
     def open_skew_wizard(self) -> bool:
         if not self.info.connected:
             return False
-        wiz = SkewWizard(self.engine, self.configs, self.info.simulated, self.skew_freqs_hint(), self)
+        wiz = SkewWizard(self.engine, self.configs, self.info.simulated, self.skew_freqs_hint(), self,
+                         settings=self.settings, save=self._save_settings)
         return bool(wiz.exec())
 
     def open_cal_dialog(self) -> bool:
@@ -593,6 +623,15 @@ class MainWindow(QMainWindow):
 
     def _begin_sweep(self) -> None:
         self._pending_sweep = False
+        keep = int(self.settings.auto_keep_sweeps)
+        if keep > 0 and self.traces.live.points:        # Settings > Keep previous sweeps
+            self._auto_kept.append(self.traces.keep_live().id)
+            while len(self._auto_kept) > keep:
+                old = self._auto_kept.pop(0)
+                if self.traces.get(old) is not None:    # the user may have removed it already
+                    self.traces.remove(old)
+            self.traces_panel.reload()
+            self.plot.traces_changed()
         self.result = None
         self._points = []
         self.plot.clear()
@@ -655,7 +694,10 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", message)
 
     def _on_session(self, info: SessionInfo) -> None:
+        was_connected = self.info.connected
         was_valid, self.info = self.info.skew_valid, info
+        if info.connected and not was_connected and self.settings.skew_wizard_on_connect and not info.skew_valid:
+            QTimer.singleShot(0, lambda: self.open_skew_wizard())     # Settings > Connect; off by default
         self._refresh_correction()
         if not info.connected or info.skew_valid:
             self._last_reason = None
@@ -765,11 +807,13 @@ class MainWindow(QMainWindow):
             if not d.exec():
                 return
             opts = self._image_opts = d.options(self.plot.unwrap(), True, True)
-        path, _ = QFileDialog.getSaveFileName(self, "Export", "bode." + fmt, "*." + fmt)
+        start = str(Path(self.start_folder()) / ("bode." + fmt)) if self.start_folder() else "bode." + fmt
+        path, _ = QFileDialog.getSaveFileName(self, "Export", start, "*." + fmt)
         if not path:
             return
         try:
             self.export(path if path.lower().endswith("." + fmt) else path + "." + fmt, fmt, opts)
+            self.remember_folder(path)
         except Exception as e:
             self._warn_box("Export", "Export failed: %s" % e)
 

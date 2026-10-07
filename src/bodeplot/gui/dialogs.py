@@ -10,10 +10,10 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
 
 from ..drivers import registry, visa_util
 from ..io.export_image import ImageOptions
-from ..io.settings import SCOPE_MIN_GAP_MS, AppSettings
+from ..io.settings import AUTO_KEEP_MAX, SCOPE_MIN_GAP_MS, SKEW_CAPTURES_MAX, SKEW_DEFAULTS, AppSettings, measure_overrides
 from ..measure import skew, theory
 from ..measure.theory import TransferFunction
-from ..models import SkewCheck, ThroughCal
+from ..models import MeasureSettings, SkewCheck, ThroughCal
 from ..sweep import calibration
 from ..units import fmt_si, parse_si
 from . import theme
@@ -277,12 +277,14 @@ class SimSettingsDialog(QDialog):
 
 
 # ---------------------------------------------------------------------- settings
+PANEL_LABELS = (("dock_config", "Configuration"), ("dock_waveform", "Waveform"), ("dock_traces", "Traces"),
+                ("dock_log", "Status log"))
 STARTUP_LABELS = (("instruments", "Real instruments"), ("simulation", "Simulation"),
                   ("last", "The mode used last time"))
 
 
 class SettingsDialog(QDialog):
-    """Every stored setting in one place: General, Instruments, Simulation."""
+    """Every stored setting in one place: General, Advanced, Instruments, Simulation."""
 
     def __init__(self, settings: AppSettings, parent=None, connected: bool = False, open_folders=None):
         super().__init__(parent)
@@ -311,16 +313,156 @@ class SettingsDialog(QDialog):
         form.addRow("Pause after a scope range change", self.gap)
         self.unwrap = QCheckBox("Unwrap phase")
         self.unwrap.setChecked(settings.unwrap_phase)
+        self.unwrap.setToolTip("Draw the phase as one continuous curve when the app starts. The box above the "
+                               "plot changes it for the running session.")
         form.addRow("Plot", self.unwrap)
+
+        # ---- behaviour (user request 2026-10-07)
+        self.skew_on_connect = QCheckBox("Open the skew wizard after every connect")
+        self.skew_on_connect.setChecked(settings.skew_wizard_on_connect)
+        self.skew_on_connect.setToolTip("Off: after a connect the status bar and the log say that the skew check is "
+                                        "needed, and starting a sweep asks. On: the wizard opens by itself.")
+        form.addRow("Connect", self.skew_on_connect)
+        self.tooltips = QCheckBox("Show explanations after")
+        self.tooltips.setChecked(settings.tooltips)
+        self.tooltips.setToolTip("Explanations like this one, shown when the mouse rests on an option. "
+                                 "Untick to switch them all off.")
+        self.tooltip_delay = QDoubleSpinBox()
+        self.tooltip_delay.setRange(0.0, 10.0)
+        self.tooltip_delay.setDecimals(1)
+        self.tooltip_delay.setSingleStep(0.5)
+        self.tooltip_delay.setSuffix(" s")
+        self.tooltip_delay.setValue(settings.tooltip_delay_ms / 1000.0)
+        self.tooltip_delay.setToolTip("How long the mouse must rest on an option before its explanation appears.")
+        row = QHBoxLayout()
+        row.addWidget(self.tooltips)
+        row.addWidget(self.tooltip_delay)
+        row.addStretch(1)
+        form.addRow("Explanations", row)
+        self.auto_keep = QSpinBox()
+        self.auto_keep.setRange(0, AUTO_KEEP_MAX)
+        self.auto_keep.setSpecialValueText("off")
+        self.auto_keep.setValue(int(settings.auto_keep_sweeps))
+        self.auto_keep.setToolTip("When a new sweep starts, keep this many previous sweeps on the plot as traces. "
+                                  "Older ones are removed; sweeps you kept yourself stay.")
+        form.addRow("Keep previous sweeps", self.auto_keep)
+        self.folder = QLineEdit(settings.export_folder)
+        self.folder.setPlaceholderText("the folder used last")
+        self.folder.setToolTip("Folder that Export and Load CSV open in. Leave it empty to start in the folder "
+                               "that was used last.")
+        self.folder_btn = QPushButton("Browse…")
+        self.folder_btn.setToolTip("Choose the folder that Export and Load CSV open in.")
+        self.folder_btn.clicked.connect(self._browse_folder)
+        row = QHBoxLayout()
+        row.addWidget(self.folder, 1)
+        row.addWidget(self.folder_btn)
+        form.addRow("Folder for files", row)
+        self.grid_color = ""
+        self.grid_swatch = QLabel()
+        self.grid_btn = QPushButton("Choose…")
+        self.grid_btn.setToolTip("Choose the colour of the grid and axis lines of the plots.")
+        self.grid_default_btn = QPushButton("Theme default")
+        self.grid_default_btn.setToolTip("Back to the theme's own faint grid and axis lines.")
+        self.grid_btn.clicked.connect(self._choose_grid_color)
+        self.grid_default_btn.clicked.connect(lambda: self.set_grid_color(""))
+        row = QHBoxLayout()
+        row.addWidget(self.grid_swatch)
+        row.addWidget(self.grid_btn)
+        row.addWidget(self.grid_default_btn)
+        row.addStretch(1)
+        form.addRow("Grid colour", row)
+        self.set_grid_color(settings.grid_color)
+        self.panels: dict[str, QCheckBox] = {}
+        row = QHBoxLayout()
+        for name, label in PANEL_LABELS:
+            box = QCheckBox(label)
+            box.setChecked(bool(settings.startup_panels.get(name, True)))
+            box.setToolTip("Show the %s panel when the app starts. A panel that is not shown is one click away "
+                           "in the View menu." % label)
+            self.panels[name] = box
+            row.addWidget(box)
+        row.addStretch(1)
+        form.addRow("Panels at start-up", row)
+        self.debug = QCheckBox("Log every instrument command")
+        self.debug.setChecked(settings.debug_logging)
+        self.debug.setToolTip("Write every command sent to the instruments and every reply into the log file "
+                              "(Help > Open log folder). For finding a fault; the file grows quickly.")
+        form.addRow("Log file", self.debug)
         if open_folders:
             row = QHBoxLayout()
             for label, slot in open_folders:
                 b = QPushButton(label)
+                b.setToolTip("Open this folder in the file manager: %s." % label.lower())
                 b.clicked.connect(slot)
                 row.addWidget(b)
             row.addStretch(1)
             form.addRow("Folders", row)
         self.tabs.addTab(general, "General")
+
+        # ---- advanced: measurement limits, for every sweep whatever a preset holds
+        adv = QWidget()
+        form = QFormLayout(adv)
+        note = QLabel("These apply to every sweep. The defaults are what the app was tested with on the bench; "
+                      "change them only for a reason.")
+        note.setWordWrap(True)
+        form.addRow(note)
+        defaults = MeasureSettings()
+        now = measure_overrides(settings.advanced)
+
+        def spin(lo, hi, value, suffix, tip):
+            s = QSpinBox()
+            s.setRange(lo, hi)
+            s.setValue(int(round(value)))
+            s.setSuffix(suffix)
+            s.setToolTip(tip)
+            return s
+
+        def dspin(lo, hi, value, suffix, tip):
+            s = QDoubleSpinBox()
+            s.setRange(lo, hi)
+            s.setDecimals(1)
+            s.setValue(float(value))
+            s.setSuffix(suffix)
+            s.setToolTip(tip)
+            return s
+
+        target = now.get("autorange_target", defaults.autorange_target)
+        self.autorange_lo = spin(20, 90, target[0] * 100, " %", "Auto-range: a signal that fills less of the scope's "
+                                 "screen than this is measured again on a more sensitive V/div step.")
+        self.autorange_hi = spin(25, 95, target[1] * 100, " %", "Auto-range: a signal that fills more of the scope's "
+                                 "screen than this is measured again on a less sensitive V/div step.")
+        row = QHBoxLayout()
+        row.addWidget(self.autorange_lo)
+        row.addWidget(QLabel("to"))
+        row.addWidget(self.autorange_hi)
+        row.addStretch(1)
+        form.addRow("Screen filled by the signal", row)
+        self.autorange_retries = spin(1, 10, now.get("autorange_max_retries", defaults.autorange_max_retries), "",
+                                      "How many times a point may be measured again to find the right V/div step "
+                                      "before it is flagged AUTORANGE_FAILED.")
+        form.addRow("Auto-range retries", self.autorange_retries)
+        self.floor = spin(1, 50, now.get("floor_fraction", defaults.floor_fraction) * 100, " %",
+                          "A signal smaller than this share of the screen on the most sensitive V/div step is "
+                          "flagged BELOW_FLOOR.")
+        form.addRow("Noise floor", self.floor)
+        self.timeout = dspin(1.0, 60.0, now.get("acquire_timeout_s", defaults.acquire_timeout_s), " s",
+                             "How long the app waits for the scope to finish one capture before it gives up on it.")
+        form.addRow("Capture timeout", self.timeout)
+        self.low_snr = dspin(0.0, 60.0, now.get("low_snr_db", defaults.low_snr_db), " dB",
+                             "A point whose fitted sine stands out of the noise by less than this is flagged LOW_SNR.")
+        form.addRow("Low SNR below", self.low_snr)
+        self.bad_retries = spin(0, 5, now.get("bad_capture_retries", defaults.bad_capture_retries), "",
+                                "How many times a capture whose reference does not hold the stimulus is taken "
+                                "again before the point is flagged REF_SUSPECT.")
+        form.addRow("Bad-capture retries", self.bad_retries)
+        self.adv_defaults_btn = QPushButton("Defaults")
+        self.adv_defaults_btn.setToolTip("Put every value on this tab back to the one the app was tested with.")
+        self.adv_defaults_btn.clicked.connect(self.advanced_defaults)
+        row = QHBoxLayout()
+        row.addWidget(self.adv_defaults_btn)
+        row.addStretch(1)
+        form.addRow(row)
+        self.tabs.addTab(adv, "Advanced")
 
         self.connections = ConnectionsPanel(settings, self, connected)
         self.tabs.addTab(self.connections, "Instruments")
@@ -348,10 +490,71 @@ class SettingsDialog(QDialog):
             return
         self.accept()
 
+    # ---- the settings added on 2026-10-07
+    def set_grid_color(self, color: str) -> None:
+        """The chosen grid colour ("#rrggbb"), or "" for the theme's own."""
+        import re
+        self.grid_color = color if re.fullmatch(r"#[0-9a-fA-F]{6}", color or "") else ""
+        if self.grid_color:
+            from PySide6.QtGui import QColor, QPixmap
+            pix = QPixmap(48, 14)
+            pix.fill(QColor(self.grid_color))
+            self.grid_swatch.setPixmap(pix)
+        else:
+            self.grid_swatch.setText("theme default")
+
+    def _choose_grid_color(self) -> None:
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
+        c = QColorDialog.getColor(QColor(self.grid_color or theme.BORDER), self, "Grid colour")
+        if c.isValid():
+            self.set_grid_color(c.name())
+
+    def _browse_folder(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+        path = QFileDialog.getExistingDirectory(self, "Folder for Export and Load CSV", self.folder.text())
+        if path:
+            self.folder.setText(path)
+
+    def advanced_defaults(self) -> None:
+        d = MeasureSettings()
+        self.autorange_lo.setValue(int(round(d.autorange_target[0] * 100)))
+        self.autorange_hi.setValue(int(round(d.autorange_target[1] * 100)))
+        self.autorange_retries.setValue(d.autorange_max_retries)
+        self.floor.setValue(int(round(d.floor_fraction * 100)))
+        self.timeout.setValue(d.acquire_timeout_s)
+        self.low_snr.setValue(d.low_snr_db)
+        self.bad_retries.setValue(d.bad_capture_retries)
+
+    def _advanced(self) -> dict:
+        """The Advanced tab as stored: only what differs from the defaults."""
+        d = MeasureSettings()
+        out: dict = {}
+        lo, hi = self.autorange_lo.value() / 100.0, self.autorange_hi.value() / 100.0
+        if lo < hi and (abs(lo - d.autorange_target[0]) > 1e-9 or abs(hi - d.autorange_target[1]) > 1e-9):
+            out.update(autorange_lo=lo, autorange_hi=hi)
+        for key, value, default in (("autorange_max_retries", self.autorange_retries.value(), d.autorange_max_retries),
+                                    ("floor_fraction", self.floor.value() / 100.0, d.floor_fraction),
+                                    ("acquire_timeout_s", self.timeout.value(), d.acquire_timeout_s),
+                                    ("low_snr_db", self.low_snr.value(), d.low_snr_db),
+                                    ("bad_capture_retries", self.bad_retries.value(), d.bad_capture_retries)):
+            if abs(value - default) > 1e-9:
+                out[key] = value
+        return out
+
     def apply_to(self, settings: AppSettings) -> None:
         settings.startup_mode = self.startup.currentData()
         settings.scope_min_gap_ms = float(self.gap.value())
         settings.unwrap_phase = self.unwrap.isChecked()
+        settings.skew_wizard_on_connect = self.skew_on_connect.isChecked()
+        settings.tooltips = self.tooltips.isChecked()
+        settings.tooltip_delay_ms = self.tooltip_delay.value() * 1000.0
+        settings.auto_keep_sweeps = self.auto_keep.value()
+        settings.export_folder = self.folder.text().strip()
+        settings.grid_color = self.grid_color
+        settings.startup_panels = {name: box.isChecked() for name, box in self.panels.items()}
+        settings.debug_logging = self.debug.isChecked()
+        settings.advanced = self._advanced()
         if self.connections.isEnabled():
             self.connections.apply_to(settings)
             settings.sim = self.result_sim
@@ -411,23 +614,19 @@ class SkewWizard(QDialog):
     engine: a SweepEngine. get_configs: callable returning engine.Configs.
     """
 
-    def __init__(self, engine, get_configs, simulated: bool, freqs_hint: tuple[float, float], parent=None):
+    def __init__(self, engine, get_configs, simulated: bool, freqs_hint: tuple[float, float], parent=None,
+                 settings: AppSettings | None = None, save=None):
+        """settings: the app settings, whose skew check values the wizard shows and edits (without
+        them the wizard has no settings row). save: called after they were changed."""
         super().__init__(parent)
         self.setWindowTitle("Channel skew check")
-        self.resize(520, 380)
+        self.resize(540, 440)
         self.engine, self.get_configs = engine, get_configs
         self.check: SkewCheck | None = None
         lay = QVBoxLayout(self)
-        intro = (
-            "<b>Put the reference probe and the DUT probe on the same node</b>: both tips on the "
-            "generator output, both ground clips on its shell, both probes at the same setting.<br><br>"
-            "The app then measures the delay between the two scope channels at %g MHz and %g MHz and "
-            "removes it from every phase reading for the rest of this session.<br><br>"
-            "The generator output is switched on for the measurement and off again afterwards."
-            % (freqs_hint[0] / 1e6, freqs_hint[1] / 1e6))
-        if simulated:
-            intro += "<br><br><i>Simulation: the simulated DUT probe is moved to the reference node for you.</i>"
-        self.intro = QLabel(intro)
+        self.simulated, self.freqs_hint = simulated, freqs_hint
+        self.settings, self.save = settings, save
+        self.intro = QLabel("")
         self.intro.setWordWrap(True)
         self.result = QLabel("")
         self.result.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -437,6 +636,32 @@ class SkewWizard(QDialog):
         self.warn.setTextFormat(Qt.RichText)
         self.warnings_text = ""
         lay.addWidget(self.intro)
+        if settings is not None:
+            from .si_widgets import SiSpinBox
+            self.freq_lo = SiSpinBox(1.0, 1e9, settings.skew_freq_lo_hz, "Hz")
+            self.freq_hi = SiSpinBox(1.0, 1e9, settings.skew_freq_hi_hz, "Hz")
+            self.captures = QSpinBox()
+            self.captures.setRange(1, SKEW_CAPTURES_MAX)
+            self.captures.setValue(int(settings.skew_captures))
+            self.defaults_btn = QPushButton("Defaults")
+            self.freq_lo.setToolTip("The lower of the two frequencies the delay is measured at. High frequencies "
+                                    "resolve a delay best: 0.3 ns is only 0.1° at 1 MHz.")
+            self.freq_hi.setToolTip("The upper of the two frequencies the delay is measured at. It is limited to "
+                                    "what the generator and the scope both reach.")
+            self.captures.setToolTip("Captures averaged at each of the two frequencies. More captures: a steadier "
+                                     "result, a slightly longer check.")
+            self.defaults_btn.setToolTip("Back to 10 MHz, 20 MHz and 3 captures, the values tested on the bench.")
+            row = QHBoxLayout()
+            for text, w in (("Check at", self.freq_lo), ("and", self.freq_hi), ("captures", self.captures)):
+                row.addWidget(QLabel(text))
+                row.addWidget(w)
+            row.addWidget(self.defaults_btn)
+            row.addStretch(1)
+            lay.addLayout(row)
+            self.freq_lo.valueChanged.connect(lambda *_: self._show_intro())
+            self.freq_hi.valueChanged.connect(lambda *_: self._show_intro())
+            self.defaults_btn.clicked.connect(self._defaults)
+        self._show_intro()
         lay.addWidget(self.result, 1)
         lay.addWidget(self.warn)
         row = QHBoxLayout()
@@ -455,7 +680,40 @@ class SkewWizard(QDialog):
         engine.skew_measured.connect(self._measured)
         engine.error.connect(self._failed)
 
+    def _freqs(self) -> tuple[float, float]:
+        if self.settings is not None:
+            return float(self.freq_lo.value()), float(self.freq_hi.value())
+        return self.freqs_hint
+
+    def _show_intro(self) -> None:
+        lo, hi = self._freqs()
+        text = (
+            "<b>Put the reference probe and the DUT probe on the same node</b>: both tips on the "
+            "generator output, both ground clips on its shell, both probes at the same setting.<br><br>"
+            "The app then measures the delay between the two scope channels at %s and %s and "
+            "removes it from every phase reading for the rest of this session.<br><br>"
+            "The generator output is switched on for the measurement and off again afterwards."
+            % (fmt_si(lo, "Hz"), fmt_si(hi, "Hz")))
+        if self.simulated:
+            text += "<br><br><i>Simulation: the simulated DUT probe is moved to the reference node for you.</i>"
+        self.intro.setText(text)
+
+    def _defaults(self) -> None:
+        self.freq_lo.setValue(SKEW_DEFAULTS[0])
+        self.freq_hi.setValue(SKEW_DEFAULTS[1])
+        self.captures.setValue(SKEW_DEFAULTS[2])
+
     def measure(self) -> None:
+        if self.settings is not None:
+            lo, hi = self._freqs()
+            if not (0 < lo < hi):
+                self.warnings_text = "The lower check frequency must be below the upper one."
+                self.warn.setText(theme.status_html("critical", self.warnings_text))
+                return
+            s = self.settings
+            s.skew_freq_lo_hz, s.skew_freq_hi_hz, s.skew_captures = lo, hi, int(self.captures.value())
+            if self.save:
+                self.save()
         self.measure_btn.setEnabled(False)
         self.accept_btn.setEnabled(False)
         self.result.setText("Measuring …")

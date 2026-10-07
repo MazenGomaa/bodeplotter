@@ -1,6 +1,8 @@
 """Left dock: sweep, stimulus, scope and measurement settings (SPEC.md section 10)."""
 from __future__ import annotations
 
+from dataclasses import replace
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QAbstractSpinBox, QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox,
                                QScrollArea, QSpinBox, QVBoxLayout, QWidget)
@@ -171,6 +173,7 @@ class ConfigPanel(QScrollArea):
         self._fit_width()
 
         self._base_measure = MeasureSettings()
+        self.advanced: dict = {}        # MeasureSettings fields set in Settings > Advanced (settings.measure_overrides)
         self._base_scope = ScopeConfig()
         self.sweep_type.currentIndexChanged.connect(self._sync_enabled)
         for w in body.findChildren(QDoubleSpinBox) + body.findChildren(QSpinBox):
@@ -217,9 +220,11 @@ class ConfigPanel(QScrollArea):
 
     def measure(self) -> MeasureSettings:
         b = self._base_measure
-        return MeasureSettings(self.method.currentData(), self.averages.value(), self.settle_ms.value(),
-                               self.settle_cycles.value(), b.autorange_target, b.autorange_max_retries,
-                               b.floor_fraction, b.acquire_timeout_s, b.vdiv_settle_ms, b.low_snr_db)
+        m = MeasureSettings(self.method.currentData(), self.averages.value(), self.settle_ms.value(),
+                            self.settle_cycles.value(), b.autorange_target, b.autorange_max_retries,
+                            b.floor_fraction, b.acquire_timeout_s, b.vdiv_settle_ms, b.low_snr_db)
+        # the Advanced tab of the Settings dialog: for every sweep, whatever a preset holds
+        return replace(m, **self.advanced) if self.advanced else m
 
     def preset(self) -> Preset:
         return Preset(self.sweep(), self.stimulus(), self.scope(), self.measure())

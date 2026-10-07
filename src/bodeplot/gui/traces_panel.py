@@ -36,12 +36,14 @@ def _swatch(color: str) -> QIcon:
 class TracesPanel(QWidget):
     changed = Signal()                  # the set was changed: the plot redraws
     message = Signal(str, str)          # level ("info" | "warn"), text: for the status log
+    folder_used = Signal(str)           # Load CSV took files from this folder
 
     def __init__(self, traces: TraceSet, parent=None):
         super().__init__(parent)
         self.traces = traces
         self.interactive = True         # tests switch this off: no message boxes
         self.unit = "db"
+        self.folder = ""                # where Load CSV opens (set by the main window from the settings)
         lay = QVBoxLayout(self)
         self.tree = QTreeWidget()
         self.tree.setColumnCount(2)
@@ -194,7 +196,9 @@ class TracesPanel(QWidget):
         self._done()
 
     def _load_clicked(self) -> None:
-        paths, _ = QFileDialog.getOpenFileNames(self, "Load CSV", "", "Sweep CSV (*.csv);;All files (*)")
+        paths, _ = QFileDialog.getOpenFileNames(self, "Load CSV", self.folder, "Sweep CSV (*.csv);;All files (*)")
+        if paths:
+            self.folder_used.emit(str(Path(paths[0]).parent))
         self.load_files(paths)
 
     def _theory_clicked(self) -> None:

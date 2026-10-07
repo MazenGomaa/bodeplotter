@@ -29,6 +29,9 @@ class Configs:
     stimulus: StimulusConfig
     scope: ScopeConfig
     measure: MeasureSettings
+    # the skew check's own settings (the wizard); None: the defaults of core.run_skew_check
+    skew_freqs: tuple[float, float] | None = None
+    skew_captures: int | None = None
 
 
 @dataclass
@@ -194,7 +197,8 @@ class EngineWorker(QObject):
         self.state_changed.emit(EngineState.RUNNING)
         try:
             check = run_skew_check(self.session, cfg.stimulus, cfg.scope, cfg.measure, cfg.sweep,
-                                   should_stop=lambda: self._cancel_skew, on_log=self.log.emit)
+                                   should_stop=lambda: self._cancel_skew, on_log=self.log.emit,
+                                   freqs=cfg.skew_freqs, captures=cfg.skew_captures)
             self.state_changed.emit(EngineState.IDLE)
             self.skew_measured.emit(check)
         except Exception as e:

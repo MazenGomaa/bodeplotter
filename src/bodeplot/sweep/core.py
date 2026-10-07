@@ -285,12 +285,23 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
                    meas: MeasureSettings, sweep: SweepConfig | None = None,
                    should_stop: Callable[[], bool] = lambda: False,
                    sleep: Callable[[float], None] = time.sleep,
-                   on_log: Callable[[LogEntry], None] | None = None) -> SkewCheck:
+                   on_log: Callable[[LogEntry], None] | None = None,
+                   freqs: tuple[float, float] | None = None, captures: int | None = None) -> SkewCheck:
     """Measure delta-t with the reference and DUT probes on the same node (SPEC.md 8.6).
+    freqs and captures are the user's settings of the wizard; without them 10 and 20 MHz
+    (or what the instruments reach) and SKEW_CAPTURES captures per frequency.
     The caller has already asked the user to connect them. Generator output is
     switched off in a finally block. Does not store the result: see Session.accept_skew."""
     src, dig = session.source, session.digitizer
-    freqs = skew_check_frequencies(session, sweep)
+    if freqs is None:
+        freqs = skew_check_frequencies(session, sweep)
+    else:
+        top = min(src.caps.sine_max_hz, dig.caps.max_hz or dig.caps.bandwidth_hz)
+        lo, hi = float(freqs[0]), min(float(freqs[1]), top)
+        if not (0 < lo < hi):
+            raise DriverError("The skew check frequencies %g and %g Hz cannot be used: the lower one must be "
+                              "below the upper one, and the instruments reach %g Hz." % (freqs[0], freqs[1], top))
+        freqs = (lo, hi)
     def bad(info):
         text = save_bad_capture(session, info)
         log.warning(text)
@@ -298,7 +309,7 @@ def run_skew_check(session: Session, stim: StimulusConfig, scope_cfg: ScopeConfi
             on_log(LogEntry("warn", text, _now_iso()))
 
     meter = DualChannelScopeMeter(dig, scope_cfg, should_stop, sleep, on_bad_capture=bad)
-    settings = MeasureSettings(**{**meas.__dict__, "averages": SKEW_CAPTURES})
+    settings = MeasureSettings(**{**meas.__dict__, "averages": max(1, int(captures or SKEW_CAPTURES))})
     settings.method = Method.SINEFIT
     same_node = getattr(dig, "sim_set_same_node", None)     # simulation only
     hs = []
