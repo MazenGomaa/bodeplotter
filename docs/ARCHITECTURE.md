@@ -63,6 +63,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `io/settings.py` | `AppSettings`, the config folder (`BODEPLOT_CONFIG_DIR`) | `drivers/visa_util.py` |
 | `measure/builtin.py` | gain and phase from the scope's own measurements (simulation only) | `drivers/base.py` |
 | `measure/meters.py` | `DualChannelScopeMeter`: one frequency point, auto-range, bad-capture retry | `drivers/base.py`, `drivers/scpi.py`, `measure/builtin.py`, `measure/sinefit.py`, `models.py`, `sweep/autorange.py` |
+| `measure/response.py` | one response curve (gain in dB, unwrapped phase): value at a frequency, level crossings, refined extremes; no Qt | - |
 | `measure/sinefit.py` | sine fit, SNR, `gain_phase`, `unwrap_deg` | - |
 | `measure/theory.py` | transfer functions of ideal circuits: the simulated DUT and the plot's theory curves | `units.py` |
 | `measure/skew.py` | channel skew: delay from H, correction, evaluation, texts | `models.py` |
