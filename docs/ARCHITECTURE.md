@@ -33,6 +33,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `app.py` | QApplication bootstrap, theme, main window | `gui/main_window.py`, `gui/theme.py`, `logging_setup.py` |
 | `logging_setup.py` | rotating log file, `log_path()` | - |
 | `models.py` | config dataclasses, `PointResult`, `SkewCheck`, `SweepResult`, `Flag`, `from_dict` / `to_jsonable` | - |
+| `traces.py` | the traces of the Bode plot (live, kept, file, theory) and the relative-to maths | `measure/theory.py`, `models.py` |
 | `units.py` | SI prefixes: `fmt_si`, `parse_si` | - |
 | `drivers/base.py` | interfaces `SignalSource`, `Digitizer`; `Waveform`; capability dataclasses; `DriverError` | - |
 | `drivers/connect.py` | scan the bus, pick by `*IDN?`, open a real `Session` | `drivers/base.py`, `drivers/registry.py`, `drivers/step_tables.py`, `drivers/transport.py`, `drivers/visa_util.py`, `io/settings.py`, `sweep/core.py` |
