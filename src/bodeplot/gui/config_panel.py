@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox,
+from PySide6.QtWidgets import (QAbstractSpinBox, QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox,
                                QScrollArea, QSpinBox, QVBoxLayout, QWidget)
 
 from ..io.presets import Preset
@@ -10,6 +10,10 @@ from .si_widgets import SiSpinBox
 from ..models import (MeasureSettings, Method, ScopeConfig, StimulusConfig, SweepConfig, SweepType)
 
 PROBES = (1.0, 10.0, 100.0)
+# Every number field and box may shrink to this width. Their natural minimum follows the
+# longest value they could ever hold (1e9 Hz, 100000 points), which made the panel much wider
+# than what is in it (user report 2026-10-07).
+FIELD_MIN_WIDTH = 100          # "1.000 Vpp" and "Logarithmic" still fit
 
 
 def _dspin(lo, hi, value, decimals=3, suffix="", step=None) -> QDoubleSpinBox:
@@ -58,7 +62,7 @@ class ConfigPanel(QScrollArea):
         f.addRow("Stop", self.stop_hz)
         f.addRow("Points / decade", self.ppd)
         f.addRow("Points", self.n_points)
-        f.addRow("", self.descending)
+        f.addRow(self.descending)                 # across both columns: a tick box must not widen the field column
         lay.addWidget(g)
 
         # ---- stimulus
@@ -95,7 +99,7 @@ class ConfigPanel(QScrollArea):
         f.addRow("Reference probe", self.ref_probe)
         f.addRow("DUT probe", self.dut_probe)
         f.addRow("Coupling", self.coupling)
-        f.addRow("", self.bw_limit)
+        f.addRow(self.bw_limit)                 # across both columns: a tick box must not widen the field column
         f.addRow("Target cycles", self.target_cycles)
         lay.addWidget(g)
 
@@ -117,6 +121,8 @@ class ConfigPanel(QScrollArea):
         f.addRow("Settle cycles", self.settle_cycles)
         lay.addWidget(g)
         lay.addStretch(1)
+        for field in body.findChildren(QAbstractSpinBox) + body.findChildren(QComboBox):
+            field.setMinimumWidth(FIELD_MIN_WIDTH)
         self.setWidget(body)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._fit_width()
@@ -133,8 +139,9 @@ class ConfigPanel(QScrollArea):
         self._sync_enabled()
 
     def _fit_width(self) -> None:
-        """Never narrower than the fields need: the dock cannot be squeezed below them by
-        its neighbours (user report 2026-10-07), so no horizontal scroll bar is needed."""
+        """Never narrower than the labels and the fields at their smallest (FIELD_MIN_WIDTH):
+        the panel can be dragged slim, but its neighbours cannot squeeze it into a horizontal
+        scroll bar (user reports 2026-10-07)."""
         body = self.widget()
         if body is not None:
             self.setMinimumWidth(body.minimumSizeHint().width() + self.verticalScrollBar().sizeHint().width()

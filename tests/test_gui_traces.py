@@ -529,3 +529,20 @@ def test_reopening_a_theory_curve_keeps_its_values_exactly(qtbot):
     qtbot.addWidget(custom)
     custom._accept()
     assert custom.tf.den == pytest.approx((1.23456789e-4, 1.0), rel=1e-12)
+
+
+def test_configuration_panel_can_be_made_slim(win, qtbot):
+    """User, after the fix above: the panel now stopped the plot from growing, and it has a lot
+    of unused space. Its fields may shrink to a small fixed minimum, so the panel can be
+    dragged much narrower than its natural width (and never needs a horizontal scroll bar)."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QAbstractSpinBox, QComboBox
+    from bodeplot.gui.config_panel import FIELD_MIN_WIDTH
+    fields = win.config.widget().findChildren(QAbstractSpinBox) + win.config.widget().findChildren(QComboBox)
+    assert len(fields) > 10 and all(w.minimumWidth() == FIELD_MIN_WIDTH for w in fields)
+    slim, natural = win.config.minimumWidth(), win.config.widget().sizeHint().width()
+    assert slim >= win.config.widget().minimumSizeHint().width() and slim < 0.8 * natural
+    dock = win.docks["dock_config"]
+    win.resizeDocks([dock], [slim], Qt.Horizontal)
+    qtbot.waitUntil(lambda: dock.width() <= slim + 30, timeout=2000)
+    assert win.config.viewport().width() >= win.config.widget().minimumSizeHint().width()
