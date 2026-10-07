@@ -308,3 +308,27 @@ def test_skew_wizard_has_its_settings_with_defaults(qtbot, tmp_path, monkeypatch
         assert len(w.toolTip()) > 25
     wiz.done(0)
     win.close()
+
+
+# ---------------------------------------------------------------------- presets (user report 2026-10-07)
+def test_loading_a_preset_says_what_it_changed(qtbot, tmp_path, monkeypatch):
+    """User: 'changing presets does not change anything'. Their two presets held identical
+    settings, and nothing said so. Loading now reports what changed, or that nothing did and
+    what a preset holds."""
+    win = make_win(qtbot, tmp_path, monkeypatch)
+    win.save_preset_as("first")
+    p = win.config.preset()
+    p.sweep.start_hz, p.stimulus.amp_vpp = 200.0, 2.5
+    win.config.set_preset(p)
+    win.save_preset_as("second")
+    win.preset_box.setCurrentText("first")
+    win._preset_chosen(0)
+    log = win.status_log.text.toPlainText()
+    assert win.config.sweep().start_hz == 50.0 and win.config.stimulus().amp_vpp == 1.0
+    assert "Loaded preset 'first': 2 settings changed" in log
+    assert "Start 200 Hz → 50 Hz" in log and "Amplitude 2.5 Vpp → 1 Vpp" in log
+    win._preset_chosen(0)                                          # the same one again
+    log = win.status_log.text.toPlainText()
+    assert "Loaded preset 'first': it holds the settings that were already on screen, so nothing changed" in log
+    assert "Configuration panel" in log
+    win.close()

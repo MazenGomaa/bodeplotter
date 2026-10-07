@@ -191,8 +191,9 @@ class MainWindow(QMainWindow):
         tb.addWidget(QLabel(" Preset "))
         self.preset_box = QComboBox()
         self.preset_box.setMinimumWidth(160)
-        self.preset_box.setToolTip("A preset is a saved set of the Configuration panel's settings. Choose one "
-                                   "to load it.")
+        self.preset_box.setToolTip("A preset is a saved set of the Configuration panel's settings (sweep, "
+                                   "stimulus, scope, measurement), nothing else. Choose one to load it; the status "
+                                   "log says what it changed. To make a new one: set the panel, then Save As.")
         tb.addWidget(self.preset_box)
         self.act_preset_save = act("Save", self.save_preset,
                                    "Store the current settings in the preset that is selected.")
@@ -738,8 +739,17 @@ class MainWindow(QMainWindow):
     def _preset_chosen(self, _index: int) -> None:
         name = self.preset_box.currentText()
         if name:
+            before = self.config.preset()
             self.config.set_preset(presets.load_preset(name))
-            self._say("info", "Loaded preset '%s'." % name)
+            changed = presets.describe_changes(before, self.config.preset())
+            if not changed:
+                # two presets saved from the same settings made the box look dead (user report 2026-10-07)
+                self._say("info", "Loaded preset '%s': it holds the settings that were already on screen, so "
+                                  "nothing changed. %s" % (name, presets.WHAT_A_PRESET_HOLDS))
+            else:
+                more = "; and %d more" % (len(changed) - 8) if len(changed) > 8 else ""
+                self._say("info", "Loaded preset '%s': %d setting%s changed: %s%s." % (
+                    name, len(changed), "" if len(changed) == 1 else "s", "; ".join(changed[:8]), more))
 
     def save_preset(self) -> None:
         name = self.preset_box.currentText()

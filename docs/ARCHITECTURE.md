@@ -59,7 +59,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `io/export_csv.py` | CSV writer and loader, the skew and calibration header lines | `measure/sinefit.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py` |
 | `io/export_image.py` | PNG / SVG / PDF with matplotlib | `io/export_csv.py`, `measure/sinefit.py`, `models.py` |
 | `io/export_touchstone.py` | `.s2p` writer | `io/export_csv.py`, `models.py` |
-| `io/presets.py` | presets as JSON files | `io/settings.py`, `models.py` |
+| `io/presets.py` | presets as JSON files; what differs between two sets of settings | `io/settings.py`, `models.py`, `units.py` |
 | `io/settings.py` | `AppSettings`, the config folder (`BODEPLOT_CONFIG_DIR`) | `drivers/visa_util.py` |
 | `measure/builtin.py` | gain and phase from the scope's own measurements (simulation only) | `drivers/base.py` |
 | `measure/meters.py` | `DualChannelScopeMeter`: one frequency point, auto-range, bad-capture retry | `drivers/base.py`, `drivers/scpi.py`, `measure/builtin.py`, `measure/sinefit.py`, `models.py`, `sweep/autorange.py` |
