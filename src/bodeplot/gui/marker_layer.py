@@ -35,6 +35,7 @@ class MarkerLayer:
         self.plots = (gain_plot, phase_plot)
         self.on_moved = on_moved    # (number, freq_hz) while a user marker is dragged
         self.log_x = True
+        self.color = theme.MARK_INK     # the user may choose another (set_color)
         self._items: dict[str, _Items] = {}
         self._placed: list[Placed] = []
         self._rects: dict[str, QRectF] = {}
@@ -83,12 +84,12 @@ class MarkerLayer:
         movable = m.kind == "user"
         for plot in self.plots:
             line = pg.InfiniteLine(angle=90, movable=movable,
-                                   pen=pg.mkPen(theme.MARK_INK, width=1, style=Qt.DashLine),
+                                   pen=pg.mkPen(self.color, width=1, style=Qt.DashLine),
                                    hoverPen=pg.mkPen(theme.INK, width=1.5, style=Qt.DashLine))
             if movable:
                 line.sigDragged.connect(lambda ln, n=m.number: self.on_moved(n, self.freq(ln.value())))
             dot = pg.ScatterPlotItem(size=theme.MARKER, symbol="d", pen=pg.mkPen(theme.SURFACE, width=theme.RING),
-                                     brush=pg.mkBrush(theme.MARK_INK))
+                                     brush=pg.mkBrush(self.color))
             for item in (line, dot):
                 item.setZValue(Z)
                 plot.addItem(item, ignoreBounds=True)        # a marker never widens "Fit view"
@@ -96,7 +97,7 @@ class MarkerLayer:
             it.dots.append(dot)
         fill = pg.mkColor(theme.SURFACE)
         fill.setAlpha(190)              # the curve shows through a label that lies on it
-        it.text = pg.TextItem(color=theme.MARK_INK, anchor=(0, 0), fill=pg.mkBrush(fill))
+        it.text = pg.TextItem(color=self.color, anchor=(0, 0), fill=pg.mkBrush(fill))
         it.text.setZValue(Z)
         self.plots[it.host].addItem(it.text, ignoreBounds=True)
         self._items[m.name] = it
@@ -109,6 +110,12 @@ class MarkerLayer:
             plot.removeItem(line)
             plot.removeItem(dot)
         self.plots[it.host].removeItem(it.text)
+
+    def set_color(self, color: str) -> None:
+        """Another colour for lines, dots and labels. The items are built again at the next show()."""
+        self.color = color
+        for name in list(self._items):
+            self._drop(name)
 
     def show(self, placed: list[Placed], log_x: bool) -> None:
         """Draw these markers and nothing else. A marker that is switched on but was not

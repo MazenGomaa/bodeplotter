@@ -60,7 +60,7 @@ def test_new_settings_have_defaults_and_survive_a_round_trip():
     s = AppSettings()
     assert (s.skew_wizard_on_connect, s.tooltips, s.tooltip_delay_ms, s.auto_keep_sweeps) == (False, True, 3000.0, 0)
     assert (s.export_folder, s.last_folder, s.grid_color, s.debug_logging, s.advanced) == ("", "", "", False, {})
-    assert s.startup_panels == {"dock_config": True, "dock_waveform": True, "dock_traces": True, "dock_log": True}
+    assert s.startup_panels == {"dock_config": True, "dock_waveform": True, "dock_traces": True, "dock_markers": True, "dock_log": True}
     assert (s.skew_freq_lo_hz, s.skew_freq_hi_hz, s.skew_captures) == (10e6, 20e6, 3)
     s.skew_wizard_on_connect, s.tooltip_delay_ms, s.auto_keep_sweeps, s.grid_color = True, 500.0, 3, "#445566"
     s.advanced = {"low_snr_db": 15.0, "autorange_max_retries": 5}
@@ -76,7 +76,7 @@ def test_bad_stored_values_fall_back():
                                "startup_panels": {"dock_log": False, "nonsense": 1}, "advanced": "x"})
     assert s.tooltip_delay_ms == 10000.0 and s.auto_keep_sweeps == 6 and s.grid_color == ""
     assert (s.skew_freq_lo_hz, s.skew_freq_hi_hz, s.skew_captures) == (10e6, 20e6, 1)
-    assert s.startup_panels == {"dock_config": True, "dock_waveform": True, "dock_traces": True, "dock_log": False}
+    assert s.startup_panels == {"dock_config": True, "dock_waveform": True, "dock_traces": True, "dock_markers": True, "dock_log": False}
     assert s.advanced == {}
     assert AppSettings.from_dict({"auto_keep_sweeps": "three", "tooltip_delay_ms": -5}).tooltip_delay_ms == 0.0
 
@@ -196,7 +196,7 @@ def test_new_settings_explain_themselves(qtbot):
 # ---------------------------------------------------------------------- the main window uses them
 def test_startup_panels_and_appearance_are_applied(qtbot, tmp_path, monkeypatch):
     win = make_win(qtbot, tmp_path, monkeypatch, tooltip_delay_ms=700.0, grid_color="#445566", debug_logging=True,
-                   startup_panels={"dock_config": True, "dock_waveform": False, "dock_traces": True, "dock_log": True},
+                   startup_panels={"dock_config": True, "dock_waveform": False, "dock_traces": True, "dock_markers": True, "dock_log": True},
                    advanced={"low_snr_db": 15.0}, export_folder=str(tmp_path))
     assert not win.docks["dock_waveform"].isVisible() and win.docks["dock_traces"].isVisible()
     win.view_actions["dock_waveform"].trigger()                    # still one click away

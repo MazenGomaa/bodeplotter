@@ -64,6 +64,8 @@ class Placed:
     y_gain: float | None
     y_phase: float | None
     left: bool = False          # the label goes to the left of the dot: the curve rises to the right there
+    value: str = ""             # the gain as the plot's unit writes it (the Markers panel's table)
+    phase: str = ""             # the phase as the phase plot shows it; "" without a phase plot
 
 
 class MarkerSet:
@@ -259,6 +261,30 @@ def label(m: Marker, value: str = "", phase: float | None = None) -> str:
     return text + ("\n" + second if second else "")
 
 
+def notes(m: Marker, with_phase: bool = True) -> str:
+    """What a table says about a marker besides its numbers: margin, bandwidth and Q,
+    reference marker, the difference to it, why there is no value, flagged."""
+    out = []
+    if m.kind == "gm":
+        out.append("gain margin %.2f dB" % m.margin)
+    if m.kind == "pm":
+        out.append("phase margin %.2f deg" % m.margin)
+    if m.extra:
+        out.append(m.extra.replace("  ", ", "))
+    if m.is_ref:
+        out.append("reference marker")
+    if m.delta is not None:
+        d = m.delta
+        out.append("rel. %s: x%.3g, %+.1f dB" % (d.ref, d.ratio, d.db)
+                   + (", %+.1f deg" % d.deg if with_phase else "")
+                   + (", %+.1f dB/dec" % d.slope if d.slope is not None else ""))
+    if m.note:
+        out.append(m.note)
+    if m.flagged:
+        out.append("flagged")
+    return "; ".join(out)
+
+
 def table(markers: list[Marker], title: str, phase=lambda m: m.deg, with_phase: bool = True) -> str:
     """The markers as tab-separated text for the clipboard. Gain in dB, plain numbers.
     with_phase False (a magnitude-only measurement): the phase column stays empty."""
@@ -267,25 +293,7 @@ def table(markers: list[Marker], title: str, phase=lambda m: m.deg, with_phase: 
         if not m.found:
             rows.append("%s\t\t\t\tnone" % m.name)
             continue
-        notes = []
-        if m.kind == "gm":
-            notes.append("gain margin %.2f dB" % m.margin)
-        if m.kind == "pm":
-            notes.append("phase margin %.2f deg" % m.margin)
-        if m.extra:
-            notes.append(m.extra.replace("  ", ", "))
-        if m.is_ref:
-            notes.append("reference marker")
-        if m.delta is not None:
-            d = m.delta
-            notes.append("rel. %s: x%.3g, %+.1f dB" % (d.ref, d.ratio, d.db)
-                         + (", %+.1f deg" % d.deg if with_phase else "")
-                         + (", %+.1f dB/dec" % d.slope if d.slope is not None else ""))
-        if m.note:
-            notes.append(m.note)
-        if m.flagged:
-            notes.append("flagged")
         ph = phase(m) if m.has_value and with_phase else None
         rows.append("%s\t%.2f\t%s\t%s\t%s" % (m.name, m.freq, "%.3f" % m.db if m.has_value else "",
-                                             "%.2f" % ph if ph is not None else "", "; ".join(notes)))
+                                             "%.2f" % ph if ph is not None else "", notes(m, with_phase)))
     return "\n".join(rows) + "\n"

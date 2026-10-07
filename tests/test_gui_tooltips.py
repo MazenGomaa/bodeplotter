@@ -75,25 +75,37 @@ def test_every_toolbar_item_explains_itself(win):
 
 def test_plot_trace_and_log_options_explain_themselves(win):
     plot, panel, log = win.plot, win.traces_panel, win.status_log
-    named = {"Unwrap phase": plot.unwrap_box, "Fit view": plot.fit_btn, "Markers": plot.markers_btn,
-             "Vertical": plot.unit_box,
-             "Relative to": plot.ref_box, "trace list": panel.tree, "Load CSV": panel.load_btn,
+    named = {"Unwrap phase": plot.unwrap_box, "Fit view": plot.fit_btn, "Vertical": plot.unit_box,
+             "Difference to trace": plot.ref_box, "trace list": panel.tree, "Load CSV": panel.load_btn,
              "Add theory": panel.theory_btn, "Keep sweep": panel.keep_btn, "Remove": panel.remove_btn,
              "Copy": log.copy_btn, "Clear": log.clear_btn}
     silent = [name for name, w in named.items() if not explains(w.toolTip(), name)]
     assert not silent, "options without an explanation: %s" % silent
     # nothing new slipped in without one: every button and box of these three panels is in the list
-    for host in (plot, panel, log):
+    for host in (plot, panel, log, win.markers_panel):
         for w in host.findChildren(QPushButton) + host.findChildren(QComboBox) + host.findChildren(QCheckBox):
             assert explains(w.toolTip()), "%s in %s has no explanation" % (
                 w.text() if hasattr(w, "text") else type(w).__name__, type(host).__name__)
 
 
+def _points():
+    import cmath
+    import math
+    from bodeplot.measure.theory import TransferFunction
+    from bodeplot.models import Flag, PointResult
+    rc = TransferFunction.rc_lpf(1e3, 100e-9)
+    for f in (100.0, 1000.0, 10000.0):
+        h = rc.h(f)
+        yield PointResult(freq_hz=f, h=h, gain_db=20 * math.log10(abs(h)), phase_deg=math.degrees(cmath.phase(h)),
+                          vref_amp=0.5, vdut_amp=0.5 * abs(h), vdiv_ref=0.02, vdiv_dut=0.02, timebase=1e-3, n_avg=1,
+                          snr_ref_db=50.0, snr_dut_db=50.0, flags=Flag.NONE, duration_s=0.1)
+
+
 def test_marker_menus_explain_themselves(win):
     plot = win.plot
+    win.plot.set_points([p for p in _points()])
     plot.add_marker(1000.0)
-    menus = {"Markers": plot.marker_menu, "Markers on": plot.marker_trace_menu,
-             "plot right-click": plot.context_menu(1000.0)}
+    menus = {"plot right-click": plot.context_menu(1000.0)}
     silent = []
     for where, menu in menus.items():
         assert menu.toolTipsVisible(), where

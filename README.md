@@ -133,20 +133,20 @@ The **Traces** panel lists what is on the plot. The live sweep is always there; 
 - **Load CSV…** adds sweeps saved earlier with Export > CSV, one or several at once.
 - **Add theory…** adds the ideal response of a circuit: pick RC low-pass, RC high-pass, RLC band-pass, RLC notch or a 2nd-order Butterworth and enter the parts (1k, 100n), or enter the coefficients of H(s). Double-click the kind of a theory trace to change its values.
 
-Tick a trace to show it, double-click its name to rename it. **Relative to** above the plot draws every trace divided by the one you choose: gain difference in dB and phase difference in degrees. With a theory curve as the reference this shows how far the measurement is from the ideal circuit. A theory curve is the ideal circuit only: no component losses, no lead inductance, no probe loading.
+Tick a trace to show it, double-click its name to rename it. **Difference to trace** above the plot draws every trace divided by the one you choose ("off" shows them as measured): gain difference in dB and phase difference in degrees. With a theory curve as the reference this shows how far the measurement is from the ideal circuit. A theory curve is the ideal circuit only: no component losses, no lead inductance, no probe loading.
 
 Traces are kept for this run of the app only. The image export shows every visible trace; CSV and Touchstone hold the live sweep.
 
 ## Markers
 
-The **Markers** button above the plot switches markers on one trace (**Markers on**, the live sweep unless you choose another). Each marker is a dashed line through both plots with its values written next to the curve.
+The **Markers** panel (a tab behind the Traces panel; View > Markers) switches markers on one trace (**Markers on**, the live sweep unless you choose another). Each marker is a dashed line through both plots with its values written next to the curve, and the panel lists all of them in a table.
 
 - **−3 dB** marks where the gain is 3 dB below the highest gain of the trace: `fc` for a low-pass or high-pass, `fL` and `fH` with bandwidth and Q for a band-pass.
 - **Peak** and **Notch** mark the highest and the lowest gain when they are real ones: not at an end of the trace and at least 1 dB clear of both ends.
 - **Margins** reads the trace as a loop gain: the phase margin where the gain passes 0 dB (180° + phase) and the gain margin where the phase passes −180°.
 - **Your own markers:** right-click the plot > **Add marker here**, then drag it, or right-click it to type a frequency (1k, 2.5M), to remove it, or to make it the **reference marker**; the others then show their difference to it and the slope in dB per decade. Up to eight.
 
-Between two measured points the values are interpolated. In **Relative to** view the markers measure the difference curve. **Copy marker values** puts a table on the clipboard, and the image export shows the markers. The ticked automatic markers are remembered; your own markers are not.
+Between two measured points the values are interpolated. With **Difference to trace** set, the markers measure the difference curve. **Copy values** puts a table on the clipboard, and the image export shows the markers. Untick **Values on the plot** to keep only the names on the plot and read the numbers in the table; **Colour…** changes the marker colour on screen. The ticks, that choice and the colour are remembered; your own markers are not.
 
 ## Instrument rules that matter
 

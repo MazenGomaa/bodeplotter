@@ -27,6 +27,7 @@ from ..units import fmt_si
 from .dialogs import (CalDialog, ConnectionsDialog, ImageExportDialog, SettingsDialog, SimSettingsDialog,
                       SkewWizard)
 from .status_log import StatusLog
+from .markers_panel import MarkersPanel
 from .traces_panel import TracesPanel
 from .waveform_view import WaveformView
 
@@ -74,16 +75,21 @@ class MainWindow(QMainWindow):
         self.status_log = StatusLog()
         self.traces_panel = TracesPanel(self.traces)
         self.traces_panel.interactive = self._interactive
+        self.markers_panel = MarkersPanel(self.plot)
         for title, name, widget, area in (
                 ("Configuration", "dock_config", self.config, Qt.LeftDockWidgetArea),
                 ("Waveform", "dock_waveform", self.waveform, Qt.RightDockWidgetArea),
                 ("Traces", "dock_traces", self.traces_panel, Qt.RightDockWidgetArea),
+                ("Markers", "dock_markers", self.markers_panel, Qt.RightDockWidgetArea),
                 ("Status log", "dock_log", self.status_log, Qt.BottomDockWidgetArea)):
             dock = QDockWidget(title, self)
             dock.setObjectName(name)
             dock.setWidget(widget)
             self.addDockWidget(area, dock)
             self.docks[name] = dock
+        # the markers belong to a trace: their panel shares the place of the Traces panel, as a tab behind it
+        self.tabifyDockWidget(self.docks["dock_traces"], self.docks["dock_markers"])
+        self.docks["dock_traces"].raise_()
 
         self.engine = SweepEngine(self)
         e = self.engine
@@ -254,7 +260,7 @@ class MainWindow(QMainWindow):
         m.setToolTipsVisible(True)
         self.view_actions = {}
         for name, text in (("dock_config", "&Configuration"), ("dock_waveform", "&Waveform"), ("dock_traces", "&Traces"),
-                           ("dock_log", "&Status log")):
+                           ("dock_markers", "&Markers"), ("dock_log", "&Status log")):
             a = self.docks[name].toggleViewAction()     # checked while the dock is open
             a.setText(text)
             m.addAction(a)
@@ -382,6 +388,8 @@ class MainWindow(QMainWindow):
         self.plot.set_unwrap(s.unwrap_phase)
         self.plot.set_unit(s.vertical_unit)
         self.plot.set_marker_kinds(s.markers)
+        self.plot.set_marker_values(s.marker_values)
+        self.plot.set_marker_color(s.marker_color)
         self.traces_panel.set_unit(self.plot.unit())
         self.act_unwrap.setChecked(s.unwrap_phase)
         try:
@@ -405,6 +413,8 @@ class MainWindow(QMainWindow):
         s.unwrap_phase = self.plot.unwrap()
         s.vertical_unit = self.plot.unit()
         s.markers = self.plot.marker_kinds()
+        s.marker_values = self.plot.marker_values()
+        s.marker_color = self.plot.marker_color()
         s.window_geometry = bytes(self.saveGeometry().toBase64()).decode("ascii")
         s.window_state = bytes(self.saveState().toBase64()).decode("ascii")
         self._save_settings()

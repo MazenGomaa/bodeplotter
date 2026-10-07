@@ -7,16 +7,17 @@ themselves; it asks the set what is to be drawn.
 from __future__ import annotations
 
 import math
+import re
 
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QActionGroup, QCursor
+from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QHBoxLayout, QInputDialog, QLabel, QMenu,
                                QMessageBox, QPushButton, QSizePolicy, QVBoxLayout, QWidget)
 
 from ..io.export_image import ImageMarker, ImageSeries
-from ..markers import KINDS, MAX_USER, MarkerSet, Placed, label, table
+from ..markers import KINDS, MAX_USER, MarkerSet, Placed, freq_text, label, notes, table
 from ..measure.sinefit import unwrap_deg
 from ..models import Flag, PointResult
 from ..traces import Drawn, Trace, TraceSet
@@ -33,8 +34,8 @@ UNITS = {"db": ("dB", "Gain", "dB", 1.0),
 # the same axis when every trace is divided by a reference
 RELATIVE_LABEL = {"db": "Gain difference", "pct": "Output / reference"}
 COLORS = theme.SERIES                    # fixed order, one per colour slot; never cycled
-# The automatic markers of the Markers menu: kind -> (menu text, explanation)
-MARKER_MENU = {
+# The automatic markers, as the Markers panel offers them: kind -> (text, explanation)
+MARKER_TEXT = {
     "cutoff": ("-3 dB", "Mark where the gain has fallen 3 dB below the highest gain of the trace: the cut-off of "
                         "a low-pass or high-pass, or both edges of a band-pass with its bandwidth and Q"),
     "peak": ("Peak", "Mark the highest gain of the trace when it is a real peak: not at an end of the trace and "
@@ -58,6 +59,7 @@ class _Items:
 
 class BodePlot(QWidget):
     remeasure_requested = Signal(float)
+    markers_changed = Signal()          # the markers were worked out again: the Markers panel follows
 
     def __init__(self, traces: TraceSet | None = None, parent=None):
         super().__init__(parent)
@@ -93,22 +95,22 @@ class BodePlot(QWidget):
         # its longest name, and the tooltip shows the chosen one in full)
         self.ref_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.ref_box.setMinimumContentsLength(18)
-        self.ref_box.setToolTip("Draw every trace divided by this one: the gain difference in dB and the phase "
-                                "difference in degrees. Not available with the vertical unit Voltage.")
+        self.ref_box.setToolTip("Show the difference to one trace: every trace is drawn divided by the one chosen "
+                                "here, as the gain difference in dB and the phase difference in degrees. 'off' "
+                                "shows the traces as measured. Not available with the vertical unit Voltage.")
         self.markers = MarkerSet()
         self._marks: list = []              # the markers of the last refresh (markers.Marker)
         self._placed: list[Placed] = []     # the same, with texts and positions
         self._ctx_menu: QMenu | None = None
-        self.markers_btn = QPushButton("Markers")
-        self.markers_btn.setToolTip("Markers on the curve: the -3 dB points, the peak, the notch, the gain and "
-                                    "phase margin, and markers of your own at any frequency")
-        self._build_marker_menu()
+        self._marker_values = True          # write the values next to each marker (off: its name only)
+        self._marker_color = ""             # "#rrggbb" chosen by the user; "": the theme's
         top.addWidget(self.unwrap_box)
         top.addWidget(self.fit_btn)
-        top.addWidget(self.markers_btn)
         top.addWidget(QLabel(" Vertical"))
         top.addWidget(self.unit_box)
-        top.addWidget(QLabel(" Relative to"))
+        self.ref_label = QLabel(" Difference to trace")
+        self.ref_label.setToolTip(self.ref_box.toolTip())
+        top.addWidget(self.ref_label)
         top.addWidget(self.ref_box)
         top.addStretch(1)
         lay.addLayout(top)
@@ -176,7 +178,7 @@ class BodePlot(QWidget):
     def _fill_ref_box(self) -> None:
         self.ref_box.blockSignals(True)
         self.ref_box.clear()
-        self.ref_box.addItem("nothing", None)
+        self.ref_box.addItem("off", None)
         for t in self.set.traces:
             self.ref_box.addItem(t.name, t.id)
         i = self.ref_box.findData(self.set.reference_id) if self.set.reference_id is not None else 0
@@ -193,7 +195,6 @@ class BodePlot(QWidget):
     def traces_changed(self) -> None:
         """The set was changed from outside (the Traces panel): names, order, visibility."""
         self._fill_ref_box()
-        self._fill_marker_traces()
         self.refresh()
 
     def set_span_hint(self, lo: float, hi: float) -> None:
@@ -204,69 +205,59 @@ class BodePlot(QWidget):
             self.refresh()
 
     # ---- markers (rules in markers.py, graphics in gui/marker_layer.py)
-    def _build_marker_menu(self) -> None:
-        menu = QMenu(self.markers_btn)
-        menu.setToolTipsVisible(True)
-        self.marker_actions = {}
-        for kind in KINDS:
-            text, tip = MARKER_MENU[kind]
-            act = menu.addAction(text)
-            act.setCheckable(True)
-            act.setToolTip(tip)
-            act.toggled.connect(lambda on, k=kind: self.set_marker_kind(k, on))
-            self.marker_actions[kind] = act
-        menu.addSeparator()
-        self.marker_trace_menu = menu.addMenu("Markers on")
-        self.marker_trace_menu.setToolTipsVisible(True)
-        self.marker_trace_menu.menuAction().setToolTip("The trace the markers measure: all automatic markers and "
-                                                       "your own read this one trace, as it is drawn")
-        menu.addSeparator()
-        self.act_add_marker = menu.addAction("Add marker")
-        self.act_add_marker.setToolTip("Put a marker of your own in the middle of the visible frequency range; "
-                                       "drag it, or right-click it to type its frequency (up to %d)" % MAX_USER)
-        self.act_add_marker.triggered.connect(lambda _checked=False: self.add_marker())
-        self.act_clear_markers = menu.addAction("Remove all markers")
-        self.act_clear_markers.setToolTip("Remove every marker of your own; the automatic markers stay as ticked")
-        self.act_clear_markers.triggered.connect(lambda _checked=False: self.clear_markers())
-        self.act_copy_markers = menu.addAction("Copy marker values")
-        self.act_copy_markers.setToolTip("Copy the markers as a table (name, frequency, gain, phase, note) "
-                                         "for a report or a spreadsheet")
-        self.act_copy_markers.triggered.connect(lambda _checked=False: self.copy_markers())
-        self.markers_btn.setMenu(menu)
-        self.marker_menu = menu
-        self._fill_marker_traces()
-
-    def _fill_marker_traces(self) -> None:
-        if self.set.get(self.markers.trace_id) is None:     # the chosen trace was removed
-            self.markers.trace_id = self.set.live.id
-        self.marker_trace_menu.clear()
-        group = QActionGroup(self.marker_trace_menu)
-        for t in self.set.traces:
-            act = self.marker_trace_menu.addAction(t.name)
-            act.setCheckable(True)
-            act.setChecked(t.id == self.markers.trace_id)
-            act.setToolTip("Measure the trace '%s' with the markers" % t.name)
-            act.triggered.connect(lambda _checked=False, i=t.id: self.set_marker_trace(i))
-            group.addAction(act)
-
     def marker_kinds(self) -> list[str]:
         """The automatic markers that are switched on, in menu order."""
         return [k for k in KINDS if k in self.markers.kinds]
 
     def set_marker_kinds(self, kinds) -> None:
-        for kind, act in self.marker_actions.items():
-            act.setChecked(kind in kinds)                   # toggled -> set_marker_kind
+        for kind in KINDS:
+            self.markers.set_kind(kind, kind in kinds)
+        self._update_markers()
 
     def set_marker_kind(self, kind: str, on: bool) -> None:
         self.markers.set_kind(kind, on)
-        if self.marker_actions[kind].isChecked() != on:
-            self.marker_actions[kind].setChecked(on)
         self._update_markers()
 
     def set_marker_trace(self, trace_id: int) -> None:
         self.markers.trace_id = trace_id
-        self._fill_marker_traces()
         self._update_markers()
+
+    def marker_values(self) -> bool:
+        """True when each marker carries its values on the plot; False: its name only."""
+        return self._marker_values
+
+    def set_marker_values(self, on: bool) -> None:
+        self._marker_values = bool(on)
+        self._update_markers()
+
+    def marker_color(self) -> str:
+        """The marker colour the user chose ("#rrggbb"), or "" for the theme's."""
+        return self._marker_color
+
+    def set_marker_color(self, color) -> bool:
+        """"#rrggbb", or "" for the theme's colour. Anything else changes nothing (False)."""
+        if color != "" and not (isinstance(color, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", color)):
+            return False
+        self._marker_color = color.lower()
+        self.marker_layer.set_color(self._marker_color or theme.MARK_INK)
+        self._update_markers()
+        return True
+
+    def can_add_marker(self) -> bool:
+        """A marker of the user's can be added: the chosen trace is on the plot (a marker on
+        nothing would stand unseen) and there are fewer than MAX_USER."""
+        return len(self.markers.user) < MAX_USER and self._marker_curve() is not None
+
+    def marker_rows(self) -> list[tuple[str, str, str, str, str]]:
+        """The markers for a table: (name, frequency, gain in the plot's unit, phase, note)."""
+        out = []
+        for p in self._placed:
+            m = p.marker
+            if not m.found:
+                out.append((m.name, "", "", "", "none"))
+            else:
+                out.append((m.name, freq_text(m.freq), p.value, p.phase, notes(m, self.has_phase)))
+        return out
 
     def placed(self) -> list[Placed]:
         """The markers of the chosen trace as shown, switched-on ones that were not found included."""
@@ -275,6 +266,8 @@ class BodePlot(QWidget):
     def add_marker(self, freq_hz: float | None = None) -> int | None:
         """A marker of the user's at freq_hz (None: the middle of the visible range).
         Returns its number, or None when there are MAX_USER already."""
+        if not self.can_add_marker():
+            return None
         if freq_hz is None:
             x0, x1 = self.gain_plot.getPlotItem().vb.viewRange()[0]
             mid = (x0 + x1) / 2.0
@@ -318,7 +311,7 @@ class BodePlot(QWidget):
         if not m.found:
             return Placed(m, "", None, None)
         if not m.has_value:
-            return Placed(m, label(m), None, None)
+            return Placed(m, label(m) if self._marker_values else m.name, None, None)
         if self.unit() == "v":
             # the output voltage between two points, by the curve's own rule (log over log frequency)
             logs = [math.log10(2.0 * p.vdut_amp) if p.vdut_amp > 0 and math.isfinite(p.vdut_amp) else float("nan")
@@ -336,8 +329,9 @@ class BodePlot(QWidget):
         here, beyond = curve.at(m.freq), curve.at(m.freq * 1.02)
         k = 1 if m.kind == "pm" else 0      # the label sits on the phase plot, or on the gain plot
         rising = here is not None and beyond is not None and beyond[k] > here[k]
-        return Placed(m, label(m, value, phase), None if m.kind == "pm" else y, None if m.kind == "gm" else phase,
-                      left=rising)
+        text = label(m, value, phase) if self._marker_values else m.name
+        return Placed(m, text, None if m.kind == "pm" else y, None if m.kind == "gm" else phase, left=rising,
+                      value=value, phase="%+.1f°" % phase if phase is not None else "")
 
     def _update_markers(self) -> None:
         got = self._marker_curve()
@@ -347,7 +341,7 @@ class BodePlot(QWidget):
             self._marks = self.markers.evaluate(curve, margins=self.has_phase and not self.is_relative())
             self._placed = [self._place(m, curve, points) for m in self._marks]
         self.marker_layer.show(self._placed, self.log_x)
-        self.act_add_marker.setEnabled(len(self.markers.user) < MAX_USER)
+        self.markers_changed.emit()
 
     def context_menu(self, freq_hz: float, number: int | None = None) -> QMenu:
         """The right-click menu of the plot at freq_hz (number: the user marker under the
@@ -360,7 +354,7 @@ class BodePlot(QWidget):
             act = menu.addAction("Add marker here")
             act.setToolTip("Put a marker of your own at this frequency; it reads gain and phase of the "
                            "chosen trace there")
-            act.setEnabled(len(self.markers.user) < MAX_USER)
+            act.setEnabled(self.can_add_marker())
             act.triggered.connect(lambda _checked=False: self.add_marker(freq_hz))
             return menu
         act = menu.addAction("Set frequency…")

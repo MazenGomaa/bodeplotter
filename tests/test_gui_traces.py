@@ -44,7 +44,7 @@ def line_y(plot, trace, which="gain_line"):
 
 # ---------------------------------------------------------------------- the plot widget
 def test_plot_with_only_the_live_trace_is_as_before(plot):
-    assert [plot.ref_box.itemText(i) for i in range(plot.ref_box.count())] == ["nothing", "Sweep"]
+    assert [plot.ref_box.itemText(i) for i in range(plot.ref_box.count())] == ["off", "Sweep"]
     assert plot.ref_box.currentData() is None and not plot.is_relative()
     plot.set_points(sweep())
     assert plot.points() == plot.set.live.points and len(plot.points()) == 21
@@ -67,7 +67,7 @@ def test_theory_and_file_traces_are_drawn_in_their_slot_colours(plot):
     f = plot.set.add_file(SweepResult({}, bad, {}), "board.csv")
     plot.traces_changed()
     assert [plot.ref_box.itemText(i) for i in range(plot.ref_box.count())] == [
-        "nothing", "Sweep", "RC low-pass 1 kΩ 100 nF", "board"]
+        "off", "Sweep", "RC low-pass 1 kΩ 100 nF", "board"]
     y = line_y(plot, th)
     assert len(y) > 250 and y[0] == pytest.approx(20 * math.log10(abs(RC.h(50.0))))      # 50 Hz to 20 MHz, smooth
     assert plot.items(th).gain_ok is None                        # a theory curve has no markers

@@ -58,17 +58,14 @@ def placed(plot):
 
 def tick(plot, *kinds, on=True):
     for k in kinds:
-        plot.marker_actions[k].setChecked(on)
+        plot.set_marker_kind(k, on)
 
 
 # ---------------------------------------------------------------------- the menu and the automatic markers
 def test_no_marker_until_one_is_switched_on(plot):
     plot.set_points(sweep())
     assert names(plot) == [] and plot.marker_kinds() == [] and plot.placed() == []
-    assert plot.markers_btn.menu() is plot.marker_menu and plot.marker_menu.toolTipsVisible()
-    assert [a.text() for a in plot.marker_menu.actions() if not a.isSeparator()] == [
-        "-3 dB", "Peak", "Notch", "Margins", "Markers on", "Add marker", "Remove all markers", "Copy marker values"]
-    assert list(plot.marker_actions) == list(KINDS) and all(a.isCheckable() for a in plot.marker_actions.values())
+    assert list(KINDS) == ["cutoff", "peak", "notch", "margins"]
 
 
 def test_cutoff_marker_follows_its_tick(plot):
@@ -120,7 +117,6 @@ def test_set_marker_kinds_ticks_the_menu(plot):
     plot.set_points(sweep(BPF))
     plot.set_marker_kinds(["peak", "cutoff", "bogus"])
     assert plot.marker_kinds() == ["cutoff", "peak"]
-    assert [k for k, a in plot.marker_actions.items() if a.isChecked()] == ["cutoff", "peak"]
     plot.set_marker_kinds([])
     assert plot.marker_kinds() == [] and names(plot) == []
 
@@ -133,11 +129,8 @@ def test_markers_on_another_trace(plot):
     plot.traces_changed()
     tick(plot, "peak", "cutoff")
     assert names(plot) == ["fc"]                                 # the live sweep is the RC low-pass
-    assert [a.text() for a in plot.marker_trace_menu.actions()] == ["Sweep", th.name]
-    assert [a.isChecked() for a in plot.marker_trace_menu.actions()] == [True, False]
-    plot.marker_trace_menu.actions()[1].trigger()
+    plot.set_marker_trace(th.id)
     assert plot.markers.trace_id == th.id and names(plot) == ["fL", "fH", "pk"]
-    assert [a.isChecked() for a in plot.marker_trace_menu.actions()] == [False, True]
     plot.set.set_visible(th.id, False)
     plot.traces_changed()
     assert names(plot) == []                                     # a hidden trace has no markers
@@ -145,7 +138,6 @@ def test_markers_on_another_trace(plot):
     plot.set.remove(th.id)
     plot.traces_changed()
     assert plot.markers.trace_id == plot.set.live.id and names(plot) == ["fc"]
-    assert [a.text() for a in plot.marker_trace_menu.actions()] == ["Sweep"]
 
 
 def test_markers_measure_the_difference_in_relative_view(plot):
@@ -279,18 +271,18 @@ def test_dragging_a_marker_line_moves_the_marker(plot):
 def test_at_most_eight_user_markers(plot):
     plot.set_points(sweep())
     assert [plot.add_marker(1000.0 * k) for k in range(1, MAX_USER + 1)] == list(range(1, MAX_USER + 1))
-    assert not plot.act_add_marker.isEnabled()
+    assert not plot.can_add_marker()
     assert plot.add_marker(123.0) is None and len(names(plot)) == MAX_USER
     plot.remove_marker(4)
-    assert plot.act_add_marker.isEnabled()
+    assert plot.can_add_marker()
 
 
-def test_add_marker_from_the_menu_lands_in_the_view(plot):
+def test_add_marker_without_a_frequency_lands_in_the_view(plot):
     plot.set_points(sweep())
-    plot.act_add_marker.trigger()
+    plot.add_marker()
     (x0, x1), _g, _p = plot.view_ranges()
     assert math.log10(plot.markers.user[1]) == pytest.approx((x0 + x1) / 2)
-    plot.act_clear_markers.trigger()
+    plot.clear_markers()
     assert plot.markers.user == {}
 
 
@@ -387,7 +379,7 @@ def test_the_layer_finds_the_marker_under_the_mouse(plot):
     off = vb.mapViewToScene(QPointF(math.log10(30000.0), -10.0))
     assert plot.marker_layer.user_at(plot.gain_plot, on) == 1
     assert plot.marker_layer.user_at(plot.gain_plot, off) is None
-    plot.marker_actions["cutoff"].setChecked(True)               # an automatic marker has no menu of its own
+    plot.set_marker_kind("cutoff", True)                         # an automatic marker has no menu of its own
     fc = vb.mapViewToScene(QPointF(math.log10(placed(plot)["fc"].marker.freq), -10.0))
     assert plot.marker_layer.user_at(plot.gain_plot, fc) is None
 
@@ -412,7 +404,7 @@ def test_copy_marker_values(plot):
     assert rows[0] == ["Markers on: Sweep"] and [r[0] for r in rows[2:]] == ["fc", "pk", "M1"]
     assert rows[3] == ["pk", "", "", "", "none"] and float(rows[4][1]) == 1000.0
     assert float(rows[2][3]) == pytest.approx(-45.0, abs=1.0)
-    plot.act_copy_markers.trigger()
+    plot.copy_markers()
     assert QApplication.clipboard().text() == text
     th = plot.set.add_theory(RC)
     plot.set.set_reference(th.id)
@@ -483,7 +475,7 @@ def test_export_markers_is_what_the_plot_shows(plot):
 def test_a_swept_cutoff_and_the_image_with_markers(win, qtbot, tmp_path, monkeypatch):
     from bodeplot.io import export_image
     run_sweep(win, qtbot)
-    win.plot.marker_actions["cutoff"].setChecked(True)
+    win.plot.set_marker_kind("cutoff", True)
     win.plot.add_marker(1000.0)
     fc = {p.marker.name: p for p in win.plot.placed()}["fc"].marker.freq
     assert fc == pytest.approx(FC, rel=0.03)                     # the simulated RC low-pass, with its noise
@@ -502,8 +494,8 @@ def test_a_swept_cutoff_and_the_image_with_markers(win, qtbot, tmp_path, monkeyp
 
 def test_marker_ticks_survive_a_restart(win, qtbot):
     assert win.plot.marker_kinds() == []                         # a first start: all four off
-    win.plot.marker_actions["peak"].setChecked(True)
-    win.plot.marker_actions["cutoff"].setChecked(True)
+    win.plot.set_marker_kind("peak", True)
+    win.plot.set_marker_kind("cutoff", True)
     win.plot.add_marker(1000.0)
     win._save_ui_state()
     assert win.settings.markers == ["cutoff", "peak"]
