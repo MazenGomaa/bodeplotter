@@ -51,8 +51,14 @@ def usb_ids(resource: str) -> tuple[int, int, str] | None:
 
 
 def discover(backend: str = DEFAULT_BACKEND) -> list[str]:
+    import warnings
     rm = open_resource_manager(backend)
     try:
-        return list(rm.list_resources("?*"))
+        with warnings.catch_warnings():
+            # pyvisa-py also looks for LAN instruments and, at every start, prints a hint that
+            # this needs the zeroconf package. The instruments are on USB (LAN was dropped by
+            # the user), so the hint is noise; every other warning still comes through.
+            warnings.filterwarnings("ignore", message=r".*requires the zeroconf package.*", category=UserWarning)
+            return list(rm.list_resources("?*"))
     finally:
         rm.close()

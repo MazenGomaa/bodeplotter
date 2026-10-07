@@ -894,3 +894,29 @@ def test_fast_preview_keeps_off_the_timebases_at_which_the_running_scope_goes_bu
     for p in result.points:                              # still at least one cycle, and enough samples
         assert 14 * p.timebase * p.freq_hz >= 1.0 and abs(p.gain_db) < 0.2
     session.close()
+
+
+def test_discovery_does_not_pass_on_the_zeroconf_hint(monkeypatch):
+    """User report 2026-10-07: every start printed pyvisa-py's hint that LAN discovery needs
+    the zeroconf package. The instruments are on USB; other warnings still come through."""
+    import warnings
+    from bodeplot.drivers import visa_util
+
+    class FakeManager:
+        closed = False
+
+        def list_resources(self, query):
+            warnings.warn("TCPIP::hislip resource discovery requires the zeroconf package to be installed... "
+                          "try 'pip install zeroconf'", UserWarning)
+            warnings.warn("something else worth reading", UserWarning)
+            return ("USB0::22102::2098::SER::0::INSTR",)
+
+        def close(self):
+            self.closed = True
+
+    rm = FakeManager()
+    monkeypatch.setattr(visa_util, "open_resource_manager", lambda backend="py": rm)
+    with warnings.catch_warnings(record=True) as seen:
+        warnings.simplefilter("always")
+        assert visa_util.discover("py") == ["USB0::22102::2098::SER::0::INSTR"]
+    assert [str(w.message) for w in seen] == ["something else worth reading"] and rm.closed
