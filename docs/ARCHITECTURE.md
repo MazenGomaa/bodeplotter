@@ -19,6 +19,8 @@ Persistence (`io/`): settings and presets are JSON in the user config folder, lo
 
 **Traces on the plot** are outside that chain. `traces.py` holds results for display (the live sweep, kept sweeps, CSV files, theory curves from `measure/theory.py`) and the maths of the relative display; the plot and the image export ask it what is to be drawn. Nothing below the GUI knows it.
 
+**Markers** are outside it too. `markers.py` holds what is switched on and the rules; `measure/response.py` is the maths on one curve, which `traces.py` also uses for the reference trace and which v3 (response metrics) is to build on. The plot asks `TraceSet.curve` for the chosen trace, lets `MarkerSet.evaluate` read it, and hands texts and positions to `gui/marker_layer.py` and to the image export.
+
 ## Two levels of simulation
 
 - `drivers/mock.py` replaces the drivers. Used by `--sim`, the GUI tests and the sweep / skew tests (`make_session` fixture in `tests/conftest.py`).
@@ -100,6 +102,7 @@ Not a clean stack, and known: `drivers/connect.py` imports `sweep/core.py` (it r
 | Skew check: validity per connection | `Session.skew_valid` and `alignment_epoch` in `sweep/core.py`; the maths in `measure/skew.py`; the wizard in `gui/dialogs.py` |
 | Through calibration: measuring, validity, applying | `run_through_cal`, `Session.cal_for` and `SweepRunner._correct` in `sweep/core.py`; the maths and the plausibility rules in `sweep/calibration.py`; `CalDialog` in `gui/dialogs.py`; the status text in `gui/main_window.py` (`cal_in_use`) |
 | Traces on the plot (overlay, theory curves, relative display) | the model and the maths in `traces.py`; drawing in `gui/bode_plot.py`; the list and its buttons in `gui/traces_panel.py`; the circuits in `measure/theory.py`; several series in an image in `io/export_image.py` |
+| Markers (−3 dB, peak, notch, margins, user markers) | rules and texts in `markers.py`; curve maths in `measure/response.py`; the chosen trace as a curve in `traces.py` (`TraceSet.curve`); menu, texts in the plot's unit and positions in `gui/bode_plot.py`; graphics and label placement in `gui/marker_layer.py`; in an image in `io/export_image.py` (`_place_labels`) |
 | Auto-range | decisions in `sweep/autorange.py`, the loop in `measure/meters.py` |
 | Step tables, pacing after range changes | `drivers/step_tables.py`; `scope_min_gap_ms` in `io/settings.py`, applied in `drivers/uni_t_upo1000.py` |
 | Single-shot capture, stale-record check, resync | `drivers/uni_t_upo1000.py` (`acquire`, `acquire_running`) |

@@ -44,7 +44,7 @@ Related documents: `docs/ARCHITECTURE.md` (modules, what calls what, where each 
 - Full **simulation mode** (mock instruments + simulated DUT) so everything except the real drivers can be built and tested without hardware.
 
 **Non-goals (v1)**
-- Full probe/channel calibration over frequency, trace overlay, auto markers (v2, §15; in progress since 2026-10-06). The single-frequency **channel alignment check** of §8.6 is NOT deferred: it is required in v1.
+- Full probe/channel calibration over frequency, trace overlay, auto markers (v2, §15; built 2026-10-06 to 2026-10-07, the markers await the user's review). The single-frequency **channel alignment check** of §8.6 is NOT deferred: it is required in v1.
 - Filter recognition (v3, §15).
 - Standalone executables (PyInstaller is a later stage).
 - Loop-gain injection workflows with amplitude profiles.

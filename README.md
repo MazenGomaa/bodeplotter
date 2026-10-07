@@ -27,7 +27,7 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | Scope channels | CH1 / CH2 and CH3 / CH4 |
 | Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
 
-**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay and theory curves, built on 2026-10-07; auto markers), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
+**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay and theory curves, built on 2026-10-07; markers, built on 2026-10-07 and awaiting review), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
 
 Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; LAN is not supported.
 
@@ -89,6 +89,7 @@ Everything below runs in simulation; on the real instruments all of it does exce
 - **Control:** pause, resume, abort (partial result kept, generator switched off on every exit path), re-measure a single point by clicking it.
 - **Channel skew check and correction** (see below).
 - **Traces**: keep a sweep, load saved CSV sweeps and add theory curves (RC, RLC, Butterworth, or your own H(s)) next to the live sweep; show or hide each; draw everything relative to one of them to read the difference directly.
+- **Markers**: −3 dB cut-off(s) with bandwidth and Q, peak, notch, gain and phase margin, and up to eight markers of your own with a reference marker; copied as a table and drawn in the exported image (see below).
 - **Explanations and settings**: every option explains itself when the mouse rests on it (3 seconds by default). File > Settings holds the start-up mode and panels, the explanations' delay, keeping previous sweeps, the folder for files, the grid colour, debug logging, and an Advanced tab with the auto-range and noise limits. The skew wizard has its own check frequencies and captures.
 - **Presets**: a preset is a saved copy of the Configuration panel. Set the panel, press Save As and name it; choosing a preset loads it and the status log says what changed.
 - **Through calibration** (see below): removes the gain and phase difference between the two probes and channels at every frequency.
@@ -135,6 +136,17 @@ The **Traces** panel lists what is on the plot. The live sweep is always there; 
 Tick a trace to show it, double-click its name to rename it. **Relative to** above the plot draws every trace divided by the one you choose: gain difference in dB and phase difference in degrees. With a theory curve as the reference this shows how far the measurement is from the ideal circuit. A theory curve is the ideal circuit only: no component losses, no lead inductance, no probe loading.
 
 Traces are kept for this run of the app only. The image export shows every visible trace; CSV and Touchstone hold the live sweep.
+
+## Markers
+
+The **Markers** button above the plot switches markers on one trace (**Markers on**, the live sweep unless you choose another). Each marker is a dashed line through both plots with its values written next to the curve.
+
+- **−3 dB** marks where the gain is 3 dB below the highest gain of the trace: `fc` for a low-pass or high-pass, `fL` and `fH` with bandwidth and Q for a band-pass.
+- **Peak** and **Notch** mark the highest and the lowest gain when they are real ones: not at an end of the trace and at least 1 dB clear of both ends.
+- **Margins** reads the trace as a loop gain: the phase margin where the gain passes 0 dB (180° + phase) and the gain margin where the phase passes −180°.
+- **Your own markers:** right-click the plot > **Add marker here**, then drag it, or right-click it to type a frequency (1k, 2.5M), to remove it, or to make it the **reference marker**; the others then show their difference to it and the slope in dB per decade. Up to eight.
+
+Between two measured points the values are interpolated. In **Relative to** view the markers measure the difference curve. **Copy marker values** puts a table on the clipboard, and the image export shows the markers. The ticked automatic markers are remembered; your own markers are not.
 
 ## Instrument rules that matter
 

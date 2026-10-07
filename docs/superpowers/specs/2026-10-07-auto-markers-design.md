@@ -1,6 +1,6 @@
 # Auto markers and user markers: design
 
-Date: 2026-10-07. Status: **design agreed with the user in conversation on 2026-10-07 ("Yes continue"); this file awaits the user's review.** Not built; the next step after approval is the implementation plan. It is milestone A4 of the roadmap (`docs/spec/roadmap.md` sections 15 and 16), the last milestone of v2.
+Date: 2026-10-07. Status: **built on 2026-10-07 (plan `docs/superpowers/plans/2026-10-07-auto-markers.md`); the result awaits the user's review.** Departures from this text, made while planning and building: (1) the label texts are built by `markers.label()` and `BodePlot._place()`, not by the layer, because the clipboard and the image need the same texts; (2) `TraceSet.curve()` is new, because `drawn()` drops dead points and would bridge gaps; (3) the image test checks the marker colour in the SVG, since matplotlib writes text as outlines; (4) a label stands to the left of its dot where the curve rises to the right, and has a translucent background (found in the first render: labels sat on the curve); the image places labels by their measured boxes. It is milestone A4 of the roadmap (`docs/spec/roadmap.md` sections 15 and 16), the last milestone of v2.
 
 ## 1. Purpose
 
