@@ -442,7 +442,7 @@ def test_vertical_unit_db_voltage_or_percent(win, qtbot):
     assert "Output" in axis.labelString() and "Vpp" in axis.labelString()
     (_x, (g0, g1), _p) = plot.data_ranges()
     assert g0 < plot.value(high) < 0.01 and 1.0 < g1 < 1.2         # the view was refitted in volts
-    y = plot.traces["sweep"].gain_line.getData()[1]
+    y = plot.items(plot.set.live).gain_line.getData()[1]
     assert float(y[0]) == pytest.approx(plot.value(low))
     assert "Vpp" in plot.value_text(low)
 

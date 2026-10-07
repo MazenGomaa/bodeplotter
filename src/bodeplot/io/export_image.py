@@ -6,6 +6,7 @@ markers. Title, plus a footer with the date and key settings.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 from pathlib import Path
 
 import numpy as np
@@ -28,6 +29,17 @@ class ImageOptions:
     log_x: bool = True
     show_phase: bool = True
     unit: str = "db"            # vertical unit of the upper plot, as in the GUI: "db" | "v" | "pct"
+
+
+@dataclass
+class ImageSeries:
+    """One trace as the plot shows it: the numbers are final (unit, unwrap, relative)."""
+    name: str
+    slot: int | None            # colour slot as on screen; None: muted
+    freqs: Any                  # numpy arrays of equal length
+    gain: Any
+    phase: Any
+    flagged: Any = None         # bool array (a measured trace: markers); None: a line only
 
 
 # unit -> (axis label, value of a point); the same three as gui/bode_plot.py UNITS
