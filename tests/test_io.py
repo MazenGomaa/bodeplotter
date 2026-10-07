@@ -300,8 +300,8 @@ def test_marker_labels_in_the_image_do_not_overlap_or_leave_the_plot(tmp_path, r
     top = max(p.gain_db for p in result.points)
     marks = [ImageMarker(1500.0 + 100.0 * k, "M%d 1.5 kHz  -3.00 dB  -45.0°" % k, -3.0, -45.0) for k in range(4)]
     marks += [ImageMarker(200.0, "pk 200 Hz  +0.00 dB\nBW 820 Hz  Q 1.94", top, 0.0, left=True),
-              ImageMarker(1.9e7, "M7 19 MHz  -60.00 dB  -90.0°", -60.0, -89.0),
-              ImageMarker(5e7, "M8 50 MHz  outside the trace")]
+              ImageMarker(9.5e5, "M7 950 kHz  -55.00 dB  -90.0°", -55.0, -89.0),
+              ImageMarker(3e5, "M8 300 kHz  no value here")]
     seen = []
     real = export_image._place_labels
 
@@ -316,3 +316,26 @@ def test_marker_labels_in_the_image_do_not_overlap_or_leave_the_plot(tmp_path, r
     assert not any(a.overlaps(b) for i, a in enumerate(boxes) for b in boxes[i + 1:])
     for b in boxes:
         assert area.y0 - 1 <= b.y0 and b.y1 <= area.y1 + 1 and area.x0 - 1 <= b.x0 and b.x1 <= area.x1 + 1
+
+
+def test_a_marker_outside_the_plot_does_not_stretch_the_image(tmp_path, result, monkeypatch):
+    """Review finding: a user marker at 5 GHz widened the exported frequency axis to 19 GHz,
+    while the screen (Fit view ignores markers) stayed on the curve."""
+    from bodeplot.io.export_image import ImageMarker
+    seen = []
+    real = export_image._place_labels
+
+    def spy(ax, items):
+        seen.append((ax.get_xlim(), [mk.text for mk, _y in items]))
+        return real(ax, items)
+    monkeypatch.setattr(export_image, "_place_labels", spy)
+    inside = ImageMarker(1000.0, "M1 1 kHz  -1.50 dB  -32.0°", -1.5, -32.0)
+    far = [ImageMarker(5e9, "M2 5 GHz  outside the trace"), ImageMarker(0.01, "M3 10 mHz  outside the trace")]
+    for log_x in (True, False):
+        seen.clear()
+        opts = export_image.ImageOptions(log_x=log_x)
+        export_image.write_image(tmp_path / "plain.png", result, opts)
+        export_image.write_image(tmp_path / "marked.png", result, opts, markers=[inside] + far)
+        assert seen[2][0] == pytest.approx(seen[0][0])           # the frequency axis is the curve's, with or without markers
+        # a marker beyond the axis is left out; 10 mHz is beyond a log axis, and on a linear one it is at its start
+        assert seen[2][1] == ([inside.text] if log_x else [inside.text, far[1].text])

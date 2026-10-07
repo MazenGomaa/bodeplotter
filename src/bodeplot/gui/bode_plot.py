@@ -284,8 +284,8 @@ class BodePlot(QWidget):
         return n
 
     def move_marker(self, number: int, freq_hz: float) -> None:
-        if self.markers.move(number, freq_hz):
-            self._update_markers()
+        self.markers.move(number, freq_hz)
+        self._update_markers()              # also after a refused move: a dragged line goes back to its marker
 
     def remove_marker(self, number: int) -> None:
         self.markers.remove(number)
@@ -408,7 +408,7 @@ class BodePlot(QWidget):
         title = "Markers on: " + t.name
         if self.is_relative():
             title += ", relative to " + self.set.reference().name
-        return table(self._marks, title, lambda m: self._phase_shown(m.deg))
+        return table(self._marks, title, lambda m: self._phase_shown(m.deg), with_phase=self.has_phase)
 
     def copy_markers(self) -> None:
         QApplication.clipboard().setText(self.marker_text())

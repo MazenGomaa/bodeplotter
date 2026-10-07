@@ -531,3 +531,27 @@ def test_a_label_stands_on_the_free_side_of_the_curve(plot):
         assert (rect.right() < dot_x) == p[name].left and (rect.left() > dot_x) == (not p[name].left)
     assert [m.left for m in plot.export_markers()] == [x.left for x in plot.placed() if x.marker.found]
     assert plot.marker_layer.items("fL").text.fill.color().alpha() < 255         # the curve shows through a label
+
+
+def test_no_phase_anywhere_in_a_magnitude_only_measurement(plot):
+    """Review finding: the reference marker's difference line and the copied table still had a phase."""
+    plot.set_points(sweep())
+    plot.set_has_phase(False)
+    plot.add_marker(1000.0), plot.add_marker(10000.0)
+    plot.toggle_reference_marker(1)
+    assert "°" not in placed(plot)["M2"].text and "dB/dec" in placed(plot)["M2"].text
+    rows = [r.split("\t") for r in plot.marker_text().splitlines()[2:]]
+    assert [r[3] for r in rows] == ["", ""] and "deg" not in plot.marker_text().split("\n", 2)[2]
+
+
+def test_a_refused_drag_puts_the_line_back(plot):
+    """Review finding: on a linear axis a marker dragged to zero or below stayed torn: one
+    line at the impossible place, the other and the label at the old frequency."""
+    plot.set_log_x(False)
+    plot.set_points(sweep())
+    plot.add_marker(1000.0)
+    gain_line, phase_line = plot.marker_layer.items("M1").lines
+    gain_line.setValue(-500.0)
+    gain_line.sigDragged.emit(gain_line)
+    assert plot.markers.user[1] == 1000.0
+    assert gain_line.value() == pytest.approx(1000.0) and phase_line.value() == pytest.approx(1000.0)

@@ -114,19 +114,25 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
                 ax.plot(f[bad], y[bad], "x", color=PRINT_FLAGGED, markersize=6,
                         label="flagged" if ax is axes[0] and not any_flagged else None)
                 any_flagged = True
+        ax.set_ylabel(label)
+        ax.grid(True, which="both", linewidth=0.4, alpha=0.6)
+        if opts.log_x:
+            ax.set_xscale("log")
+    for ax, key in zip(axes, ("gain", "phase")):
         texts = []
-        for mk in markers or []:
+        xlim = ax.get_xlim()            # the curves have set the frequency axis; a marker never widens it,
+        for mk in (markers or []):      # and one beyond it is left out (on screen Fit view ignores markers too)
+            if not (min(xlim) <= mk.freq <= max(xlim)):
+                continue
             ax.axvline(mk.freq, color=PRINT_MARKER, linewidth=0.7, linestyle="--")
             y = mk.y_gain if key == "gain" else mk.y_phase
             if y is not None:
                 ax.plot([mk.freq], [y], "D", color=PRINT_MARKER, markersize=4)
             if mk.label_on == key and mk.text:
                 texts.append((mk, y))
+        if markers:
+            ax.set_xlim(xlim)
         labels_to_place.append((ax, texts))
-        ax.set_ylabel(label)
-        ax.grid(True, which="both", linewidth=0.4, alpha=0.6)
-        if opts.log_x:
-            ax.set_xscale("log")
     if named or any_flagged:
         axes[0].legend(loc="best", fontsize=8)
     axes[-1].set_xlabel("Frequency (Hz)")

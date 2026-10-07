@@ -255,3 +255,30 @@ def test_table_for_the_clipboard():
     assert rows[3] == ["pk", "", "", "", "none"]
     assert rows[7][4] == "reference marker" and rows[8][4].startswith("rel. M1: x10, ")
     assert text.endswith("\n") and all(len(r) == 5 for r in rows[1:])
+
+
+def test_cutoff_beside_a_steep_drop_stays_between_its_points():
+    """Review finding: the parabola lifted the peak 3 dB above every point, the -3 dB level
+    lay above the curve, and the edges came out crossed with a negative bandwidth."""
+    c = by_hand([100.0, 200.0, 400.0, 800.0, 1600.0, 3200.0], [-10.0, -0.1, 0.0, -25.0, -30.0, -35.0])
+    m = every(c)
+    assert 100.0 < m["fL"].freq < 200.0 and 400.0 < m["fH"].freq < 800.0
+    assert m["fL"].db == pytest.approx(-3.0) and m["fH"].db == pytest.approx(-3.0)       # 3 dB below the highest point
+    assert m["fH"].extra.startswith("BW ") and "-" not in m["fH"].extra
+    flat_top = by_hand([100.0, 200.0, 400.0, 800.0], [-10.0, 0.0, 0.0, -10.0])
+    assert every(flat_top)["fL"].freq < every(flat_top)["fH"].freq
+
+
+def test_texts_without_phase():
+    """Review finding: a magnitude-only measurement showed '+0.0°' in the difference line
+    and a phase column of zeros in the copied table."""
+    c = by_hand([100.0, 1e5], [0.0, -60.0])
+    ms = MarkerSet()
+    ms.add(1000.0), ms.add(10000.0)
+    ms.toggle_ref(1)
+    m1, m2 = ms.evaluate(c, margins=False)
+    assert delta_text(m2.delta, with_phase=False) == "Δ M1  ×10  -20.0 dB  -20.0 dB/dec"
+    assert label(m2, "-40.00 dB") == "M2 10 kHz  -40.00 dB\nΔ M1  ×10  -20.0 dB  -20.0 dB/dec"
+    rows = [r.split("\t") for r in table([m1, m2], "t", with_phase=False).splitlines()]
+    assert [r[3] for r in rows[2:]] == ["", ""] and rows[3][4] == "rel. M1: x10, -20.0 dB, -20.0 dB/dec"
+    assert "deg" not in rows[3][4] and all(len(r) == 5 for r in rows[1:])

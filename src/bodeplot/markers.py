@@ -167,6 +167,8 @@ def _peak(c: Curve, highest: bool):
 
 def _cross(c: Curve, i: int, j: int, level: float) -> float:
     a, b = c.db[i] - level, c.db[j] - level
+    if a == b:
+        return c.f[i]
     return c.f[i] * (c.f[j] / c.f[i]) ** (a / (a - b))
 
 
@@ -174,6 +176,8 @@ def _cutoffs(c: Curve, top) -> list[Marker]:
     if top is None:
         return [Marker("fc", "cutoff")]
     level = top.db - DROP_DB
+    if c.db[top.index] <= level:                # the refined peak stands 3 dB over every point: count from the
+        level = c.db[top.index] - DROP_DB       # highest point, or the level would lie above the whole curve
     lo = hi = None
     k = top.index
     while k > 0 and c.ok[k - 1]:                # down in frequency, to the first crossing or a gap
@@ -231,10 +235,10 @@ def freq_text(f: float) -> str:
     return fmt_si(f, "Hz", 3)
 
 
-def delta_text(d: Delta | None) -> str:
+def delta_text(d: Delta | None, with_phase: bool = True) -> str:
     if d is None:
         return ""
-    text = "Δ %s  ×%.3g  %+.1f dB  %+.1f°" % (d.ref, d.ratio, d.db, d.deg)
+    text = "Δ %s  ×%.3g  %+.1f dB" % (d.ref, d.ratio, d.db) + ("  %+.1f°" % d.deg if with_phase else "")
     return text + ("  %+.1f dB/dec" % d.slope if d.slope is not None else "")
 
 
@@ -251,12 +255,13 @@ def label(m: Marker, value: str = "", phase: float | None = None) -> str:
         return "%s  %s%s" % (head, m.note, "  (ref)" if m.is_ref else "")
     text = "  ".join([head, value] + (["%+.1f°" % phase] if phase is not None else []))
     text += ("  (ref)" if m.is_ref else "") + flag
-    second = m.extra or delta_text(m.delta)
+    second = m.extra or delta_text(m.delta, phase is not None)
     return text + ("\n" + second if second else "")
 
 
-def table(markers: list[Marker], title: str, phase=lambda m: m.deg) -> str:
-    """The markers as tab-separated text for the clipboard. Gain in dB, plain numbers."""
+def table(markers: list[Marker], title: str, phase=lambda m: m.deg, with_phase: bool = True) -> str:
+    """The markers as tab-separated text for the clipboard. Gain in dB, plain numbers.
+    with_phase False (a magnitude-only measurement): the phase column stays empty."""
     rows = [title, "Marker\tFrequency (Hz)\tGain (dB)\tPhase (deg)\tNote"]
     for m in markers:
         if not m.found:
@@ -273,13 +278,14 @@ def table(markers: list[Marker], title: str, phase=lambda m: m.deg) -> str:
             notes.append("reference marker")
         if m.delta is not None:
             d = m.delta
-            notes.append("rel. %s: x%.3g, %+.1f dB, %+.1f deg" % (d.ref, d.ratio, d.db, d.deg)
+            notes.append("rel. %s: x%.3g, %+.1f dB" % (d.ref, d.ratio, d.db)
+                         + (", %+.1f deg" % d.deg if with_phase else "")
                          + (", %+.1f dB/dec" % d.slope if d.slope is not None else ""))
         if m.note:
             notes.append(m.note)
         if m.flagged:
             notes.append("flagged")
-        ph = phase(m) if m.has_value else None
+        ph = phase(m) if m.has_value and with_phase else None
         rows.append("%s\t%.2f\t%s\t%s\t%s" % (m.name, m.freq, "%.3f" % m.db if m.has_value else "",
                                              "%.2f" % ph if ph is not None else "", "; ".join(notes)))
     return "\n".join(rows) + "\n"
