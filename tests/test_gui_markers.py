@@ -547,3 +547,42 @@ def test_a_refused_drag_puts_the_line_back(plot):
     gain_line.sigDragged.emit(gain_line)
     assert plot.markers.user[1] == 1000.0
     assert gain_line.value() == pytest.approx(1000.0) and phase_line.value() == pytest.approx(1000.0)
+
+
+# ---------------------------------------------------------------------- the small items of the A4 review
+def _some_rows_without_voltage():
+    """Three points of gain 1; the middle one has no voltage (a file with a hole in that column)."""
+    pts = [point(f, cmath.rect(1.0, math.radians(deg))) for f, deg in ((100.0, 170.0), (1000.0, 0.0), (10000.0, -170.0))]
+    pts[1] = replace(pts[1], vdut_amp=float("nan"))
+    return pts
+
+
+def test_voltage_marker_phase_is_on_the_drawn_curve_when_rows_lack_a_voltage(plot):
+    plot.set_points(_some_rows_without_voltage())
+    plot.set_unit("v")
+    plot.set_unwrap(True)
+    plot.add_marker(10000.0)
+    line_y = plot.items(plot.set.live).phase_line.getData()[1]
+    assert list(line_y) == pytest.approx([170.0, 190.0])         # the row without a voltage is not drawn
+    assert placed(plot)["M1"].y_phase == pytest.approx(190.0)    # was -170: unwrapped through the hidden row
+
+
+def test_voltage_marker_on_a_row_without_a_voltage_reads_the_drawn_line(plot):
+    plot.set_points(_some_rows_without_voltage())
+    plot.set_unit("v")
+    plot.add_marker(1000.0)
+    m = placed(plot)["M1"]
+    assert m.y_gain == pytest.approx(1.0) and "Vpp" in m.text    # 2 x 0.5 V on both sides of it
+
+
+def test_stacked_labels_stay_inside_the_gain_plot(plot):
+    plot.set_points(sweep())
+    for k in range(MAX_USER):                                    # at -56 dB, just above the lower edge
+        plot.add_marker(1e6 * 1.01 ** k)
+    QApplication.processEvents()
+    plot.refresh()
+    box = plot.gain_plot.getPlotItem().vb.sceneBoundingRect()
+    rects = [plot.marker_layer.label_rect("M%d" % (k + 1)) for k in range(MAX_USER)]
+    assert not any(a.intersects(b) for i, a in enumerate(rects) for b in rects[i + 1:])
+    for r in rects:
+        assert box.top() - 1 <= r.top() and r.bottom() <= box.bottom() + 1

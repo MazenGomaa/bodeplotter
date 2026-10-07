@@ -293,3 +293,26 @@ def test_a_large_frequency_ratio_is_written_in_full():
     _m1, m2, m3 = ms.evaluate(c)
     assert delta_text(m2.delta, with_phase=False).startswith("Δ M1  ×3333  ")
     assert "x3333," in table([m2], "t") and delta_text(m3.delta, with_phase=False).startswith("Δ M1  ×0.5  ")
+
+
+# ---------------------------------------------------------------------- the small items of the A4 review
+def test_phase_jitter_around_180_degrees_is_no_gain_margin():
+    """An inverting stage: the phase only wobbles around the level, it never passes it."""
+    f = [1.0, 10.0, 100.0, 1000.0, 10000.0]
+    assert not every(by_hand(f, [6.0] * 5, [179.9, 180.1, 179.9, 180.2, 179.8]))["GM"].found
+    # it starts on the level and leaves it: it was never clearly on the other side
+    assert not every(by_hand(f, [6.0, 6.0, 6.0, 0.0, -10.0], [-179.9, -180.1, -179.9, -225.0, -270.0]))["GM"].found
+
+
+def test_a_noisy_pass_through_minus_180_is_still_a_gain_margin():
+    c = by_hand([1.0, 10.0, 100.0, 1000.0, 10000.0], [0.0, -5.0, -6.0, -7.0, -10.0],
+                [-170.0, -179.9, -180.1, -179.95, -190.0])
+    gm = every(c)["GM"]
+    assert gm.found and 5.0 < gm.margin < 6.0                   # the smallest of the three passes
+
+
+def test_copied_frequency_keeps_its_digits_below_one_hertz():
+    rows = table([Marker("M1", "user", 0.0123456, -1.0, -10.0), Marker("M2", "user", 1234.5678, -1.0, -10.0)],
+                 "t").splitlines()
+    assert rows[2].split("\t")[1] == "0.0123456"
+    assert rows[3].split("\t")[1] == "1234.57"

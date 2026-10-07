@@ -339,3 +339,54 @@ def test_a_marker_outside_the_plot_does_not_stretch_the_image(tmp_path, result, 
         assert seen[2][0] == pytest.approx(seen[0][0])           # the frequency axis is the curve's, with or without markers
         # a marker beyond the axis is left out; 10 mHz is beyond a log axis, and on a linear one it is at its start
         assert seen[2][1] == ([inside.text] if log_x else [inside.text, far[1].text])
+
+
+def _spy_labels(monkeypatch):
+    seen = []
+    real = export_image._place_labels
+
+    def spy(ax, items):
+        boxes = real(ax, items)
+        seen.append((ax.get_window_extent(), boxes))
+        return boxes
+    monkeypatch.setattr(export_image, "_place_labels", spy)
+    return seen
+
+
+def test_many_marker_labels_low_in_the_image_stay_inside_the_plot(tmp_path, result, monkeypatch):
+    """A4 review: labels stacked downwards from a dot near the lower edge ran out of the plot."""
+    from bodeplot.io.export_image import ImageMarker
+    low = min(p.gain_db for p in result.points)
+    marks = [ImageMarker(6e5 * 1.01 ** k, "M%d 600 kHz  -52.00 dB  -89.0°" % (k + 1), low + 2.0, -89.0)
+             for k in range(8)]
+    seen = _spy_labels(monkeypatch)
+    export_image.write_image(tmp_path / "m.png", result, export_image.ImageOptions(), markers=marks)
+    area, boxes = seen[0]
+    assert len(boxes) == 8
+    assert not any(a.overlaps(b) for i, a in enumerate(boxes) for b in boxes[i + 1:])
+    for b in boxes:
+        assert area.y0 - 1 <= b.y0 and b.y1 <= area.y1 + 1
+
+
+def test_marker_labels_in_the_image_keep_clear_of_the_legend():
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from bodeplot.io.export_image import ImageMarker
+    fig, ax = plt.subplots(figsize=(8, 3))
+    try:
+        ax.plot([100.0, 1e6], [0.0, 0.0], label="Sweep")
+        ax.plot([100.0, 1e6], [-3.0, -3.0], label="Sweep kept at 12:00:00")
+        ax.set_xscale("log")
+        ax.set_ylim(-10.0, 1.0)
+        legend = ax.legend(loc="upper right", fontsize=8)
+        fig.tight_layout()
+        marks = [ImageMarker(3e5 * 1.05 ** k, "M%d 300 kHz  +0.00 dB  -1.0°" % (k + 1), 0.0, -1.0) for k in range(3)]
+        boxes = export_image._place_labels(ax, [(mk, mk.y_gain) for mk in marks])
+        area, key = ax.get_window_extent(), legend.get_window_extent(fig.canvas.get_renderer())
+        assert not any(b.overlaps(key) for b in boxes)
+        assert not any(a.overlaps(b) for i, a in enumerate(boxes) for b in boxes[i + 1:])
+        for b in boxes:
+            assert area.y0 - 1 <= b.y0 and b.y1 <= area.y1 + 1 and area.x0 - 1 <= b.x0 and b.x1 <= area.x1 + 1
+    finally:
+        plt.close(fig)

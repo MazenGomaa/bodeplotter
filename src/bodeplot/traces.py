@@ -227,11 +227,13 @@ class TraceSet:
             out.append(Drawn(t, freqs, hs, pts))
         return out
 
-    def curve(self, trace_id: int, span_hint: tuple[float, float] | None = None, relative: bool = True):
+    def curve(self, trace_id: int, span_hint: tuple[float, float] | None = None, relative: bool = True,
+              only=None):
         """One trace as a response curve, for the markers: (curve, the measured point behind
         each curve point or None for a theory curve). As it is, or divided by the reference
         like drawn(). Unlike drawn() it keeps dead points, so that a gap stays a gap. None:
-        there is no such trace."""
+        there is no such trace. only: a test on a measured point; the points that fail it are
+        left out as if they were not in the trace (the plot does not draw them either)."""
         t = self.get(trace_id)
         if t is None:
             return None
@@ -240,7 +242,8 @@ class TraceSet:
             freqs = theory_grid(*span) if span else []
             hs, points = [t.theory.h(f) for f in freqs], None
         else:
-            points = sorted((p for p in t.points if p.freq_hz > 0 and math.isfinite(p.freq_hz)),
+            points = sorted((p for p in t.points if p.freq_hz > 0 and math.isfinite(p.freq_hz)
+                             and (only is None or only(p))),
                             key=lambda p: p.freq_hz)
             freqs, hs = [p.freq_hz for p in points], [p.h for p in points]
         ref_trace = self.reference() if relative else None

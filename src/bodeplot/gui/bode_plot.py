@@ -317,7 +317,10 @@ class BodePlot(QWidget):
             t = self.set.live
         if not any(d.trace is t and len(f) for d, f, _gain, _phase in self._shown):
             return None
-        curve, points = self.set.curve(t.id, self.span_hint, relative=self.is_relative())
+        # Voltage: a row without a voltage is not drawn (_drawn), so the markers do not see it either;
+        # the line and the unwrapped phase then run from its one neighbour to the other, as on the plot
+        only = (lambda p: math.isfinite(p.vdut_amp)) if self.unit() == "v" else None
+        curve, points = self.set.curve(t.id, self.span_hint, relative=self.is_relative(), only=only)
         if points is not None:
             curve.flagged = [bool(p.flags & ~QUIET) for p in points]
         return curve, points

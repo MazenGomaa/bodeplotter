@@ -168,14 +168,17 @@ def write_image(path, result: SweepResult, opts: ImageOptions | None = None,
 
 def _place_labels(ax, items) -> list:
     """Write the marker texts of one plot: next to the dot (at the top of the plot for a
-    marker with no value), on the side that is free of the curve, moved down until no text
-    covers another, and kept inside the plot. items: (ImageMarker, y or None). Returns the
+    marker with no value), on the side that is free of the curve, moved down (up, or to the
+    other side, when the plot ends there) until no text covers another or the legend, and
+    kept inside the plot. items: (ImageMarker, y or None). Returns the
     boxes of the texts in pixels. Called when the layout of the figure is final."""
     fig = ax.figure
     renderer = fig.canvas.get_renderer()
     area = ax.get_window_extent(renderer)
     pt = 72.0 / fig.dpi                 # points per pixel
     taken = []
+    legend = ax.get_legend()
+    keep_clear = [legend.get_window_extent(renderer)] if legend is not None and items else []
     for mk, y in sorted(items, key=lambda it: it[0].freq):
         xy, coords = ((mk.freq, 1.0), ("data", "axes fraction")) if y is None else ((mk.freq, y), "data")
         ann = ax.annotate(mk.text, xy=xy, xycoords=coords, xytext=(4, 4), textcoords="offset points",
@@ -191,13 +194,24 @@ def _place_labels(ax, items) -> list:
         if (box.x0 < area.x0) if left else (box.x1 > area.x1):      # no room on that side
             left = not left
             box = put(left, 0.0)
-        down = max(0.0, box.y1 - area.y1)
-        box = put(left, down)
-        for _ in range(40):
-            if not any(box.overlaps(b) for b in taken):
-                break
-            down += box.height + 2.0
-            box = put(left, down)
+        start = box.y1 - area.y1 if box.y1 > area.y1 else min(0.0, box.y0 - area.y0)
+
+        def free(side: bool):
+            """The nearest free place on that side, downwards or else upwards; None: there is none."""
+            for step in (1.0, -1.0):
+                down = start
+                for _ in range(40):
+                    b = put(side, down)
+                    if b.y0 < area.y0 - 0.5 or b.y1 > area.y1 + 0.5:
+                        break
+                    if side != left and (b.x0 < area.x0 or b.x1 > area.x1):
+                        break
+                    if not any(b.overlaps(t) for t in taken + keep_clear):
+                        return b
+                    down += step * (b.height + 2.0)
+            return None
+        # a label that covers another one stays where it was first put only when the plot is full
+        box = free(left) or free(not left) or put(left, start)
         taken.append(box)
     return taken
 

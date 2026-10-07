@@ -23,6 +23,21 @@ GRAB_PX = 6         # a right-click this close to a user marker's line is on tha
 MAX_ROWS = 30
 
 
+def _free(rect: QRectF, taken: list[QRectF], box: QRectF) -> QRectF | None:
+    """rect moved down, or else up, to the nearest place where it covers no label in taken and
+    stays between the upper and the lower edge of box. None: there is no such place."""
+    for down in (True, False):
+        r = QRectF(rect)
+        for _ in range(MAX_ROWS):
+            hit = next((t for t in taken if r.intersects(t)), None)
+            if hit is None:
+                return r
+            r.moveTop(hit.bottom() + 2.0 if down else hit.top() - 2.0 - r.height())
+            if r.top() < box.top() or r.bottom() > box.bottom():
+                break
+    return None
+
+
 class _Items:
     """The graphics of one marker: a line and a dot per plot, one label on its host plot."""
 
@@ -163,20 +178,20 @@ class MarkerLayer:
                 w, h = size.width(), size.height()
                 if y is not None and math.isfinite(y):
                     dot = vb.mapViewToScene(QPointF(self.x(p.marker.freq), y))
-                    top = max(dot.y() - h - GAP, box.top())
+                    top = dot.y() - h - GAP
                 else:
                     dot = vb.mapViewToScene(QPointF(self.x(p.marker.freq), vb.viewRange()[1][1]))
                     top = box.top()
+                top = max(box.top(), min(top, box.bottom() - h))
                 right_of, left_of = dot.x() + GAP, dot.x() - GAP - w
                 if p.left:
-                    left = left_of if left_of >= box.left() else right_of
+                    sides = [left_of, right_of] if left_of >= box.left() else [right_of, left_of]
                 else:
-                    left = right_of if right_of + w <= box.right() else left_of
-                rect = QRectF(left, top, w, h)
-                for _ in range(MAX_ROWS):
-                    if not any(rect.intersects(r) for r in taken[it.host]):
-                        break
-                    rect.translate(0.0, h + 2.0)
+                    sides = [right_of, left_of] if right_of + w <= box.right() else [left_of, right_of]
+                # the side the marker asks for first; a label that covers another one stays where it
+                # was first put only when the plot has no free place on either side
+                rect = next((r for r in (_free(QRectF(left, top, w, h), taken[it.host], box) for left in sides)
+                             if r is not None), QRectF(sides[0], top, w, h))
                 taken[it.host].append(rect)
                 self._rects[p.marker.name] = rect
                 it.text.setPos(vb.mapSceneToView(rect.topLeft()))

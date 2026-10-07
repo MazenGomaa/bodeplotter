@@ -7,6 +7,7 @@ plot, the clipboard text and the image export only show that answer.
 """
 from __future__ import annotations
 
+import bisect
 import math
 from dataclasses import dataclass
 
@@ -17,7 +18,8 @@ KINDS = ("cutoff", "peak", "notch", "margins")      # the automatic markers, in 
 MAX_USER = 8
 DROP_DB = 3.0                   # the cut-off lies this far below the highest gain
 PROMINENCE_DB = 1.0             # a peak or notch stands at least this far clear of both ends
-SAME_FREQ = 1e-3                # two markers within 0.1 % have no slope between them
+PASS_DEG = 2.0                  # the phase passes -180 degrees when it stands this far clear of it on both sides
+SAME_FREQ = 1e-3              # two markers within 0.1 % have no slope between them
 OUTSIDE = "outside the trace"
 NO_VALUE = "no value here"
 
@@ -216,6 +218,23 @@ def _phase_margin(c: Curve) -> Marker:
     return best or Marker("PM", "pm")
 
 
+def _passes(c: Curve, f: float, level: float) -> bool:
+    """The phase really passes level at f: it stands PASS_DEG clear of it on one side before f
+    and on the other side after it, with no gap in between. A phase that only wobbles around
+    the level (an inverting stage at +-180 degrees) passes nothing."""
+    def side(indices) -> int:
+        for i in indices:
+            if not c.ok[i]:
+                return 0
+            d = c.deg[i] - level
+            if abs(d) >= PASS_DEG:
+                return 1 if d > 0 else -1
+        return 0
+    k = bisect.bisect_left(c.f, f)              # the first point at or above f
+    before, after = side(range(k - 1, -1, -1)), side(range(k, len(c.f)))
+    return before != 0 and after == -before
+
+
 def _gain_margin(c: Curve) -> Marker:
     idx = c.usable()
     if not idx:
@@ -227,7 +246,7 @@ def _gain_margin(c: Curve) -> Marker:
         level = -180.0 + 360.0 * k
         for f in crossings(c, level, "deg"):
             v = c.at(f)
-            if v is not None and (best is None or -v[0] < best.margin):
+            if v is not None and _passes(c, f, level) and (best is None or -v[0] < best.margin):
                 best = Marker("GM", "gm", f, v[0], level, c.flagged_at(f), margin=-v[0])
         k += 1
     return best or Marker("GM", "gm")
@@ -291,6 +310,11 @@ def notes(m: Marker, with_phase: bool = True) -> str:
     return "; ".join(out)
 
 
+def _plain_hz(f: float) -> str:
+    """A frequency in Hz as a plain number: two decimals, more below 1 kHz so that six digits stay."""
+    return "%.*f" % (max(2, 5 - math.floor(math.log10(f))), f)
+
+
 def table(markers: list[Marker], title: str, phase=lambda m: m.deg, with_phase: bool = True) -> str:
     """The markers as tab-separated text for the clipboard. Gain in dB, plain numbers.
     with_phase False (a magnitude-only measurement): the phase column stays empty."""
@@ -300,6 +324,6 @@ def table(markers: list[Marker], title: str, phase=lambda m: m.deg, with_phase: 
             rows.append("%s\t\t\t\tnone" % m.name)
             continue
         ph = phase(m) if m.has_value and with_phase else None
-        rows.append("%s\t%.2f\t%s\t%s\t%s" % (m.name, m.freq, "%.3f" % m.db if m.has_value else "",
+        rows.append("%s\t%s\t%s\t%s\t%s" % (m.name, _plain_hz(m.freq), "%.3f" % m.db if m.has_value else "",
                                              "%.2f" % ph if ph is not None else "", notes(m, with_phase)))
     return "\n".join(rows) + "\n"
