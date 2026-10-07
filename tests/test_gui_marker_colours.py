@@ -230,3 +230,15 @@ def test_the_image_draws_each_marker_in_its_print_colour(plot, tmp_path):
     odd = export_image.ImageMarker(1000.0, "M1 1 kHz", -3.0, -45.0, color="no such colour")
     assert export_image.write_image(tmp_path / "odd.png", SweepResult({}, [], {}), export_image.ImageOptions(),
                                     series, labels, markers=[odd]).stat().st_size > 500
+
+
+def test_a_marker_line_is_not_hidden_by_the_trace_it_runs_along(plot):
+    """User report: the notch marker had one colour in the gain plot and another in the phase
+    plot. At a notch the phase jumps, the trace runs straight up along the marker's line, and
+    the trace was drawn over the marker: there the line looked like the trace."""
+    plot.set_marker_kinds(["peak"])
+    live = plot.items(plot.set.live)
+    it = plot.marker_layer.items("pk")
+    for k, trace_line in enumerate((live.gain_line, live.phase_line)):
+        assert it.lines[k].zValue() > trace_line.zValue() and it.dots[k].zValue() > trace_line.zValue()
+    assert all(item.zValue() < live.gain_ok.zValue() for item in it.lines + it.dots + [it.text])   # a point keeps its click

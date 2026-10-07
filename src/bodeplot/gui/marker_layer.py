@@ -14,7 +14,10 @@ from PySide6.QtCore import QPointF, QRectF, Qt
 from ..markers import Placed
 from . import theme
 
-Z = 5               # above the other traces, below the live sweep (10 and 11): a point keeps its click
+# Above every trace line, the live sweep's too (10), and below the live sweep's points (11). Above the
+# line: where a trace runs straight up along a marker (the phase jump at a notch), the marker stays
+# in its own colour (user report 2026-10-07). Below the points: a point keeps its click.
+Z = 10.5
 GAP = 6             # px between a dot and its label
 GRAB_PX = 6         # a right-click this close to a user marker's line is on that marker
 MAX_ROWS = 30
