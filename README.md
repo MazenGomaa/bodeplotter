@@ -89,6 +89,8 @@ Everything below runs in simulation; on the real instruments all of it does exce
 - **Control:** pause, resume, abort (partial result kept, generator switched off on every exit path), re-measure a single point by clicking it.
 - **Channel skew check and correction** (see below).
 - **Traces**: keep a sweep, load saved CSV sweeps and add theory curves (RC, RLC, Butterworth, or your own H(s)) next to the live sweep; show or hide each; draw everything relative to one of them to read the difference directly.
+- **Explanations and settings**: every option explains itself when the mouse rests on it (3 seconds by default). File > Settings holds the start-up mode and panels, the explanations' delay, keeping previous sweeps, the folder for files, the grid colour, debug logging, and an Advanced tab with the auto-range and noise limits. The skew wizard has its own check frequencies and captures.
+- **Presets**: a preset is a saved copy of the Configuration panel. Set the panel, press Save As and name it; choosing a preset loads it and the status log says what changed.
 - **Through calibration** (see below): removes the gain and phase difference between the two probes and channels at every frequency.
 - **Waveform view** of the last capture with the fitted sines, and a status log table.
 - **Presets and settings** as JSON in the user config folder; old or damaged files load with defaults.
