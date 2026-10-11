@@ -27,7 +27,7 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | Scope channels | CH1 / CH2 and CH3 / CH4 |
 | Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
 
-**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay and theory curves, built on 2026-10-07; markers, built and accepted on 2026-10-07: v2 is done), v3 (filter recognition), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
+**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay and theory curves, built on 2026-10-07; markers, built and accepted on 2026-10-07: v2 is done), v3 (filter recognition; started: part 1, the response metrics and the Analysis tab, was built on 2026-10-11; part 2 is a finer sweep around a found feature), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
 
 Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; LAN is not supported.
 
@@ -90,6 +90,7 @@ Everything below runs in simulation; on the real instruments all of it does exce
 - **Channel skew check and correction** (see below).
 - **Traces**: keep a sweep, load saved CSV sweeps and add theory curves (RC, RLC, Butterworth, or your own H(s)) next to the live sweep; show or hide each; draw everything relative to one of them to read the difference directly.
 - **Markers**: −3 dB cut-off(s) with bandwidth and Q, peak, notch, gain and phase margin, and up to eight markers of your own with a reference marker; copied as a table and drawn in the exported image (see below).
+- **Analysis**: on a button, the numbers of a trace: passband level and ripple, cut-off(s), slope and filter order, stopband attenuation, and every resonance with its Q from the width and from the phase; a second trace (a theory curve, an earlier sweep) next to it with the difference.
 - **Explanations and settings**: every option explains itself when the mouse rests on it (3 seconds by default). File > Settings holds the start-up mode and panels, the explanations' delay, keeping previous sweeps, the folder for files, the grid colour, debug logging, and an Advanced tab with the auto-range and noise limits. The skew wizard has its own check frequencies and captures.
 - **Presets**: a preset is a saved copy of the Configuration panel. Set the panel, press Save As and name it; choosing a preset loads it and the status log says what changed.
 - **Through calibration** (see below): removes the gain and phase difference between the two probes and channels at every frequency.
@@ -141,12 +142,23 @@ Traces are kept for this run of the app only. The image export shows every visib
 
 The **Markers** panel (on the right, a tab behind the Traces panel; View > Markers) switches markers on one trace (**Markers on**, the live sweep unless you choose another). Each marker is a dashed line through both plots with its values written next to the curve, and the panel lists all of them in a table.
 
-- **−3 dB** marks where the gain is 3 dB below the highest gain of the trace: `fc` for a low-pass or high-pass, `fL` and `fH` with bandwidth and Q for a band-pass.
+- **−3 dB** marks where the gain is 3 dB below the passband level (the flat part of the trace; without one, its highest gain): `fc` for a low-pass or high-pass, `fL` and `fH` with bandwidth and Q for a band-pass.
 - **Peak** and **Notch** mark the highest and the lowest gain when they are real ones: not at an end of the trace and at least 1 dB clear of both ends.
 - **Margins** reads the trace as a loop gain: the phase margin where the gain passes 0 dB (180° + phase) and the gain margin where the phase passes −180°.
 - **Your own markers:** right-click the plot > **Add marker here**, then drag it, or right-click it to type a frequency (1k, 2.5M), to remove it, or to make it the **reference marker**; the others then show their difference to it and the slope in dB per decade. Up to eight.
 
 Between two measured points the values are interpolated. With **Difference to trace** set, the markers measure the difference curve. **Copy values** puts a table on the clipboard, and the image export shows the markers. Untick **Values on the plot** to keep only the names on the plot and read the numbers in the table; Every marker has a colour square in the table: click it (or right-click one of your own markers > **Colour**) to pick another of the twenty palette colours for its line and dot. The image export uses the same colours, darkened for the white background. The ticks, that choice and the colours are remembered; your own markers are not.
+
+## Analysis
+
+The **Analysis** panel (on the right, a tab behind Traces and Markers; View > Analysis) works out the numbers of one trace when you press **Analyse**. Choose the trace under **Trace**, and under **Compare with** a second one, for example a theory curve with your design values: its numbers appear next to the measured ones, with the difference in percent (frequencies, Q) or in dB.
+
+- **Passband:** the level of the flat part of the trace and how far the gain moves inside it. The cut-off is counted 3 dB below this level, here and in the −3 dB marker.
+- **Roll-off and stop band:** the slope the curve settles to and the order that goes with it; how far below the passband the trace gets.
+- **Resonances:** every peak and every notch with its frequency, its height or depth, Q from its −3 dB width and, for a peak, Q from the phase.
+- **≥** means "at least": the sweep ends before the number has settled. The notes under the table say why, and where a resonance has too few points to be trusted.
+
+The table stays until you press Analyse again; the line above it warns when the trace has changed since. **Copy table** puts it on the clipboard.
 
 ## Instrument rules that matter
 

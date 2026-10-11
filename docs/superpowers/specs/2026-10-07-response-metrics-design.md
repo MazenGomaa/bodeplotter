@@ -1,6 +1,6 @@
 # Response metrics and the Analysis tab: design
 
-Date: 2026-10-07. Status: **design approved by the user on 2026-10-07 ("Approved, remember to check design rules for ui, colors, interface and so on"); nothing is built; plan `docs/superpowers/plans/2026-10-07-response-metrics.md`.** It is part 1 of v3 (milestone B1 of the roadmap, `docs/spec/roadmap.md` sections 15 and 16, with a first Analysis tab taken forward from B4).
+Date: 2026-10-07. Status: **design approved by the user on 2026-10-07 ("Approved, remember to check design rules for ui, colors, interface and so on"); built on 2026-10-11 (plan `docs/superpowers/plans/2026-10-07-response-metrics.md`); waiting for the user's review.** Departures made while building: none in the code. Seen in the build's renders and left for the user's look: the window's smallest height is 563 px once a table with notes is shown (487 px before), and with "Compare with" on, the row names are cut to "…" in a window narrower than about 1300 px until the dock is dragged wider. It is part 1 of v3 (milestone B1 of the roadmap, `docs/spec/roadmap.md` sections 15 and 16, with a first Analysis tab taken forward from B4).
 
 **Changed after the approval, while planning.** The rules were tried in a throw-away prototype against the theory circuits before the plan was written (clean, 2 800 noisy curves, 3 000 odd inputs). Seven rules of the approved text gave wrong or unusable answers and were replaced; the text below is the corrected one, and the user is to confirm these with the plan:
 
