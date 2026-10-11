@@ -95,7 +95,8 @@ def test_peak_edges_and_notch(plot):
     assert placed(plot)["pk"].marker.freq == pytest.approx(F0, rel=0.01)
     assert "\nBW " in placed(plot)["fH"].text and " Q " in placed(plot)["fH"].text
     plot.set_points(sweep(NOTCH))
-    assert names(plot) == ["fc", "nt"]                           # one edge of the notch is 3 dB down from the flat part
+    assert names(plot) == ["fL", "fH", "nt"]                     # both edges of the notch, 3 dB below the flat parts
+    assert "\nBW " in placed(plot)["fH"].text
     assert placed(plot)["nt"].marker.freq == pytest.approx(F0, rel=0.03)
 
 

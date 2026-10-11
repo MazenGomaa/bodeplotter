@@ -36,8 +36,9 @@ RELATIVE_LABEL = {"db": "Gain difference", "pct": "Output / reference"}
 COLORS = theme.SERIES                    # fixed order, one per colour slot; never cycled
 # The automatic markers, as the Markers panel offers them: kind -> (text, explanation)
 MARKER_TEXT = {
-    "cutoff": ("-3 dB", "Mark where the gain has fallen 3 dB below the highest gain of the trace: the cut-off of "
-                        "a low-pass or high-pass, or both edges of a band-pass with its bandwidth and Q"),
+    "cutoff": ("-3 dB", "Mark where the gain has fallen 3 dB below the passband level (the flat part of the "
+                        "trace; without one, its highest gain): the cut-off of a low-pass or high-pass, or both "
+                        "edges of a band-pass or a notch with the bandwidth and Q"),
     "peak": ("Peak", "Mark the highest gain of the trace when it is a real peak: not at an end of the trace and "
                      "at least 1 dB above both ends"),
     "notch": ("Notch", "Mark the lowest gain of the trace when it is a real notch: not at an end of the trace and "

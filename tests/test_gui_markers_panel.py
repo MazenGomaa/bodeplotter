@@ -139,7 +139,7 @@ def test_the_table_lists_every_marker_with_its_values(plot, panel):
     plot.toggle_reference_marker(1)
     got = rows(panel)
     assert [r[0] for r in got] == ["fc", "pk", "M1", "M2"]
-    assert got[0][1].endswith("kHz") and got[0][2] == "-3.02 dB" and got[0][3].startswith("-4") and got[0][3].endswith("°")
+    assert got[0][1].endswith("kHz") and got[0][2] in ("-3.02 dB", "-3.03 dB", "-3.04 dB") and got[0][3].startswith("-4") and got[0][3].endswith("°")
     assert got[1] == ["pk", "", "", "", "none"]                  # switched on, and a low-pass has no peak
     assert got[2][1] == "1 kHz" and got[2][4] == "reference marker"
     assert got[3][4].startswith("rel. M1: x10, ") and got[3][4].endswith("dB/dec")

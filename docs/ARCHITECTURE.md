@@ -36,7 +36,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `__main__.py` | entry point: `python -m bodeplot [--sim] [--debug]` | `__init__.py`, `app.py` |
 | `app.py` | QApplication bootstrap, theme, main window | `gui/main_window.py`, `gui/theme.py`, `logging_setup.py` |
 | `logging_setup.py` | rotating log file, `log_path()` | - |
-| `markers.py` | the markers of the Bode plot: what is switched on, the user's markers, the rules (-3 dB, peak, notch, margins), label and clipboard texts; no Qt | `measure/response.py`, `units.py` |
+| `markers.py` | the markers of the Bode plot: what is switched on, the user's markers, the rules (-3 dB, peak, notch, margins), label and clipboard texts; no Qt | `measure/metrics.py`, `measure/response.py`, `units.py` |
 | `models.py` | config dataclasses, `PointResult`, `SkewCheck`, `SweepResult`, `Flag`, `from_dict` / `to_jsonable` | - |
 | `traces.py` | the traces of the Bode plot (live, kept, file, theory), the relative-to maths, a trace as a response curve | `measure/response.py`, `measure/theory.py`, `models.py` |
 | `units.py` | SI prefixes: `fmt_si`, `parse_si` | - |
@@ -69,6 +69,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `io/settings.py` | `AppSettings`, the config folder (`BODEPLOT_CONFIG_DIR`) | `drivers/visa_util.py` |
 | `measure/builtin.py` | gain and phase from the scope's own measurements (simulation only) | `drivers/base.py` |
 | `measure/meters.py` | `DualChannelScopeMeter`: one frequency point, auto-range, bad-capture retry | `drivers/base.py`, `drivers/scpi.py`, `measure/builtin.py`, `measure/sinefit.py`, `models.py`, `sweep/autorange.py` |
+| `measure/metrics.py` | what the shape of one response curve says: flat stretches, passband level and ripple, cut-offs, slope and order, stopband attenuation, resonances with Q from width and phase; no Qt | `measure/response.py` |
 | `measure/response.py` | one response curve (gain in dB, unwrapped phase): value at a frequency, level crossings, refined extremes; no Qt | - |
 | `measure/sinefit.py` | sine fit, SNR, `gain_phase`, `unwrap_deg` | - |
 | `measure/theory.py` | transfer functions of ideal circuits: the simulated DUT and the plot's theory curves | `units.py` |

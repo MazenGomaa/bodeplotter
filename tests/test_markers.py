@@ -64,7 +64,7 @@ def test_rc_low_pass_has_a_cutoff_and_nothing_else():
     m = every(of(RC))
     assert set(m) == {"fc", "pk", "nt", "GM", "PM"}
     assert m["fc"].freq == pytest.approx(FC, rel=0.02) and m["fc"].deg == pytest.approx(-45.0, abs=1.0)
-    assert m["fc"].db == pytest.approx(of(RC).db[0] - 3.0)
+    assert m["fc"].db == pytest.approx(-3.0, abs=0.02)             # 3 dB below the flat level, not below one point
     assert not m["pk"].found and not m["nt"].found and not m["GM"].found and not m["PM"].found
 
 
@@ -251,7 +251,7 @@ def test_table_for_the_clipboard():
     assert rows[0] == ["Markers on: Sweep"]
     assert rows[1] == ["Marker", "Frequency (Hz)", "Gain (dB)", "Phase (deg)", "Note"]
     assert [r[0] for r in rows[2:]] == ["fc", "pk", "nt", "GM", "PM", "M1", "M2"]
-    assert float(rows[2][1]) == pytest.approx(FC, rel=0.02) and float(rows[2][2]) == pytest.approx(-3.0, abs=0.01)
+    assert float(rows[2][1]) == pytest.approx(FC, rel=0.02) and float(rows[2][2]) == pytest.approx(-3.0, abs=0.02)
     assert rows[3] == ["pk", "", "", "", "none"]
     assert rows[7][4] == "reference marker" and rows[8][4].startswith("rel. M1: x10, ")
     assert text.endswith("\n") and all(len(r) == 5 for r in rows[1:])
@@ -316,3 +316,28 @@ def test_copied_frequency_keeps_its_digits_below_one_hertz():
                  "t").splitlines()
     assert rows[2].split("\t")[1] == "0.0123456"
     assert rows[3].split("\t")[1] == "1234.57"
+
+
+def test_the_cutoff_counts_from_the_flat_level_when_there_is_one():
+    """v3 (user, 2026-10-07): a low-pass with a hump before its cut-off. The cut-off lies 3 dB
+    below the flat level, not 3 dB below the top of the hump."""
+    w0 = 2 * math.pi * 10e3
+    hump = TransferFunction.custom([w0 * w0], [1.0, w0 / 2.0, w0 * w0])       # second order, Q = 2: a 6.3 dB hump
+    m = every(of(hump))
+    x2 = (1.75 + math.sqrt(1.75 ** 2 + 4)) / 2                  # |H|^2 = 1/2
+    assert set(m) >= {"fc", "pk"} and "fL" not in m             # counted from the hump it was two edges, 6.2 and 11.7 kHz
+    assert m["fc"].freq == pytest.approx(10e3 * math.sqrt(x2), rel=0.01)       # 14.8 kHz
+    assert m["fc"].db == pytest.approx(-3.0, abs=0.05)
+    assert m["pk"].found and m["pk"].db == pytest.approx(6.3, abs=0.2)         # the peak marker still sits on the hump
+
+
+def test_a_notch_filter_gets_both_edges_with_bandwidth_and_q():
+    m = every(of(NOTCH))
+    assert "fc" not in m and m["fL"].freq < F0 < m["fH"].freq
+    assert m["fL"].db == pytest.approx(-3.0, abs=0.05) and m["fH"].extra.startswith("BW ")
+    assert float(m["fH"].extra.split("Q ")[1]) == pytest.approx(1.0, rel=0.05)
+
+
+def test_a_resonant_band_pass_keeps_the_rule_of_v2():
+    m = every(of(BPF))                                          # no flat stretch: 3 dB below the peak, as before
+    assert m["fL"].db == pytest.approx(m["pk"].db - 3.0, abs=1e-9) and m["fH"].db == m["fL"].db

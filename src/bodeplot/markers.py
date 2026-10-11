@@ -11,13 +11,12 @@ import bisect
 import math
 from dataclasses import dataclass
 
-from .measure.response import Curve, crossings, extremum
+from .measure.metrics import DROP_DB, ends_extreme, marker_pair, passband
+from .measure.response import Curve, crossings
 from .units import fmt_si
 
 KINDS = ("cutoff", "peak", "notch", "margins")      # the automatic markers, in menu order
 MAX_USER = 8
-DROP_DB = 3.0                   # the cut-off lies this far below the highest gain
-PROMINENCE_DB = 1.0             # a peak or notch stands at least this far clear of both ends
 PASS_DEG = 2.0                  # the phase passes -180 degrees when it stands this far clear of it on both sides
 SAME_FREQ = 1e-3              # two markers within 0.1 % have no slope between them
 OUTSIDE = "outside the trace"
@@ -117,13 +116,13 @@ class MarkerSet:
         margins False: the margins make no sense here (relative display, no phase) and are
         left out."""
         out: list[Marker] = []
-        top, has_peak = _peak(c, True)
+        top, has_peak = ends_extreme(c, True)
         if "cutoff" in self.kinds:
-            out += _cutoffs(c, top)
+            out += _cutoffs(c)
         if "peak" in self.kinds:
             out.append(_at(c, "pk", "peak", top.f, top.db) if has_peak else Marker("pk", "peak"))
         if "notch" in self.kinds:
-            low, has_notch = _peak(c, False)
+            low, has_notch = ends_extreme(c, False)
             out.append(_at(c, "nt", "notch", low.f, low.db) if has_notch else Marker("nt", "notch"))
         if "margins" in self.kinds and margins:
             out += [_gain_margin(c), _phase_margin(c)]
@@ -155,51 +154,17 @@ def _at(c: Curve, name: str, kind: str, f: float, db: float | None = None) -> Ma
     return Marker(name, kind, f, v[0] if db is None else db, v[1], c.flagged_at(f))
 
 
-def _peak(c: Curve, highest: bool):
-    """(extreme, is it a real peak / notch). When it is not, the extreme is the plain
-    highest (lowest) point, not a refined one. (None, False) for an empty curve."""
-    e = extremum(c, highest)
-    if e is None:
-        return None, False
-    idx = c.usable()
-    ends = (c.db[idx[0]], c.db[idx[-1]])
-    clear = e.db - max(ends) if highest else min(ends) - e.db
-    if e.interior and clear >= PROMINENCE_DB:
-        return e, True
-    e.f, e.db = c.f[e.index], c.db[e.index]
-    return e, False
-
-
-def _cross(c: Curve, i: int, j: int, level: float) -> float:
-    a, b = c.db[i] - level, c.db[j] - level
-    if a == b:
-        return c.f[i]
-    return c.f[i] * (c.f[j] / c.f[i]) ** (a / (a - b))
-
-
-def _cutoffs(c: Curve, top) -> list[Marker]:
-    if top is None:
+def _cutoffs(c: Curve) -> list[Marker]:
+    """The -3 dB markers: 3 dB below the passband level (measure/metrics.py: the level of the
+    flat part of the curve; without one, its highest gain)."""
+    p = passband(c)
+    cuts = marker_pair(p)
+    if not cuts:
         return [Marker("fc", "cutoff")]
-    level = top.db - DROP_DB
-    if c.db[top.index] <= level:                # the refined peak stands 3 dB over every point: count from the
-        level = c.db[top.index] - DROP_DB       # highest point, or the level would lie above the whole curve
-    lo = hi = None
-    k = top.index
-    while k > 0 and c.ok[k - 1]:                # down in frequency, to the first crossing or a gap
-        if c.db[k - 1] <= level:
-            lo = _cross(c, k - 1, k, level)
-            break
-        k -= 1
-    k = top.index
-    while k < len(c.f) - 1 and c.ok[k + 1]:
-        if c.db[k + 1] <= level:
-            hi = _cross(c, k, k + 1, level)
-            break
-        k += 1
-    if lo is None and hi is None:
-        return [Marker("fc", "cutoff")]
-    if lo is None or hi is None:
-        return [_at(c, "fc", "cutoff", lo if hi is None else hi, level)]
+    level = p.level - DROP_DB
+    if len(cuts) == 1 or cuts[1].f <= cuts[0].f:
+        return [_at(c, "fc", "cutoff", cuts[0].f, level)]
+    lo, hi = cuts[0].f, cuts[1].f
     low, high = _at(c, "fL", "cutoff", lo, level), _at(c, "fH", "cutoff", hi, level)
     bw = hi - lo
     high.extra = "BW %s  Q %.3g" % (fmt_si(bw, "Hz", 3), math.sqrt(lo * hi) / bw)
