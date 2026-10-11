@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from bodeplot.measure.response import Curve, crossings, curve, extremum
+from bodeplot.measure.response import Curve, crossings, curve, extremum, refine
 from bodeplot.measure.theory import TransferFunction
 
 RC = TransferFunction.rc_lpf(1e3, 100e-9)
@@ -100,3 +100,20 @@ def test_extremum_at_an_end_and_on_poor_curves():
     assert flat.db == 0.0 and not flat.interior                 # the first of equal points
     beside_gap = extremum(by_hand([1.0, 10.0, 100.0, 1000.0], [0.0, 5.0, 0.0, 0.0], ok=[True, True, False, True]))
     assert beside_gap.f == 10.0 and beside_gap.db == 5.0        # no parabola across a gap
+
+
+def test_refine_works_on_any_point_and_extremum_uses_it():
+    c = of(BPF)
+    e = extremum(c)
+    assert refine(c, e.index) == (e.f, e.db)                    # the highest point: the same answer
+    f, db = refine(c, e.index)
+    assert c.f[e.index - 1] < f < c.f[e.index + 1] and db >= c.db[e.index]
+    assert refine(c, 0) == (c.f[0], c.db[0])                    # an end has one neighbour only: the point itself
+    assert refine(c, len(c.f) - 1) == (c.f[-1], c.db[-1])
+    rising = e.index - 10                                       # on the flank the parabola opens the wrong way or peaks outside
+    assert refine(c, rising) == (c.f[rising], c.db[rising])
+    gap = by_hand([1.0, 10.0, 100.0], [0.0, 3.0, 0.0], ok=[False, True, True])
+    assert refine(gap, 1) == (10.0, 3.0)                        # a dead neighbour: no parabola
+    notch = of(TransferFunction.rlc_notch(100.0, 1e-3, 100e-9))
+    low = extremum(notch, highest=False)
+    assert refine(notch, low.index, highest=False) == (low.f, low.db)

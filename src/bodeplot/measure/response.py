@@ -132,14 +132,10 @@ class Extremum:
     interior: bool              # not the first or the last usable point
 
 
-def extremum(c: Curve, highest: bool = True) -> Extremum | None:
-    """The highest (or lowest) gain of the curve. Its position is refined with a parabola
-    through the extreme point and its two neighbours (dB over log frequency) when both
-    exist with no gap between the three."""
-    idx = c.usable()
-    if not idx:
-        return None
-    i = (max if highest else min)(idx, key=lambda k: c.db[k])
+def refine(c: Curve, i: int, highest: bool = True) -> tuple[float, float]:
+    """(frequency, gain in dB) of the extreme at point i, refined with a parabola through the
+    point and its two neighbours (dB over log frequency). The point itself when a neighbour
+    is missing or dead, or when the parabola does not open the right way."""
     f, db = c.f[i], c.db[i]
     if 0 < i < len(c.f) - 1 and c.ok[i - 1] and c.ok[i + 1] and c.f[i - 1] < c.f[i] < c.f[i + 1]:
         x0, x1, x2 = (math.log10(c.f[k]) for k in (i - 1, i, i + 1))
@@ -151,4 +147,15 @@ def extremum(c: Curve, highest: bool = True) -> Extremum | None:
             xv = -b / (2 * a)
             if x0 < xv < x2:
                 f, db = 10.0 ** xv, y1 + a * (xv * xv - x1 * x1) + b * (xv - x1)
+    return f, db
+
+
+def extremum(c: Curve, highest: bool = True) -> Extremum | None:
+    """The highest (or lowest) gain of the curve, its position refined between the points
+    (refine)."""
+    idx = c.usable()
+    if not idx:
+        return None
+    i = (max if highest else min)(idx, key=lambda k: c.db[k])
+    f, db = refine(c, i, highest)
     return Extremum(f, db, i, idx[0] < i < idx[-1])
