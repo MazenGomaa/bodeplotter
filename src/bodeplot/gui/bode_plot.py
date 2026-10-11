@@ -326,6 +326,18 @@ class BodePlot(QWidget):
             curve.flagged = [bool(p.flags & ~QUIET) for p in points]
         return curve, points
 
+    def analysis_curve(self, trace_id: int):
+        """One trace as a response curve for the Analysis panel: the trace itself (gain in dB,
+        phase), whatever the vertical unit and 'Difference to trace' are set to, its suspect
+        points flagged. None: no such trace, or it has no points."""
+        got = self.set.curve(trace_id, self.span_hint, relative=False)
+        if got is None or not got[0].f:
+            return None
+        curve, points = got
+        if points is not None:
+            curve.flagged = [bool(p.flags & ~QUIET) for p in points]
+        return curve
+
     def _place(self, m, curve, points) -> Placed:
         """Text and dot positions of one marker in what the plots show now."""
         if not m.found:

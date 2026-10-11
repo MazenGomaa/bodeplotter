@@ -82,7 +82,7 @@ def test_plot_trace_and_log_options_explain_themselves(win):
     silent = [name for name, w in named.items() if not explains(w.toolTip(), name)]
     assert not silent, "options without an explanation: %s" % silent
     # nothing new slipped in without one: every button and box of these three panels is in the list
-    for host in (plot, panel, log, win.markers_panel):
+    for host in (plot, panel, log, win.markers_panel, win.analysis_panel):
         for w in host.findChildren(QPushButton) + host.findChildren(QComboBox) + host.findChildren(QCheckBox):
             assert explains(w.toolTip()), "%s in %s has no explanation" % (
                 w.text() if hasattr(w, "text") else type(w).__name__, type(host).__name__)

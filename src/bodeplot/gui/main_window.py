@@ -26,6 +26,7 @@ from .config_panel import ConfigPanel
 from ..units import fmt_si
 from .dialogs import (CalDialog, ConnectionsDialog, ImageExportDialog, SettingsDialog, SimSettingsDialog,
                       SkewWizard)
+from .analysis_panel import AnalysisPanel
 from .status_log import StatusLog
 from .markers_panel import MarkersPanel
 from .traces_panel import TracesPanel
@@ -35,7 +36,7 @@ log = logging.getLogger("bodeplot.gui")
 BUSY = (EngineState.CONNECTING, EngineState.RUNNING, EngineState.PAUSED, EngineState.ABORTING)
 
 
-LAYOUT_VERSION = 2      # the arrangement of the panels; a window layout stored by another one is not restored
+LAYOUT_VERSION = 3      # the arrangement of the panels; a window layout stored by another one is not restored
 
 class MainWindow(QMainWindow):
     def __init__(self, simulate: bool | None = None, settings: AppSettings | None = None,
@@ -78,10 +79,12 @@ class MainWindow(QMainWindow):
         self.traces_panel = TracesPanel(self.traces)
         self.traces_panel.interactive = self._interactive
         self.markers_panel = MarkersPanel(self.plot)
+        self.analysis_panel = AnalysisPanel(self.plot)
         for title, name, widget, area in (
                 ("Configuration", "dock_config", self.config, Qt.LeftDockWidgetArea),
                 ("Traces", "dock_traces", self.traces_panel, Qt.RightDockWidgetArea),
                 ("Markers", "dock_markers", self.markers_panel, Qt.RightDockWidgetArea),
+                ("Analysis", "dock_analysis", self.analysis_panel, Qt.RightDockWidgetArea),
                 ("Status log", "dock_log", self.status_log, Qt.BottomDockWidgetArea),
                 ("Waveform", "dock_waveform", self.waveform, Qt.BottomDockWidgetArea)):
             dock = QDockWidget(title, self)
@@ -90,10 +93,11 @@ class MainWindow(QMainWindow):
             self.addDockWidget(area, dock)
             self.docks[name] = dock
         # The window reads in working order (user's review of 2026-10-07): set up on the left, the
-        # plot in the middle, reading the result on the right (Traces, and Markers as a tab behind
-        # it: markers belong to a trace). What is watched while a sweep runs, the log and the
+        # plot in the middle, reading the result on the right (Traces, with Markers and Analysis as
+        # tabs behind it: both read a trace). What is watched while a sweep runs, the log and the
         # waveform, shares a low strip underneath.
         self.tabifyDockWidget(self.docks["dock_traces"], self.docks["dock_markers"])
+        self.tabifyDockWidget(self.docks["dock_markers"], self.docks["dock_analysis"])
         self.docks["dock_traces"].raise_()
         self.splitDockWidget(self.docks["dock_log"], self.docks["dock_waveform"], Qt.Horizontal)
         self._default_sizes()
@@ -279,7 +283,7 @@ class MainWindow(QMainWindow):
         m.setToolTipsVisible(True)
         self.view_actions = {}
         for name, text in (("dock_config", "&Configuration"), ("dock_waveform", "&Waveform"), ("dock_traces", "&Traces"),
-                           ("dock_markers", "&Markers"), ("dock_log", "&Status log")):
+                           ("dock_markers", "&Markers"), ("dock_analysis", "&Analysis"), ("dock_log", "&Status log")):
             a = self.docks[name].toggleViewAction()     # checked while the dock is open
             a.setText(text)
             m.addAction(a)

@@ -52,7 +52,7 @@ SCOPE_MIN_GAP_MS = (100.0, 2000.0)      # 100 ms is the pacing proven on the ben
 TOOLTIP_DELAY_MS = (0.0, 10000.0)
 MARKER_KINDS = ("cutoff", "peak", "notch", "margins")   # as markers.KINDS; a test keeps the two equal
 AUTO_KEEP_MAX = 6                       # with the live sweep, seven of the eight trace colours
-PANELS = ("dock_config", "dock_waveform", "dock_traces", "dock_markers", "dock_log")
+PANELS = ("dock_config", "dock_waveform", "dock_traces", "dock_markers", "dock_analysis", "dock_log")
 SKEW_DEFAULTS = (10e6, 20e6, 3)         # check frequencies and captures per frequency (SPEC.md section 8.6)
 SKEW_CAPTURES_MAX = 20
 # Advanced measurement settings: stored key -> (lowest, highest, integer?). They override the

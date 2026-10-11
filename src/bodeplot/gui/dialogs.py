@@ -278,7 +278,7 @@ class SimSettingsDialog(QDialog):
 
 # ---------------------------------------------------------------------- settings
 PANEL_LABELS = (("dock_config", "Configuration"), ("dock_waveform", "Waveform"), ("dock_traces", "Traces"),
-                ("dock_markers", "Markers"), ("dock_log", "Status log"))
+                ("dock_markers", "Markers"), ("dock_analysis", "Analysis"), ("dock_log", "Status log"))
 STARTUP_LABELS = (("instruments", "Real instruments"), ("simulation", "Simulation"),
                   ("last", "The mode used last time"))
 
