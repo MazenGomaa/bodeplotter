@@ -341,3 +341,9 @@ def test_a_notch_filter_gets_both_edges_with_bandwidth_and_q():
 def test_a_resonant_band_pass_keeps_the_rule_of_v2():
     m = every(of(BPF))                                          # no flat stretch: 3 dB below the peak, as before
     assert m["fL"].db == pytest.approx(m["pk"].db - 3.0, abs=1e-9) and m["fH"].db == m["fL"].db
+
+
+def test_the_simulators_loop_gain_has_both_margins():
+    m = every(of(TransferFunction.loop3()))                     # 4 / (1 + s/w)^3 with a pole at 1 kHz
+    assert m["GM"].margin == pytest.approx(6.02, abs=0.2) and m["GM"].freq == pytest.approx(1e3 * math.sqrt(3), rel=0.02)
+    assert m["PM"].margin == pytest.approx(27.1, abs=1.0)

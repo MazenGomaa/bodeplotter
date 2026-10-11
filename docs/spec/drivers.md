@@ -226,7 +226,7 @@ It follows the same rules as the app: no `:RUN`, no table walk by default, gener
 
 The transfer functions of the simulated DUT live in `measure/theory.py` (`TransferFunction`); `SimulatedDUT` adds the load on the source. The same module supplies the plot's theory curves (section 10).
 - `SimulatedDUT` supports:
-  - Presets: RC LPF, RC HPF, RLC band-pass, RLC notch, 2nd-order Butterworth LPF.
+  - Presets: RC LPF, RC HPF, RLC band-pass, RLC notch, 2nd-order Butterworth LPF. Added on 2026-10-11 on the user's request, to try the analysis and the markers on (`measure/theory.py`; each also a theory curve): `rlc_lpf` (resonant low-pass, Q = sqrt(L/C)/R), `rc_shelf` (RC low-pass with R2 in series with C: a stop band that levels off), `wide_bpf` (flat top between two cut-offs), `butter_lpf` and `cheby_lpf` (order 1 to 10), `two_res` (the sum of two resonant band-passes; the valley between them is a notch), `crystal` (series and parallel resonance), `amp` (gain above 0 dB, one pole), `loop3` (gain / (1 + s/w)^3: −180° at fp·√3 with gain / 8).
   - A custom H(s) via numerator/denominator coefficients.
   - Parameters in the GUI sim dialog.
 - `MockSource` feeds `MockScope`. MockScope synthesises both channels:

@@ -97,7 +97,7 @@ Everything below runs in simulation; on the real instruments all of it does exce
 - **Waveform view** of the last capture with the fitted sines, and a status log table.
 - **Presets and settings** as JSON in the user config folder; old or damaged files load with defaults.
 - **Export:** CSV (with a loader that round-trips), PNG, SVG, PDF, Touchstone `.s2p`.
-- **Simulated DUTs:** through, RC low-pass, RC high-pass, RLC band-pass, RLC notch, 2nd-order Butterworth low-pass, custom H(s).
+- **Simulated DUTs:** through, RC low-pass, RC high-pass, RLC band-pass, RLC notch, 2nd-order Butterworth low-pass, custom H(s); and circuits to try the analysis and the markers on: a resonant RLC low-pass (a hump before the cut-off), an RC low-pass whose stop band levels off, a band-pass with a flat top, Butterworth and Chebyshev low-passes of order 1 to 10, two resonances, a crystal (a peak and a notch close together), an amplifier with one pole, and a loop gain with three poles (gain and phase margin). File > Sim settings chooses one; the same list is under Traces > Add theory.
 
 ## Channel skew check
 
@@ -132,7 +132,7 @@ The **Traces** panel lists what is on the plot. The live sweep is always there; 
 
 - **Keep sweep** keeps the current sweep on the plot when the next one starts.
 - **Load CSV…** adds sweeps saved earlier with Export > CSV, one or several at once.
-- **Add theory…** adds the ideal response of a circuit: pick RC low-pass, RC high-pass, RLC band-pass, RLC notch or a 2nd-order Butterworth and enter the parts (1k, 100n), or enter the coefficients of H(s). Double-click the kind of a theory trace to change its values.
+- **Add theory…** adds the ideal response of a circuit: pick a circuit (RC low-pass, RC high-pass, RLC band-pass, RLC notch, a Butterworth or Chebyshev low-pass and the others of the simulator's list) and enter the parts (1k, 100n), or enter the coefficients of H(s). Double-click the kind of a theory trace to change its values.
 
 Tick a trace to show it, double-click its name to rename it. **Difference to trace** above the plot draws every trace divided by the one you choose ("off" shows them as measured): gain difference in dB and phase difference in degrees. With a theory curve as the reference this shows how far the measurement is from the ideal circuit. A theory curve is the ideal circuit only: no component losses, no lead inductance, no probe loading.
 

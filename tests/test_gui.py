@@ -680,3 +680,13 @@ def test_status_follows_the_scope_settings(win, qtbot):
     win.config.set_preset(p)
     assert win.skew_status[1].startswith("cal: ")                # kept, and used again
     assert "cal: " in win.about_text()
+
+
+def test_a_dock_title_keeps_the_whole_height_of_its_text():
+    """Qt sizes a dock's title bar from the font and the padding alone. A border on the title is
+    taken out of the text's height instead, which cut the foot of the 'g' in 'Status log' (user's
+    report of 2026-10-11): the title has no border."""
+    import re
+    from bodeplot.gui import theme
+    rule = re.search(r"QDockWidget::title\s*\{([^}]*)\}", theme.QSS).group(1)
+    assert "padding" in rule and "border" not in rule

@@ -130,7 +130,7 @@ QToolBar QToolButton#primary:disabled {{ background: transparent; color: #5b5a56
 QToolBar QLabel {{ color: {MUTED}; }}
 
 QDockWidget {{ color: {INK_2}; }}
-QDockWidget::title {{ background: {PAGE}; padding: 5px 8px; border-bottom: 1px solid {HAIRLINE}; }}
+QDockWidget::title {{ background: {PAGE}; padding: 5px 8px; }}
 QDockWidget > QWidget {{ background: {SURFACE}; }}
 QMainWindow::separator {{ background: {PAGE}; width: 4px; height: 4px; }}
 QMainWindow::separator:hover {{ background: {ACCENT_DIM}; }}

@@ -349,3 +349,29 @@ def test_five_hundred_points_are_analysed_in_well_under_half_a_second():
     start = time.perf_counter()
     analyse(c)
     assert time.perf_counter() - start < 0.5
+
+
+# ---------------------------------------------------------------------- the simulator's circuits
+def test_every_circuit_of_the_simulator_shows_what_it_is_for():
+    """The circuits added to Simulation mode to try the analysis on (measure/theory.py), with their defaults."""
+    m = analyse(of(TF.rlc_lpf()))                               # a hump: the cut-off from the flat level, one peak
+    assert m.source == "flat" and len(m.cutoffs) == 1 and [r.kind for r in m.resonances] == ["peak"]
+    assert m.resonances[0].height == pytest.approx(6.3, abs=0.3)
+    m = analyse(of(TF.rc_shelf()))                              # a stop band that levels off: a plain attenuation
+    assert [b.kind for b in m.bands] == ["pass", "floor"]
+    assert m.cutoffs[0].attenuation.v == pytest.approx(40.1, abs=0.5) and not m.cutoffs[0].attenuation.limit
+    m = analyse(of(TF.wide_bpf(), grid(5.0, 2e7)))              # a flat top: two cut-offs, centre, bandwidth
+    assert m.source == "flat" and [k.f for k in m.cutoffs] == pytest.approx([100.0, 100e3], rel=0.03)
+    assert m.resonances == [] and m.bandwidth == pytest.approx(99.9e3, rel=0.03)
+    m = analyse(of(TF.butter_lpf()))
+    assert m.cutoffs[0].f == pytest.approx(10e3, rel=0.02) and m.cutoffs[0].order.v == 5
+    m = analyse(of(TF.cheby_lpf()))
+    assert m.ripple == pytest.approx(1.0, abs=0.1) and m.cutoffs[0].order.v == 5
+    m = analyse(of(TF.two_res()))
+    assert [r.kind for r in m.resonances] == ["peak", "notch", "peak"]      # the valley between them is a notch
+    assert [m.resonances[0].f0, m.resonances[2].f0] == pytest.approx([10e3, 300e3], rel=0.03)
+    m = analyse(of(TF.crystal(), grid(1e5, 1e7, 200)))
+    assert [r.kind for r in m.resonances] == ["peak", "notch"]
+    assert [r.f0 for r in m.resonances] == pytest.approx([1e6, 1.05e6], rel=0.01)
+    m = analyse(of(TF.amp()))
+    assert m.level == pytest.approx(20.0, abs=0.05) and m.cutoffs[0].f == pytest.approx(50e3, rel=0.02)

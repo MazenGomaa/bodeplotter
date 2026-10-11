@@ -33,7 +33,7 @@ Run from the project root (PowerShell). There is no build step and no linter or 
 
 `tests/conftest.py` puts `src/` on the path, sets `QT_QPA_PLATFORM=offscreen` and sets `BODEPLOT_NO_HARDWARE` (every VISA open raises; never remove it: on 2026-10-06 a GUI test opened a real connection by accident). `BODEPLOT_CONFIG_DIR` redirects the settings and presets folder.
 
-This machine: Windows 11, Python 3.14 (`py -3.14`), both instruments bound to WinUSB, so the backend is `@py`. No `pdftoppm`: extract PDF text with `pypdf` in a throwaway venv in the scratchpad. The project is a git repository with no remote.
+This machine: Windows 11, Python 3.14 (`py -3.14`), both instruments bound to WinUSB, so the backend is `@py`. No `pdftoppm`: extract PDF text with `pypdf` in a throwaway venv in the scratchpad. The project is a git repository; `origin` is the user's private GitHub repository `MazenGomaa/bodeplotter`.
 
 ## Hard rules for instrument work
 
