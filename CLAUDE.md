@@ -11,7 +11,7 @@ Bode plotter: PC software that sweeps a UNI-T generator and reads a UNI-T scope 
 | `docs/SPEC.md` | design spec: overview and index; the detail is in `docs/spec/` (`drivers.md`, `sweep.md`, `skew.md`, `gui.md`, `web.md`, `roadmap.md`) |
 | `HW_REPORT.md` | what the hardware really does: the current verified facts, and the index of the dated test runs in `docs/hw/`. It overrides the manuals where they disagree |
 | `docs/superpowers/specs/`, `docs/superpowers/plans/` | approved feature designs and their implementation plans |
-| `docs/feature.md` | the user's notes on parked features (LCR mode, curve tracer) |
+| `docs/feature.md` | the user's notes on parked features (LCR mode, FFT mode, curve tracer) |
 | `docs/*.pdf` | the programming manuals (the UPO1000 manual is the one cited for the scope, as `U1K p.N`) |
 | `README.md` | status, how to run, features, for a user |
 

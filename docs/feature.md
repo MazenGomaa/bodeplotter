@@ -1,7 +1,8 @@
 # Parked features
 
 1. Semiconductor Curve Tracer Mode (below)
-2. LCR / Impedance Analyzer Mode (at the end of this file)
+2. LCR / Impedance Analyzer Mode
+3. FFT / Spectrum and Distortion Mode (at the end of this file; after the LCR phase)
 
 ---
 
@@ -192,3 +193,38 @@ Everything stays ground-referenced, so there is no conflict between the scope an
 2. Channel through-calibration (v2) done; phase match across frequency known.
 3. Fixture built; R_ref values measured.
 4. Hardware check: measure known parts (1% resistors, a C0G capacitor, an inductor) against a reference LCR meter if one is available.
+
+---
+---
+
+# Feature: FFT / Spectrum and Distortion Mode (parked)
+
+Status: **parked idea, not scheduled. Bench testing comes first: nothing about this mode is planned or designed until the hardware questions of section 4 are answered on the bench.** It comes after the LCR phase. Added 2026-11-01 on the user's request; the app would then have three modes: Bode, LCR, FFT.
+
+## 1. Would it beat the scope's built-in FFT?
+
+Mostly no as a general spectrum analyser; yes for jobs that use the generator.
+
+- **Limit: the app sees only 700 points per channel.** `:WAVeform:DATA?` returns the screen record, 700 points over 14 divisions, interpolated at fast timebases (`docs/spec/drivers.md`, HW_REPORT S7). The scope's own FFT runs on its internal memory (7K or more; how many points it uses is not checked). 700 points give 350 bins, a bin width of 1 / (14 × timebase) and a higher noise floor; timebases of 50 ms/div or slower are forbidden, which caps the resolution at low frequency.
+- **Same in both:** the 8-bit ADC, so spurs and distortion near −40 to −50 dBFS in either FFT.
+- **Scope's FFT stays better at:** live update (the app needs about 0.2 s per capture in preview style, 0.8 s single shot), finer resolution, unknown signals the app does not generate (noise, switching spurs).
+- **App's FFT would be better at:**
+  1. **Coherent analysis with the generator:** the app picks a stimulus frequency with a whole number of cycles in the record, so there is no leakage and no window; fundamental and harmonics measured with the sine fit at n·f. Gives THD, THD+N and per-harmonic levels. This is the strongest reason to build the mode.
+  2. **Averaging:** power averaging over captures; vector (complex) averaging with a stable trigger, which lowers the noise floor.
+  3. **Precision and tooling:** floating-point spectra, choice of window, markers, peak list, trace compare, CSV export, the Analysis tab.
+  4. **Both channels at once:** cross-spectrum and coherence (overlaps with Bode).
+
+Direction if built: a stimulus-driven harmonic / distortion analyser first, an averaged spectrum view second. Not a replacement for the scope's FFT on unknown signals.
+
+## 2. Reuse
+The single-shot capture, auto-range and sine fit (`measure/sinefit.py`, SPEC §8.4) of the Bode engine. A harmonic readout (fit at n·f) can work on captures the Bode sweep already takes.
+
+## 3. Out of scope for now
+Replacing the scope's live FFT; spectra of signals the app does not generate as the main use.
+
+## 4. Before planning anything (bench tests first)
+1. LCR phase done, or the user re-opens this.
+2. **Bench: can the scope return more than 700 points?** `:WAVeform:MODE` other than NORMal (RAW or MAX, if the UPO1000 manual lists them), with the memory depth at 7K and above, read only from a stopped single-shot record, every command cited with its manual page. Record what comes back and how long the readout takes. This result decides whether a general spectrum view is worth building at all.
+3. **Bench: the scope's own FFT as a reference.** Its record length, windows and dB floor with a known sine, so the app can be compared to it.
+4. **Bench: distortion floor.** A clean generator sine fitted at 2f to 10f, to see the THD floor the scope and generator together allow.
+5. Then write the spec section from this file.

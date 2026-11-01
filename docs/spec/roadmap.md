@@ -63,6 +63,7 @@ After v3, hardware and communication are re-checked end to end on the real instr
 ### Parked features (`docs/feature.md`)
 
 - **LCR / impedance analyzer mode:** parked, unscheduled; decision after v3. It depends on the v2 calibration and on the v3 fitting code, so both are to be kept reusable. (The user owns a UNI-T UT612 LCR meter, which can serve as the reference meter that file asks for.)
+- **FFT / spectrum and distortion mode:** parked, after the LCR phase (added 2026-11-01). Bench tests first (does the scope return more than 700 points; the scope's own FFT as a reference; the distortion floor); nothing is planned or designed until those are done.
 - **Curve tracer mode:** heavily deferred; it needs hardware that is not available yet. Mentioned only; no design work.
 
 ### Later, unscheduled
