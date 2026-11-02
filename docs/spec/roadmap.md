@@ -25,7 +25,7 @@ v1 (Milestones 0 to 7, §16) is done and accepted on Windows. The phases below a
   - Passband gain and ripple; stopband attenuation.
   - Centre frequency, bandwidth and Q (for BPF / BSF).
   - Roll-off slope in dB/decade → estimated order.
-- Rational transfer-function fit (e.g. vector fitting / least squares on complex H): show the fitted curve and list poles and zeros.
+- Rational transfer-function fit (e.g. vector fitting / least squares on complex H): show the fitted curve and list poles and zeros. **Order of work set by the user on 2026-11-02:** classification and the confidence score first, then this fit (B3) with the Crystal group and the narrow crystal sweep (`docs/STATE.md`).
 - Confidence score; refuse to classify when there are too many flags, too narrow a span, or low SNR.
 - Keep the fitting code reusable: the parked LCR mode (below) depends on it.
 
