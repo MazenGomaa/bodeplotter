@@ -184,3 +184,72 @@ def test_a_sweep_that_ends_while_the_gain_beyond_a_notch_rises_has_a_note():
     n = notes(m_of(_elliptic(), grid(50.0, 18e3)))
     assert [x for x in n if x.startswith("Beyond")] == ["Beyond fc the gain still rises where the sweep ends, past the notch: the stop band may come "
                  "back higher than the sweep shows."]
+
+
+# ---------------------------------------------------------------------- the type (classification design, section 6)
+def mk_of(tf, freqs=None, phase=True, wide=None):
+    from bodeplot.measure.classify import classify
+    freqs = freqs or grid()
+    c = curve(freqs, [tf.h(f) for f in freqs], wide_flags=wide)
+    m = analyse(c, phase)
+    return m, classify(m, c, phase)
+
+
+def test_type_group_first():
+    m, k = mk_of(RC)
+    t = rows(m, k=k)
+    assert [(r.group, r.name) for r in t[:3]] == [("Type", "Type"), ("Type", "Shape"), ("Type", "Confidence")]
+    assert [r.value for r in t[:3]] == ["Low-pass", "order 1", "100 %"]
+    assert t[3].group == "Passband" and all(r.tip == GROUPS["Type"] for r in t[:3])
+    assert list(GROUPS)[0] == "Type"
+    assert [r.group for r in rows(m)][0] == "Passband"                  # without a type, as before
+
+
+def test_refused_type_row():
+    m, k = mk_of(RC, grid(10e3, 50e3))                                   # a slice of a slope
+    t = rows(m, k=k)
+    assert [r.value for r in t[:3]] == ["Not classified", "", ""]
+    n = notes(m, k=k)
+    assert n[0] == k.refused and n[0].startswith("Not classified: ")
+
+
+def test_reasons_lead_the_notes():
+    m, k = mk_of(RC, wide=["skew unchecked"])
+    n = notes(m, k=k)
+    assert n[0].startswith("−10 % Skew unchecked") and n[1:] == notes(m)
+    assert cell(rows(m, k=k), "Type", "Confidence").value == "90 %"
+
+
+def test_type_rows_compare():
+    m, k = mk_of(RC)
+    mb, kb = mk_of(BPF)
+    mw, kw = mk_of(RC, wide=["skew unchecked"])
+    t = rows(m, mb, k=k, ko=kb)
+    assert (cell(t, "Type", "Type").compare, cell(t, "Type", "Type").diff) == ("Band-pass", "differs")
+    assert cell(t, "Type", "Shape").compare == ", ".join(kb.words) and cell(t, "Type", "Shape").diff == ""
+    t = rows(m, mw, k=k, ko=kw)
+    assert cell(t, "Type", "Type").diff == "same" and cell(t, "Type", "Confidence").diff == "+10 points"
+    assert cell(rows(mw, m, k=kw, ko=k), "Type", "Confidence").diff == "−10 points"
+    mr, kr = mk_of(RC, grid(10e3, 50e3))
+    t = rows(m, mr, k=k, ko=kr)
+    assert cell(t, "Type", "Type").compare == "Not classified"
+    assert cell(t, "Type", "Type").diff == "" and cell(t, "Type", "Confidence").diff == ""
+
+
+def test_clipboard_has_the_type():
+    m, k = mk_of(RC)
+    lines = table("Analysis of: Sweep", rows(m, k=k), notes(m, k=k)).splitlines()
+    assert lines[2:6] == ["Type", "Type\tLow-pass", "Shape\torder 1", "Confidence\t100 %"]
+
+
+def test_a_type_refused_for_its_score_still_shows_the_score():
+    """Design section 6: Confidence is the score when there is one."""
+    import dataclasses
+    from bodeplot.measure.analysis_settings import DEFAULTS
+    from bodeplot.measure.classify import classify
+    freqs = grid(100.0)
+    c = curve(freqs, [RC.h(f) for f in freqs])
+    s = dataclasses.replace(DEFAULTS, min_score=95)
+    m = analyse(c, s=s)
+    k = classify(m, c, True, s)
+    assert [r.value for r in rows(m, s=s, k=k)[:3]] == ["Not classified", "", "80 %"]
