@@ -13,6 +13,16 @@ Date: 2026-11-02. Status: **design approved by the user on 2026-11-02 (plan appr
 7. **A new reason, a span under a decade, −30 (3.4):** a narrow sweep that stepped over a crystal's peak read high-pass at 100 %; now it is refused.
 8. **"gain" only from a flat level (3.3):** a level read from a peak is that peak, not a passband gain: an RC sweep that starts 0.3 decade below fc read "gain −1.0 dB", an under-sampled Q 10 band-pass "gain −2.3 dB".
 
+**Changed after the build, from the branch review and the simulated run (2026-11-02; the user: "LOW_SNR not counted", "Fix all, then rerun").** A simulated sweep of every circuit through the window (50 Hz to 20 MHz, 20 points per decade) left 8 of 15 not classified: the sweep sets LOW_SNR on every point below about −31 dB, so a low-pass's stop band alone made 46 % of the points "flagged". The tests had only fed theory curves, which carry no flags. A fresh reviewer found the rest:
+
+9. **LOW_SNR is not a fault of the point (section 4):** it counts neither toward the 30 % refusal nor in the score; the noise ends and the scatter judge the SNR.
+10. **A scatter that cannot be measured near the level is taken over the whole trace (3):** with fewer than 9 sign-flipping second differences near the level, the same over every usable point outside the noise ends. An open probe (pure noise) has too few points near its "level" and read band-pass or band-stop at up to 100 %; 3 dB of noise gave types back that 2 dB refused.
+11. **Crystal-like holds the peak to Q 10, not the notch (3.2 rule 1):** measured from a flat level, a crystal's notch is broad (Q about 8 even at 1000 points per decade), so a wide log sweep could never read crystal-like; it read band-stop 65 to 80 %. Of the 900 log sweeps: 854 right (the build: 836); the crystal is right from 40 points per decade up.
+12. **The ripple word only on a low-pass, high-pass or band-pass, and at most 3 dB (`ripple_max_db`, 3.3):** a crystal read "band-stop, ripple 19.4 dB (Chebyshev-like)", a coarse rc_shelf "flat, ripple 0.5 dB".
+13. **Unknown shows no confidence (section 6):** "Unknown, 100 %" read as a contradiction. The score still exists and still refuses under 40.
+
+Rulings made in the build where this text was silent: with `crystal_q` at 200 the Q 100 crystal on a linear sweep is a band-pass by rule 7 (the plan had said unknown); a band-pass read from a peak counts the points between its cut-offs for "too few points"; a band-stop rests on its notch, an unknown with several peaks on its peaks.
+
 Known limits, left as they are: a response sampled too coarsely to show its features is misread with a middling score (two_res at 5 points per decade, its second peak never sampled: low-pass or high-pass at 70 %; the Q = 100 crystal with 50 points over 300 kHz: low-pass at 55 %). The notes' "too few points ... sweep finer" (part 1) and the finer sweep (part 2, B3) are the remedy. The LC trap over a −19 dB floor (`tests/test_metrics.py`, TRAP_SHELF) reads as a shelf, just inside the 20 dB limit.
 
 ## 1. Purpose
@@ -53,7 +63,7 @@ Success criteria:
 
 All of it reads one `Metrics` (part 1) and the `Curve` it was made from. Every number in this section is a setting (section 5); the figure given is its default.
 
-**The scatter** used below is the noise near the level: over the usable points outside the noise ends whose gain lies within 10 dB (`floor_db`) of the level, the second differences that change sign against both neighbours, their median times the factor of part 1 (`metrics.SIGMA_OF_D2`); 0 with fewer than 9 (`noise_points`) of them.
+**The scatter** used below is the noise near the level: over the usable points outside the noise ends whose gain lies within 10 dB (`floor_db`) of the level, the second differences that change sign against both neighbours, their median times the factor of part 1 (`metrics.SIGMA_OF_D2`). With fewer than 9 (`noise_points`) of them, the same over every usable point outside the noise ends (an open probe has too few points near its level); 0 with fewer than 9 there too.
 
 ### 3.1 Refusals, checked first
 
@@ -71,7 +81,7 @@ After the type and its score (3.2 to 3.4): a score under 40 % refuses too, with 
 
 The cut-offs in ascending frequency give their sides: "high" (the passband lies below, a low-pass edge) or "low". Tried in this order; the first that fits is the type.
 
-1. **Crystal-like**: a peak and a notch, the notch above the peak, f_notch / f_peak under 1.2, both with Q (width) of 10 or more. A ceramic resonator reads the same; the tooltip says so.
+1. **Crystal-like**: a peak of Q (width) 10 or more and a notch above it, f_notch / f_peak under 1.2 (the notch has no Q limit: from a flat level it is broad). A ceramic resonator reads the same; the tooltip says so.
 2. **Flat / all-pass**: a passband, no cut-off, no resonance 3 dB high or deep. With phase: when the phase turns by 90° or more across the sweep, all-pass, else flat. A magnitude-only sweep is flat, with the reason "phase not measured".
 3. **Unknown, several peaks**: no flat passband and two or more peaks 10 dB high or more.
 4. **Band-stop, from a notch**: a notch, and a roll-off that ends in it beyond which the gain comes back within 3 dB of the level (its stopband value under 3 dB).
@@ -88,7 +98,7 @@ Joined with commas after the type, each only when it applies:
 - crystal-like: "fs <f>, fp <f>".
 - "order N" for each roll-off with an order (low-pass, high-pass, band-pass), "order ≥ N" when it is a limit.
 - "peaking +x dB": a peak at least 1 dB over a flat level on the passband's side of a cut-off; "peaking" alone for rule 5.
-- "ripple x dB (Chebyshev-like)": part 1's ripple is 0.3 dB or more and 6 times the scatter or more, and there is no peaking.
+- "ripple x dB (Chebyshev-like)": a low-pass, high-pass or band-pass whose ripple (part 1) is 0.3 dB or more, 3 dB or less (`ripple_max_db`; more is a resonance) and 6 times the scatter or more, and there is no peaking.
 - "stopband notches (elliptic-like)": a low-pass, high-pass or band-pass roll-off that ends in a notch (no slope, a stopband value).
 - shelf: "high-frequency step −x dB" or "low-frequency step"; "notch at <f>" when it has one.
 - "Q x" for a band-pass or band-stop with a centre.
@@ -119,7 +129,7 @@ The score is at least 0. Under 40: refused (3.1).
 
 `Curve` keeps `flagged` as it is (part 1's "(flagged)" marks do not change). It gains two fields, filled by `BodePlot.analysis_curve`:
 
-- `point_flagged`: per point, a flag other than the quiet ones (`QUIET`) and other than SKEW_UNCHECKED;
+- `point_flagged`: per point, a flag other than the quiet ones (`QUIET`), SKEW_UNCHECKED and LOW_SNR (on every point of a deep stop band; the noise rules judge it): `bode_plot.NOT_A_FAULT`;
 - `wide_flags`: the names of the flags that mark every point (today SKEW_UNCHECKED), shown as "skew unchecked".
 
 Both survive `curve()` and `metrics.without_noise`. A curve built without them (tests, theory curves) has no flags of either kind.
@@ -135,7 +145,7 @@ Both survive `curve()` and `metrics.without_noise`. A curve built without them (
 
 ## 6. The Analysis table
 
-- A **Type** group first: Type (e.g. "Low-pass"), Shape (the shape words), Confidence ("85 %"). Refused: Type reads "Not classified", Shape is empty, Confidence is the score when there is one.
+- A **Type** group first: Type (e.g. "Low-pass"), Shape (the shape words), Confidence ("85 %"). Refused: Type reads "Not classified", Shape is empty, Confidence is the score when there is one. Unknown: Confidence is empty, and Compare with shows no difference in points.
 - The reasons go in the notes before part 1's notes, as "−10 % skew unchecked". The four-line limit holds; the rest scrolls.
 - With Compare with: the Compare column holds the other trace's type, shape and score; Difference reads "same" or "differs" for the type, the score's difference in points, nothing for the shape.
 - Tooltips state each rule (`tests/test_gui_tooltips.py`). Colours from `gui/theme.py` only.
