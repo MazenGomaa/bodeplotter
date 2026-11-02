@@ -134,7 +134,8 @@ def _type(m: Metrics, c: Curve, phase: bool, s: AnalysisSettings) -> _Read:
         edge = max(k.f for k in m.cutoffs) if kind == LOW_PASS else min(k.f for k in m.cutoffs)
         for b in m.bands:
             step = m.level - b.level
-            if b.kind != "pass" and (b.lo > edge if kind == LOW_PASS else b.hi < edge) and s.shelf_lo <= step < s.shelf_hi:
+            beyond = b.lo > edge if kind == LOW_PASS else b.hi < edge
+            if b.kind != "pass" and beyond and s.shelf_lo <= step < s.shelf_hi:
                 words = [("high" if kind == LOW_PASS else "low") + "-frequency step " + _db(-step)]
                 return _Read(SHELF, words + ["notch at " + _hz(r.f0) for r in notches])
         return _Read(kind, reasons=[] if flat else [from_peak])

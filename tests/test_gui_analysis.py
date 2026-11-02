@@ -284,3 +284,16 @@ def test_changed_settings_wait_for_analyse_and_the_line_says_so(plot, panel):
     assert fc(panel) == pytest.approx(FC * math.sqrt(10 ** 0.6 - 1), rel=0.02)
     tips = [panel.table.topLevelItem(i).toolTip(0) for i in range(panel.table.topLevelItemCount())]
     assert any("fallen 6 dB below" in t for t in tips)                  # the rules name the numbers in force
+
+
+def test_analysis_curve_splits_the_flags(plot):
+    """Classification design section 4: a flag on every point is the sweep's, not a point's."""
+    wide = Flag.SKEW_UNCHECKED
+    plot.set_points([point(f, RC.h(f), wide | Flag.CLIPPED if i in (10, 20) else wide) for i, f in enumerate(FREQS)])
+    c = plot.analysis_curve(plot.set.live.id)
+    assert c.wide_flags == ["skew unchecked"]
+    assert [i for i, b in enumerate(c.point_flagged) if b] == [10, 20]
+    assert all(c.flagged)
+    plot.set_points([point(f, RC.h(f), Flag.CLIPPED if i == 3 else Flag.NONE) for i, f in enumerate(FREQS)])
+    c = plot.analysis_curve(plot.set.live.id)
+    assert c.wide_flags == [] and [i for i, b in enumerate(c.point_flagged) if b] == [3]

@@ -76,15 +76,16 @@ class Curve:
         return loc is not None and (self.flagged[loc[0]] or self.flagged[loc[1]])
 
 
-def curve(freqs, hs, flagged=None) -> Curve:
+def curve(freqs, hs, flagged=None, point_flagged=None, wide_flags=None) -> Curve:
     """A curve from frequencies and complex values. Rows with an impossible frequency are
     dropped; the rest is put in ascending order."""
     flagged = list(flagged) if flagged is not None else [False] * len(freqs)
-    rows = sorted(((float(f), complex(h), bool(b)) for f, h, b in zip(freqs, hs, flagged)
+    alone = list(point_flagged) if point_flagged is not None else [False] * len(freqs)
+    rows = sorted(((float(f), complex(h), bool(b), bool(a)) for f, h, b, a in zip(freqs, hs, flagged, alone)
                    if f > 0 and math.isfinite(f)), key=lambda r: r[0])
-    c = Curve()
+    c = Curve(wide_flags=list(wide_flags or []))
     last = None
-    for f, h, bad in rows:
+    for f, h, bad, one in rows:
         ok = usable(h)
         d = math.degrees(cmath.phase(h)) if ok else 0.0
         if ok and last is not None:
@@ -96,6 +97,7 @@ def curve(freqs, hs, flagged=None) -> Curve:
         c.deg.append(d)
         c.ok.append(ok)
         c.flagged.append(bad)
+        c.point_flagged.append(one)
     return c
 
 

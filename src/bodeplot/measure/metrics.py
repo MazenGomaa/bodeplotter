@@ -317,7 +317,7 @@ def without_noise(c: Curve, noise: list[Noise]) -> Curve:
     ok = list(c.ok)
     for n in noise:
         ok[n.first:n.last + 1] = [False] * (n.last - n.first + 1)
-    return Curve(c.f, c.db, c.deg, ok, c.flagged)
+    return Curve(c.f, c.db, c.deg, ok, c.flagged, c.point_flagged, c.wide_flags)
 
 
 def ends_extreme(c: Curve, highest: bool, s: AnalysisSettings = DEFAULTS):

@@ -117,3 +117,15 @@ def test_refine_works_on_any_point_and_extremum_uses_it():
     notch = of(TransferFunction.rlc_notch(100.0, 1e-3, 100e-9))
     low = extremum(notch, highest=False)
     assert refine(notch, low.index, highest=False) == (low.f, low.db)
+
+
+def test_curve_keeps_the_two_kinds_of_flags_through_sorting_and_the_noise_ends():
+    """Classification design section 4: point_flagged per point, wide_flags for the whole sweep."""
+    from bodeplot.measure.metrics import Noise, without_noise
+    c = curve([1000.0, 100.0, 10000.0], [1 + 0j, 1 + 0j, 1 + 0j], point_flagged=[True, False, False],
+              wide_flags=["skew unchecked"])
+    assert c.point_flagged == [False, True, False] and c.wide_flags == ["skew unchecked"]
+    d = without_noise(c, [Noise(2, 2, 1e4, 1e4, -80.0, False)])
+    assert d.point_flagged == [False, True, False] and d.wide_flags == ["skew unchecked"] and d.ok[2] is False
+    plain = of(RC)
+    assert plain.point_flagged == [False] * len(plain.f) and plain.wide_flags == []

@@ -334,13 +334,17 @@ class BodePlot(QWidget):
     def analysis_curve(self, trace_id: int):
         """One trace as a response curve for the Analysis panel: the trace itself (gain in dB,
         phase), whatever the vertical unit and 'Difference to trace' are set to, its suspect
-        points flagged. None: no such trace, or it has no points."""
+        points flagged. A flag on every point (skew unchecked) is the sweep's: wide_flags, not
+        point_flagged (classification design, section 4). None: no such trace, or it has no points."""
         got = self.set.curve(trace_id, self.span_hint, relative=False)
         if got is None or not got[0].f:
             return None
         curve, points = got
         if points is not None:
             curve.flagged = [bool(p.flags & ~QUIET) for p in points]
+            curve.point_flagged = [bool(p.flags & ~QUIET & ~Flag.SKEW_UNCHECKED) for p in points]
+            every = points and all(p.flags & Flag.SKEW_UNCHECKED for p in points)
+            curve.wide_flags = ["skew unchecked"] if every else []
         return curve
 
     def _place(self, m, curve, points) -> Placed:
