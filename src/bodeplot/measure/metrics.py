@@ -24,6 +24,7 @@ FLOOR_DB = 10.0             # a flat stretch this far below the passband level i
 PROMINENCE_DB = 1.0         # a peak or notch stands this far clear of its surroundings
 NOISE_WINDOW = 1.0          # decades over which the scatter of the curve is estimated
 NOISE_FACTOR = 8.0          # ... and a peak or notch stands this many times the scatter clear
+NOISE_DB = 0.5              # dB of scatter (over FLAT_WINDOW): from here to an end of the curve it is noise
 TROUGH_DB = 0.1             # a dip inside the passband counts for the ripple from this depth
 SLOPE_WINDOW = 0.5          # decades of the window that measures a roll-off
 STEEPENING = 2.0            # dB/decade: the outermost window is this much steeper than the settled slope: a limit
@@ -53,6 +54,17 @@ class Band:
     at_low: bool                # it touches the low (high) end of the curve
     at_high: bool
     flagged: bool = False
+
+
+@dataclass
+class Noise:
+    """A stretch at an end of the curve where the gain is the instrument's noise, not the circuit."""
+    first: int                  # index of its first and last point
+    last: int
+    lo: float                   # their frequencies
+    hi: float
+    level: float                # dB, the median gain of the stretch
+    at_low: bool                # it is at the low end of the curve (else at the high end)
 
 
 @dataclass
@@ -110,6 +122,7 @@ class Metrics:
     bandwidth: float | None = None
     q: float | None = None
     resonances: list[Resonance] = field(default_factory=list)
+    noise: list[Noise] = field(default_factory=list)    # left out of everything above
 
 
 # ---- small tools
@@ -175,11 +188,45 @@ def local_slopes(c: Curve, x=None) -> list:
     return out
 
 
-def _scatter(c: Curve, x, a: int, b: int, i: int) -> float:
+def _scatter(c: Curve, x, a: int, b: int, i: int, width: float = NOISE_WINDOW) -> float:
     """The scatter of the gain around point i, from the second differences of its neighbourhood."""
-    j0, j1 = _window(x, a, b, i, NOISE_WINDOW)
+    j0, j1 = _window(x, a, b, i, width)
     d2 = [abs(c.db[j - 1] - 2 * c.db[j] + c.db[j + 1]) for j in range(max(j0, a + 1), min(j1, b - 1) + 1)]
     return 1.4826 * statistics.median(d2) / math.sqrt(6.0) if d2 else 0.0
+
+
+def noise_ends(c: Curve) -> list[Noise]:
+    """The ends of the curve that are lost in the noise: from an end inwards, the points whose
+    scatter is over NOISE_DB, at least FLAT_POINTS of them, lying FLOOR_DB or more below the
+    highest gain of the rest. A curve that is noise all through has none (nothing would be left)."""
+    segs = segments(c)
+    if not segs:
+        return []
+    x = _logs(c)
+    out = []
+    for (a, b), step in ((segs[0], +1), (segs[-1], -1)):
+        start = a if step > 0 else b
+        k = start
+        while a <= k <= b and _scatter(c, x, a, b, k, FLAT_WINDOW) > NOISE_DB:
+            k += step
+        first, last = sorted((start, k - step))
+        if last - first + 1 < FLAT_POINTS:
+            continue
+        rest = [c.db[i] for i in c.usable() if not first <= i <= last]
+        level = statistics.median(c.db[first:last + 1])
+        if len(rest) >= MIN_POINTS and level <= max(rest) - FLOOR_DB:
+            out.append(Noise(first, last, c.f[first], c.f[last], level, step > 0))
+    if len(out) == 2 and out[0].last >= out[1].first:  # one stretch of noise from end to end
+        return []
+    return out
+
+
+def without_noise(c: Curve, noise: list[Noise]) -> Curve:
+    """The curve with its noisy ends as dead points."""
+    ok = list(c.ok)
+    for n in noise:
+        ok[n.first:n.last + 1] = [False] * (n.last - n.first + 1)
+    return Curve(c.f, c.db, c.deg, ok, c.flagged)
 
 
 def ends_extreme(c: Curve, highest: bool):
@@ -458,6 +505,8 @@ def analyse(c: Curve, phase: bool = True) -> Metrics:
         return m
     m.ok = True
     m.flagged_share = sum(1 for i in idx if c.flagged[i]) / m.points
+    m.noise = noise_ends(c)
+    c = without_noise(c, m.noise)
     x = _logs(c)
     p = passband(c)
     m.level, m.source, m.bands, m.cutoffs = p.level, p.source, p.bands, p.cutoffs
@@ -479,6 +528,10 @@ def analyse(c: Curve, phase: bool = True) -> Metrics:
         m.level_flagged = c.flagged[p.top.index]
     for cut in m.cutoffs:
         _roll_off(c, x, cut, m.level, m.bands, m.resonances)
+        noise = next((n for n in m.noise if n.at_low == (cut.side == "low")), None)
+        if cut.falling and noise is not None:           # it falls into the noise: at least down to the noise
+            cut.falling = False
+            cut.attenuation = Value(m.level - noise.level, True, cut.attenuation.flagged)
     pair = marker_pair(p)
     if len(pair) == 2 and pair[1].f > pair[0].f:
         lo, hi = pair

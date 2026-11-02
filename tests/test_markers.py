@@ -8,6 +8,7 @@ import pytest
 
 from bodeplot.markers import KINDS, MAX_USER, NO_VALUE, OUTSIDE, Marker, MarkerSet, delta_text, label, table
 from bodeplot.measure.response import Curve, curve
+from bodeplot.measure import theory
 from bodeplot.measure.theory import TransferFunction
 
 RC = TransferFunction.rc_lpf(1e3, 100e-9)
@@ -347,3 +348,16 @@ def test_the_simulators_loop_gain_has_both_margins():
     m = every(of(TransferFunction.loop3()))                     # 4 / (1 + s/w)^3 with a pole at 1 kHz
     assert m["GM"].margin == pytest.approx(6.02, abs=0.2) and m["GM"].freq == pytest.approx(1e3 * math.sqrt(3), rel=0.02)
     assert m["PM"].margin == pytest.approx(27.1, abs=1.0)
+
+
+def test_no_notch_or_margin_in_the_noise_floor():
+    """Below -80 dB the curve is the scope's noise: its lowest point there is no notch, and the
+    phase wandering through -180 degrees there is no gain margin (measure/metrics.py: noise_ends)."""
+    tf = theory.build("butter_lpf", {"fc": 10e3, "n": 5})
+    for seed in (1, 2, 3):
+        rnd = random.Random(seed)
+        freqs = grid(20.0, 5e6, 40)
+        m = every(curve(freqs, [tf.h(f) + complex(rnd.gauss(0, 1e-4), rnd.gauss(0, 1e-4)) for f in freqs]))
+        assert not m["nt"].found, (seed, m["nt"].freq)
+        assert m["GM"].freq is None or m["GM"].freq < 20e3, (seed, m["GM"].freq)
+        assert m["fc"].freq == pytest.approx(10e3, rel=0.02)

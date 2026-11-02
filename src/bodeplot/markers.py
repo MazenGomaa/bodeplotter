@@ -11,7 +11,7 @@ import bisect
 import math
 from dataclasses import dataclass
 
-from .measure.metrics import DROP_DB, ends_extreme, marker_pair, passband
+from .measure.metrics import DROP_DB, ends_extreme, marker_pair, noise_ends, passband, without_noise
 from .measure.response import Curve, crossings
 from .units import fmt_si
 
@@ -114,8 +114,10 @@ class MarkerSet:
         """The markers for this curve, in the order -3 dB, peak, notch, margins, user. An
         automatic marker that is switched on and does not exist comes back with freq None.
         margins False: the margins make no sense here (relative display, no phase) and are
-        left out."""
+        left out. The automatic markers leave out the ends lost in the noise; user markers read
+        the whole curve."""
         out: list[Marker] = []
+        whole, c = c, without_noise(c, noise_ends(c))
         top, has_peak = ends_extreme(c, True)
         if "cutoff" in self.kinds:
             out += _cutoffs(c)
@@ -126,7 +128,7 @@ class MarkerSet:
             out.append(_at(c, "nt", "notch", low.f, low.db) if has_notch else Marker("nt", "notch"))
         if "margins" in self.kinds and margins:
             out += [_gain_margin(c), _phase_margin(c)]
-        users = {n: self._user(c, n, f) for n, f in sorted(self.user.items())}
+        users = {n: self._user(whole, n, f) for n, f in sorted(self.user.items())}
         ref = users.get(self.ref)
         for n, m in users.items():
             if ref is not None and m is not ref and m.has_value and ref.has_value:

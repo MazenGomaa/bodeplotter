@@ -157,6 +157,7 @@ The **Analysis** panel (on the right, a tab behind Traces and Markers; View > An
 - **Roll-off and stop band:** the slope the curve settles to and the order that goes with it; how far below the passband the trace gets.
 - **Resonances:** every peak and every notch with its frequency, its height or depth, Q from its −3 dB width and, for a peak, Q from the phase.
 - **≥** means "at least": the sweep ends before the number has settled. The notes under the table say why, and where a resonance has too few points to be trusted.
+- **Noise:** where an end of the trace is lost in the instrument's noise (the gain scatters from point to point), that part is left out of the table and of the automatic markers, and a note says from which frequency. A roll-off that runs into it reads "≥" down to the noise.
 
 The table stays until you press Analyse again; the line above it warns when the trace has changed since. **Copy table** puts it on the clipboard.
 

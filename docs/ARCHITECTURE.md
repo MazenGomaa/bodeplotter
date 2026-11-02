@@ -21,7 +21,7 @@ Persistence (`io/`): settings and presets are JSON in the user config folder, lo
 
 **Markers** are outside it too. `markers.py` holds what is switched on and the rules; `measure/response.py` is the maths on one curve, which `traces.py` also uses for the reference trace and which v3 (response metrics) is to build on. `gui/markers_panel.py` holds the controls and follows the plot's `markers_changed`. The plot asks `TraceSet.curve` for the chosen trace, lets `MarkerSet.evaluate` read it, and hands texts and positions to `gui/marker_layer.py` and to the image export.
 
-**The analysis** (v3, part 1) sits beside the markers. `measure/metrics.py` reads the shape of one curve; `markers.py` takes its −3 dB cut-offs from it (`passband`, `marker_pair`), so the marker and the Analysis table show the same cut-off. `analysis.py` turns a `Metrics` into rows of text; `gui/analysis_panel.py` asks the plot for a trace as a curve (`BodePlot.analysis_curve`: always absolute and in dB) when Analyse is pressed, and follows the plot's `markers_changed` only to tell whether its table is still current.
+**The analysis** (v3, part 1) sits beside the markers. `measure/metrics.py` reads the shape of one curve; `markers.py` takes its −3 dB cut-offs from it (`passband`, `marker_pair`) and leaves out the same noisy ends (`noise_ends`, `without_noise`), so the marker and the Analysis table show the same cut-off. `analysis.py` turns a `Metrics` into rows of text; `gui/analysis_panel.py` asks the plot for a trace as a curve (`BodePlot.analysis_curve`: always absolute and in dB) when Analyse is pressed, and follows the plot's `markers_changed` only to tell whether its table is still current.
 
 ## Two levels of simulation
 
@@ -73,7 +73,7 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `io/settings.py` | `AppSettings`, the config folder (`BODEPLOT_CONFIG_DIR`) | `drivers/visa_util.py` |
 | `measure/builtin.py` | gain and phase from the scope's own measurements (simulation only) | `drivers/base.py` |
 | `measure/meters.py` | `DualChannelScopeMeter`: one frequency point, auto-range, bad-capture retry | `drivers/base.py`, `drivers/scpi.py`, `measure/builtin.py`, `measure/sinefit.py`, `models.py`, `sweep/autorange.py` |
-| `measure/metrics.py` | what the shape of one response curve says: flat stretches, passband level and ripple, cut-offs, slope and order, stopband attenuation, resonances with Q from width and phase; no Qt | `measure/response.py` |
+| `measure/metrics.py` | what the shape of one response curve says: flat stretches, passband level and ripple, cut-offs, slope and order, stopband attenuation, resonances with Q from width and phase, the ends lost in the noise; no Qt | `measure/response.py` |
 | `measure/response.py` | one response curve (gain in dB, unwrapped phase): value at a frequency, level crossings, refined extremes; no Qt | - |
 | `measure/sinefit.py` | sine fit, SNR, `gain_phase`, `unwrap_deg` | - |
 | `measure/theory.py` | transfer functions of ideal circuits: the simulated DUT and the plot's theory curves | `units.py` |

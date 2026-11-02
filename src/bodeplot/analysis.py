@@ -198,6 +198,10 @@ def notes(m: Metrics) -> list[str]:
     falling = [name for name, cut in zip(cut_names(m), m.cutoffs) if cut.falling]
     if falling:
         out.append("Beyond %s the sweep ends before the stop band levels off." % " and ".join(falling))
+    for n in m.noise:
+        where = ("Below", hz(n.hi)) if n.at_low else ("Above", hz(n.lo))
+        out.append("%s %s the gain is lost in the noise (about %.0f dB): that part is left out of the analysis."
+                   % (where + (n.level,)))
     for r in m.resonances:
         if r.points < FEW_POINTS:
             out.append("Too few points on the %s at %s (%d): its top and its Q are uncertain; sweep finer "

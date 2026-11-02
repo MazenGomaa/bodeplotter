@@ -1,6 +1,7 @@
 """The Analysis table as text (analysis.py): rows, limits, the difference to a second trace,
 the notes and the clipboard text."""
 import math
+import random
 
 import pytest
 
@@ -131,6 +132,16 @@ def test_notes():
     assert n[-1].endswith("is marked.") and " % of the points are flagged" in n[-1]
     assert notes(m_of(RC, [100.0, 1e3, 1e4])) == ["No analysis: fewer than 5 usable points."]
     assert rows(m_of(RC, [100.0, 1e3, 1e4])) == []
+
+
+def test_a_note_says_where_the_noise_starts():
+    rnd = random.Random(1)
+    freqs = grid(20.0, 5e6)
+    c = curve(freqs, [RC.h(f) + complex(rnd.gauss(0, 1e-4), rnd.gauss(0, 1e-4)) for f in freqs])
+    n = notes(analyse(c))
+    (noise,) = [s for s in n if "noise" in s]
+    assert noise.startswith("Above ") and "the gain is lost in the noise (about -" in noise
+    assert not any("levels off" in s for s in n)
 
 
 def test_table_for_the_clipboard():

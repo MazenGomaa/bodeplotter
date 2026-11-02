@@ -277,6 +277,39 @@ def test_noise_moves_the_numbers_little_and_invents_nothing(db, tol, seed):
     assert analyse(of(TF.through(), db=db, seed=seed)).resonances == []
 
 
+def floored(tf, floor=1e-4, freqs=None, seed=1):
+    """The curve of a transfer function above an instrument's noise floor: complex noise of
+    that size (1e-4: -80 dB) added to every point, as a scope adds it."""
+    rnd = random.Random(seed)
+    freqs = freqs or grid(20.0, 5e6, 40)
+    return curve(freqs, [tf.h(f) + complex(rnd.gauss(0, floor), rnd.gauss(0, floor)) for f in freqs])
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+@pytest.mark.parametrize("tf, order", [(RC, 1), (butter(5, 10e3), 5), (HUMP, 2)])
+def test_a_noise_floor_ends_the_roll_off(tf, order, seed):
+    m = analyse(floored(tf, seed=seed))
+    (noise,) = m.noise
+    assert not noise.at_low and noise.level < -50.0
+    (cut,) = m.cutoffs
+    assert cut.order.v == order and abs(cut.slope.v) == pytest.approx(20.0 * order, rel=0.1)
+    assert cut.attenuation.limit and cut.attenuation.v > 50.0 and not cut.falling
+    assert [r.kind for r in m.resonances] == (["peak"] if tf is HUMP else [])
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_no_resonance_is_found_in_the_noise_at_the_low_end(seed):
+    m = analyse(floored(TWO, seed=seed))
+    assert [n.at_low for n in m.noise] == [True] or [n.at_low for n in m.noise] == [True, False]
+    assert all(r.f0 > 1e3 for r in m.resonances)
+    assert [r.kind for r in m.resonances][:1] == ["peak"] and m.resonances[0].f0 == pytest.approx(1e4, rel=0.02)
+
+
+def test_a_clean_curve_or_a_noisy_whole_has_no_noise_floor():
+    assert analyse(of(RC, db=0.2)).noise == []
+    assert analyse(floored(TF.custom([1e-5], [1.0]))).noise == []     # all of it in the noise: nothing is left out
+
+
 # ---------------------------------------------------------------------- the marker's pair
 def test_of_many_cutoffs_the_marker_takes_the_two_around_the_highest_gain():
     f = grid(10.0, 1e6, 20)
