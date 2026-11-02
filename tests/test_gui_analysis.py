@@ -94,7 +94,8 @@ def test_analyse_fills_the_table(plot, panel):
     assert panel.table.isColumnHidden(2) and panel.table.isColumnHidden(3)      # nothing to compare with
     assert "Sweep, analysed " in panel.state.text() and "changed" not in panel.state.text()
     assert panel.copy_btn.isEnabled() and "sweep ends before" in panel.notes.text()
-    head = panel.table.topLevelItem(0)
+    head = panel.table.topLevelItem(1)                  # after the Type group
+    assert head.text(0) == "Passband"
     assert head.isExpanded() and len(head.toolTip(0)) > 60 and head.isFirstColumnSpanned()
     assert head.child(0).toolTip(1) == "Passband, Level. " + head.toolTip(0)     # the name in full, then the rule
     assert head.child(0).textAlignment(1) & Qt.AlignRight
@@ -297,3 +298,37 @@ def test_analysis_curve_splits_the_flags(plot):
     plot.set_points([point(f, RC.h(f), Flag.CLIPPED if i == 3 else Flag.NONE) for i, f in enumerate(FREQS)])
     c = plot.analysis_curve(plot.set.live.id)
     assert c.wide_flags == [] and [i for i, b in enumerate(c.point_flagged) if b] == [3]
+
+
+# ---------------------------------------------------------------------- the type (classification design, section 6)
+def test_the_type_comes_first_after_analyse(plot, panel):
+    plot.set_points(sweep())
+    panel.analyse()
+    assert panel.rows()[0] == ["Type", "", "", ""]
+    assert value(panel, "Type", "Type") == "Low-pass" and value(panel, "Type", "Confidence") == "100 %"
+    assert panel.text().splitlines()[2:4] == ["Type", "Type\tLow-pass"]
+    assert "type" in panel.analyse_btn.toolTip() and "confidence" in panel.analyse_btn.toolTip()
+
+
+def test_compare_shows_both_types(plot, panel):
+    plot.set_points(sweep())
+    theory = plot.set.add_theory(BPF)
+    plot.traces_changed()
+    choose(panel.compare_box, theory.name)
+    panel.analyse()
+    assert value(panel, "Type", "Type", 2) == "Band-pass" and value(panel, "Type", "Type", 3) == "differs"
+
+
+def test_type_rows_have_tooltips(plot, panel):
+    plot.set_points(sweep())
+    panel.analyse()
+    head = panel.table.topLevelItem(0)
+    assert head.text(0) == "Type" and "Confidence" in head.toolTip(0) and "40 %" in head.toolTip(0)
+    assert head.child(0).toolTip(1) == "Type, Type. " + head.toolTip(0)
+
+
+def test_a_sweep_with_unchecked_skew_says_so_first_in_the_notes(plot, panel):
+    plot.set_points([point(f, RC.h(f), Flag.SKEW_UNCHECKED) for f in FREQS])
+    panel.analyse()
+    assert value(panel, "Type", "Confidence") == "90 %"
+    assert panel.notes.text().splitlines()[0].startswith("−10 % Skew unchecked")

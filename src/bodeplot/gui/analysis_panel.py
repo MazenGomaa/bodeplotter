@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout, QHB
                                QWidget)
 
 from .. import analysis
-from ..measure import metrics
+from ..measure import classify, metrics
 from ..measure.analysis_settings import DEFAULTS
 from . import theme
 
@@ -71,9 +71,10 @@ class AnalysisPanel(QWidget):
 
         row = QHBoxLayout()
         self.analyse_btn = QPushButton("Analyse")
-        self.analyse_btn.setToolTip("Work out the numbers of the chosen trace now: passband level and ripple, "
-                                    "cut-offs, slope and order, stopband attenuation, and every resonance. The "
-                                    "table then stays as it is until this is pressed again.")
+        self.analyse_btn.setToolTip("Work out the numbers of the chosen trace now: its type (low-pass, band-pass, "
+                                    "crystal-like ...) with a confidence in percent, then passband level and "
+                                    "ripple, cut-offs, slope and order, stopband attenuation, and every resonance. "
+                                    "The table then stays as it is until this is pressed again.")
         self.copy_btn = QPushButton("Copy table")
         self.copy_btn.setToolTip("Copy the table and its notes as tab-separated text for a report or a spreadsheet")
         row.addWidget(self.analyse_btn)
@@ -186,8 +187,10 @@ class AnalysisPanel(QWidget):
         s = self.settings
         m = metrics.analyse(curve, phase, s) if curve is not None else metrics.Metrics(reason="the trace has no points")
         mo = metrics.analyse(other_curve, phase, s) if other_curve is not None else None
-        rows = analysis.rows(m, mo, phase, s)
-        notes = analysis.notes(m, s)
+        k = classify.classify(m, curve, phase, s) if m.ok else None     # not ok: part 1's reason says why
+        ko = classify.classify(mo, other_curve, phase, s) if mo is not None and mo.ok else None
+        rows = analysis.rows(m, mo, phase, s, k, ko)
+        notes = analysis.notes(m, s, k)
         if other is not None and (mo is None or not mo.ok):     # of the compared trace only that it has no numbers
             notes.append("%s: no analysis, %s." % (other.name, mo.reason if mo is not None else "the trace has no points"))
         title = trace.name + (", compared with %s" % other.name if other is not None else "")
