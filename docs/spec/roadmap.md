@@ -19,7 +19,7 @@ v1 (Milestones 0 to 7, §16) is done and accepted on Windows. The phases below a
 
 ### Phase B. v3: filter recognition
 
-- Classify the response as LPF / HPF / BPF / BSF / all-pass / unknown (design of 2026-11-02, `docs/superpowers/specs/2026-11-02-classification-design.md`: also flat, shelf and crystal-like; every threshold a setting).
+- Classify the response as LPF / HPF / BPF / BSF / all-pass / unknown (design of 2026-11-02, `docs/superpowers/specs/2026-11-02-classification-design.md`: also flat, shelf and crystal-like; every threshold a setting). **Built on 2026-11-02** on the branch `v3-classification`: `measure/classify.py`, the Type group of the Analysis table.
 - Report:
   - Cutoff(s) at −3 dB relative to the passband.
   - Passband gain and ripple; stopband attenuation.
