@@ -154,7 +154,7 @@ Between two measured points the values are interpolated. With **Difference to tr
 The **Analysis** panel (on the right, a tab behind Traces and Markers; View > Analysis) works out the numbers of one trace when you press **Analyse**. Choose the trace under **Trace**, and under **Compare with** a second one, for example a theory curve with your design values: its numbers appear next to the measured ones, with the difference in percent (frequencies, Q) or in dB.
 
 - **Passband:** the level of the flat part of the trace and how far the gain moves inside it. The cut-off is counted 3 dB below this level, here and in the −3 dB marker.
-- **Roll-off and stop band:** the slope the curve settles to and the order that goes with it; how far below the passband the trace gets.
+- **Roll-off and stop band:** the slope the curve settles to and the order that goes with it; how far below the passband the trace stays (beyond a notch: down to the highest gain that comes back after it, the worst case).
 - **Resonances:** every peak and every notch with its frequency, its height or depth, Q from its −3 dB width and, for a peak, Q from the phase.
 - **≥** means "at least": the sweep ends before the number has settled. The notes under the table say why, and where a resonance has too few points to be trusted.
 - **Noise:** where an end of the trace is lost in the instrument's noise (the gain scatters from point to point), that part is left out of the table and of the automatic markers, and a note says from which frequency. A roll-off that runs into it reads "≥" down to the noise.

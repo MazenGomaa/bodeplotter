@@ -536,3 +536,54 @@ def test_a_roll_off_ends_at_a_gap_and_does_not_reach_a_notch_beyond_it():
     (cut,) = [c for c in m.cutoffs if c.f < 12e3]
     assert cut.slope is not None                                # it ends at the gap, not in the notch past it
     assert cut.attenuation.limit and not cut.rising
+
+
+@pytest.mark.parametrize("tf, ppd, k, expect", [(ELLIPTIC, 10, 0, 41.5), (ELLIPTIC, 8, 3, 41.5), (ELLIPTIC, 12, 2, 41.5),
+                                                 (ELLIPTIC, 15, 4, 41.5), (TRAP_ROLL, 10, 7, 37.0)])
+def test_a_notch_missed_on_a_sparse_sweep_still_ends_the_roll_off(tf, ppd, k, expect):
+    """Below 20 points per decade the stop band's own bends raise the scatter and its notches are
+    not found; the gain still comes back up after the roll-off's lowest point, and that is read as
+    a notch would be: the highest gain that comes back, no order (it read '≥ 76 dB', order 1)."""
+    off = 10 ** (k / 40 / ppd)
+    m = analyse(of(tf, grid(50 * off, 2e6 * off, ppd), db=0.02, seed=k))
+    cut = m.cutoffs[0]
+    assert cut.attenuation.v == pytest.approx(expect, abs=2.0) and not cut.attenuation.limit
+    assert cut.slope is None and not cut.falling
+
+
+def noisy_butterworths(n, seed=11):
+    """n random Butterworth low-passes (order 1 to 5, fc 1 to 30 kHz) swept to 5 MHz at 10 to 40
+    points per decade over an instrument's noise floor of -60 to -80 dB."""
+    rnd = random.Random(seed)
+    for t in range(n):
+        order, fc = rnd.randint(1, 5), 10 ** rnd.uniform(3, math.log10(3e4))
+        ppd = rnd.choice([10, 15, 20, 30, 40])
+        floor, lo = 10 ** (-rnd.uniform(60, 80) / 20), 20 * 10 ** rnd.random() / ppd
+        yield t, order, floored(butter(order, fc), floor, grid(lo, 5e6, ppd), seed=t)
+
+
+def test_the_noise_where_a_roll_off_meets_it_invents_no_notch_and_keeps_the_order():
+    """Close to a noise floor the noise moves the gain by several dB: a dip there is not a notch
+    (it took the order away from 4 % of plain Butterworth sweeps)."""
+    wrong = []
+    for t, order, c in noisy_butterworths(240):
+        m = analyse(c)
+        (cut,) = [x for x in m.cutoffs if x.side == "high"]
+        if m.resonances or cut.order is None:
+            wrong.append((t, order, [(r.kind, round(r.height, 1)) for r in m.resonances]))
+    assert wrong == []
+
+
+def test_repeated_frequencies_break_nothing():
+    """A hand-edited file can repeat a frequency: the -3 dB width of a peak there is zero."""
+    f = [100, 200, 300, 400, 500, 500, 500, 600, 700, 800, 900]
+    m = analyse(by_hand(f, [-20, -18, -15, -12, -6, 0, -6, -12, -15, -18, -20]))
+    assert m.ok and all(r.q_width is None or math.isfinite(r.q_width) for r in m.resonances)
+
+
+def test_a_roll_off_that_ends_at_a_gap_is_not_said_to_end_with_the_sweep():
+    freqs = grid()
+    hs = [RC.h(f) if not 2e4 < f < 3e4 else complex("nan") for f in freqs]
+    m = analyse(curve(freqs, hs))
+    (cut,) = m.cutoffs
+    assert cut.attenuation.limit and not cut.falling              # a limit, but the sweep goes on past the gap

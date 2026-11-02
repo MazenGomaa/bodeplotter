@@ -31,8 +31,10 @@ NOISE_GAP = 3               # points: a gap this short in the noise, where it lo
 NOISE_TURNS = 0.4           # a noisy end turns up or down this often from point to point (noise ~0.67)
 NOISE_NEAR = 30.0           # dB over a noise floor's level: the scatter there is judged close around each point
 SCATTER_POINTS = 41         # a scatter is taken over at most this many points (a decade at 40 per decade)
+NOISE_PEAK = 10.0           # dB over the noise's level that its peaks reach
 NOISE_RISE = 12.0           # dB over the noise's level: a point this high is still the curve (noise peaks reach ~10)
 TROUGH_DB = 0.1             # a dip inside the passband counts for the ripple from this depth
+COMEBACK_DB = 3.0           # dB the gain comes back up after a point of a roll-off: a notch the scatter hid was there
 SLOPE_WINDOW = 0.5          # decades of the window that measures a roll-off
 SETTLE_DECADES = 1.0        # a floor nearer the cut-off than this: the slope has not settled, it is a limit
 STEEPENING = 2.0            # dB/decade: the outermost window is this much steeper than the settled slope: a limit
@@ -256,6 +258,15 @@ def _near_scatter(c: Curve, x, a: int, b: int, i: int) -> float:
     return 1.4826 * statistics.median(noise) / math.sqrt(6.0) if len(noise) >= 3 else 0.0
 
 
+def _noise_reach(db: float, quiet: float, up: bool = False) -> float:
+    """How far down (up) in dB the peaks of a noise floor at level quiet can move a gain of db: the
+    noise adds a vector of up to NOISE_PEAK over its median. Down is infinite when it can cancel the gain."""
+    r = 10 ** ((quiet + NOISE_PEAK - db) / 20)
+    if up:
+        return 20 * math.log10(1.0 + r)
+    return math.inf if r >= 1.0 else -20 * math.log10(1.0 - r)
+
+
 def _noisy(c: Curve, x, a: int, b: int, i: int) -> bool:
     """Point i lies in noise: around it (FLAT_WINDOW, at least NOISE_POINTS points) the gain
     scatters by more than NOISE_DB and its second differences keep changing sign. The bend of a
@@ -463,6 +474,8 @@ def _extremes(c: Curve, x, a: int, b: int, highest: bool, floor: float = PROMINE
                 low = min(low, y[k])
             feet.append(low)
         clear = y[i] - max(feet)
+        if quiet is not None and clear < _noise_reach(c.db[i], quiet, highest):
+            continue                                    # the noise alone can push the point this far (a peak up, a notch down)
         scatter = _scatter(c, x, a, b, i)
         if quiet is not None and c.db[i] < quiet + NOISE_NEAR:
             scatter = max(scatter, _near_scatter(c, x, a, b, i))
@@ -523,7 +536,7 @@ def _resonances(c: Curve, x, phase: bool, bands: list[Band], quiet: float | None
                 w = _width(c, i, a, b, level, rising=not highest) if (highest or c.db[i] < level) else None
                 if w is not None:
                     f_lo, f_hi, k_lo, k_hi = w
-                    r.q_width = f0 / (f_hi - f_lo)
+                    r.q_width = f0 / (f_hi - f_lo) if f_hi > f_lo else None     # a repeated frequency: no width
                     inside = list(range(k_lo, k_hi + 1))
                 else:                                   # no -3 dB width: the points that stand in its upper half
                     half = db - clear / 2 if highest else db + clear / 2
@@ -549,7 +562,21 @@ def _resonances(c: Curve, x, phase: bool, bands: list[Band], quiet: float | None
 
 
 # ---- slope, order, attenuation
-def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonances: list[Resonance]) -> None:
+def _settles_after_top(c: Curve, low: int, end: int, step: int) -> bool:
+    """Beyond the highest gain after point low (towards end) the curve goes on as a curve: at least
+    four points that do not turn up and down at NOISE_TURNS of them. A stop band falls on, or ripples
+    slowly, after the gain comes back; the noise at an end does not (it can dip deep as a notch does)."""
+    top = max(range(low, end + step, step), key=lambda k: c.db[k])
+    after = list(range(top, end + step, step))
+    if len(after) < 4:
+        return False
+    d1 = [c.db[j] - c.db[i] for i, j in zip(after, after[1:])]
+    return sum(1 for u, v in zip(d1, d1[1:]) if u * v < 0) / (len(d1) - 1) < NOISE_TURNS
+
+
+def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonances: list[Resonance],
+              quiet: float | None = None) -> None:
+    """quiet: the level of a noise floor, if the curve has one."""
     step = 1 if cut.side == "high" else -1
     a, b = next(s for s in segments(c) if s[0] <= cut.inner <= s[1])
     end = b if step > 0 else a
@@ -557,7 +584,25 @@ def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonan
     stops += [r.index for r in resonances if r.kind == "notch"]
     beyond = [k for k in stops if (k - cut.outer) * step >= 0 and a <= k <= b]     # not across a gap
     stop = min(beyond, key=lambda k: abs(k - cut.outer)) if beyond else end
-    at_end = not beyond
+    at_notch = bool(beyond) and stop in [r.index for r in resonances if r.kind == "notch"]
+    if not beyond:                                      # a notch the scatter hid: the gain comes back after the lowest point
+        low, rise, top = cut.outer, 0.0, -math.inf      # the point the gain comes back the most after
+        for k in range(end, cut.outer - step, -step):
+            top = max(top, c.db[k])
+            if top - c.db[k] > rise:
+                low, rise = k, top - c.db[k]
+        if (rise >= COMEBACK_DB and _settles_after_top(c, low, end, step)
+                and (quiet is None or rise >= _noise_reach(c.db[low], quiet))):
+            stop, at_notch = low, True
+    at_end = not beyond and not at_notch
+    if at_notch:                                        # the worst case: the highest gain that comes back beyond it
+        far = list(range(stop, end + 1)) if step > 0 else list(range(end, stop + 1))
+        if any(band.kind == "pass" and band.first in far for band in bands):
+            return                                      # a band-stop: the other passband; the depth is the notch's
+        top = max(far, key=lambda k: c.db[k])
+        cut.attenuation = Value(level - c.db[top], False, any(c.flagged[k] for k in far))
+        cut.rising = top == end and not any(band.first <= end <= band.last for band in bands)
+        return                                          # into a notch the curve has no slope that means an order
     lo, hi = sorted((cut.inner, stop))
     if hi - lo < 2:
         return
@@ -577,8 +622,7 @@ def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonan
                 break                                   # what is left of the roll-off is shorter than a window
             if e - s >= 2:
                 windows.append((s, e))
-    at_notch = bool(beyond) and stop in [r.index for r in resonances if r.kind == "notch"]
-    if beyond and not at_notch:                         # into a floor: the windows clear of the bend into it
+    if beyond:                         # into a floor: the windows clear of the bend into it
         clear = [(s, e) for s, e in windows
                  if (x[e] <= x[hi] - FLAT_WINDOW + EPS if step > 0 else x[s] >= x[lo] + FLAT_WINDOW - EPS)]
         windows = clear or windows
@@ -586,29 +630,20 @@ def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonan
     slopes = [v for v in slopes if v is not None]
     if not slopes:
         return
-    if not at_notch:                                    # into a notch the curve has no slope that means an order
-        settled = statistics.median(slopes)             # the slope the roll-off settles to
-        last = slopes[-1] if step > 0 else slopes[0]    # the window farthest from the passband
-        at_floor = bool(beyond) and not at_notch            # every window holds the knee or the bend into it
-        limit = (span < SLOPE_WINDOW - EPS or (at_end and sign * last - sign * settled > STEEPENING)
-                 or (at_floor and span < SETTLE_DECADES - EPS))
-        cut.slope = Value(settled, limit, flagged)
-        cut.order = Value(float(max(1, round(abs(settled) / 20.0))), limit, flagged)
-    if at_notch:                                        # the worst case: the highest gain that comes back beyond it
-        far = list(range(stop, end + 1)) if step > 0 else list(range(end, stop + 1))
-        if any(band.kind == "pass" and band.first in far for band in bands):
-            return                                      # a band-stop: the other passband; the depth is the notch's
-        top = max(far, key=lambda k: c.db[k])
-        cut.attenuation = Value(level - c.db[top], False, any(c.flagged[k] for k in far))
-        cut.rising = top == end and not any(band.first <= end <= band.last for band in bands)
-        return
+    settled = statistics.median(slopes)                 # the slope the roll-off settles to
+    last = slopes[-1] if step > 0 else slopes[0]        # the window farthest from the passband
+    at_floor = bool(beyond)                             # every window holds the knee or the bend into it
+    limit = (span < SLOPE_WINDOW - EPS or (at_end and sign * last - sign * settled > STEEPENING)
+             or (at_floor and span < SETTLE_DECADES - EPS))
+    cut.slope = Value(settled, limit, flagged)
+    cut.order = Value(float(max(1, round(abs(settled) / 20.0))), limit, flagged)
     floor = next((band for band in bands if band.kind == "floor" and (band.first if step > 0 else band.last) == stop),
                  None) if beyond else None
     if floor is not None:
         cut.attenuation = Value(level - floor.level, False, flagged or floor.flagged)
     else:
         cut.attenuation = Value(level - min(c.db[k] for k in idx), True, flagged)
-        cut.falling = at_end
+        cut.falling = at_end and end == (c.usable()[-1] if step > 0 else c.usable()[0])     # not at a gap
 
 
 # ---- the whole answer
@@ -644,7 +679,7 @@ def analyse(c: Curve, phase: bool = True) -> Metrics:
     else:
         m.level_flagged = c.flagged[p.top.index]
     for cut in m.cutoffs:
-        _roll_off(c, x, cut, m.level, m.bands, m.resonances)
+        _roll_off(c, x, cut, m.level, m.bands, m.resonances, max((n.level for n in m.noise), default=None))
         noise = next((n for n in m.noise if n.at_low == (cut.side == "low")), None)
         if cut.falling and noise is not None:           # it falls into the noise: at least down to the noise
             cut.falling = False
@@ -656,3 +691,4 @@ def analyse(c: Curve, phase: bool = True) -> Metrics:
         m.centre, m.bandwidth = math.sqrt(lo.f * hi.f), hi.f - lo.f
         m.q = m.centre / m.bandwidth
     return m
+
