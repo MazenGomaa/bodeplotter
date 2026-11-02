@@ -35,6 +35,25 @@ def test_every_field_has_a_default_inside_its_range_and_a_tooltip():
         assert getattr(A.DEFAULTS, f.key) == f.default
 
 
+CLASSIFY_KEYS = {
+    "Classification": ["crystal_ratio", "crystal_q", "allpass_deg", "notch_db", "shelf_lo", "shelf_hi", "ripple_db",
+                       "ripple_scatter", "peaking_db", "gain_db", "min_stop_db", "span_dec", "noise_share",
+                       "scatter_db", "scatter_warn", "point_flag_share", "min_score"],
+    "Score weights": ["w_wide_flag", "w_short_passband", "w_limit", "w_from_peak", "w_noise_end", "w_scatter",
+                      "w_no_phase", "w_few_points", "w_little_stop", "w_short_span"],
+}
+
+
+def test_the_classification_has_its_groups_of_fields():
+    """Design section 5: the Classification and Score weights groups of the Analysis tab."""
+    for group, keys in CLASSIFY_KEYS.items():
+        assert group in A.GROUPS
+        assert [f.key for f in A.FIELDS if f.group == group] == keys
+    for key in CLASSIFY_KEYS["Score weights"]:
+        f = A.field(key)
+        assert f.unit == "%" and f.lo == 0 and f.hi == 100 and f.decimals == 0
+
+
 def test_stored_values_are_cleaned():
     got = A.clean({"floor_db": 20, "flat_points": 7.6, "nonsense": 1, "drop_db": "6", "prominence_db": True,
                    "noise_db": float("nan"), "slope_window": 99.0})

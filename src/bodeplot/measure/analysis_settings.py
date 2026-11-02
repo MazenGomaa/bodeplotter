@@ -27,7 +27,8 @@ class Field:
 
 GENERAL, FLAT, ROLL, RES, NOISE = ("General", "Passband and flat stretches", "Cut-off and roll-off", "Resonances",
                                    "Noise floor")
-GROUPS = (GENERAL, FLAT, ROLL, RES, NOISE)
+CLASSIFY, WEIGHTS = "Classification", "Score weights"
+GROUPS = (GENERAL, FLAT, ROLL, RES, NOISE, CLASSIFY, WEIGHTS)
 
 FIELDS = (
     Field("min_points", 5, GENERAL, "Fewest usable points", "", 3, 50, 0,
@@ -107,6 +108,72 @@ FIELDS = (
           "clearer than that can push its own point."),
     Field("noise_rise", 12.0, NOISE, "Still the curve above", "dB", 1.0, 40.0, 1,
           "A point this far over the noise's level is still the curve, not noise."),
+    # Classification (design section 3)
+    Field("crystal_ratio", 1.2, CLASSIFY, "Crystal: notch within", "×", 1.01, 2.0, 2,
+          "A peak with a notch above it, closer than this ratio of their frequencies, is crystal-like (a "
+          "ceramic resonator reads the same)."),
+    Field("crystal_q", 10, CLASSIFY, "Crystal: Q at least", "", 1, 1000, 0,
+          "Both the peak and the notch of a crystal-like pair must be at least this sharp (Q from their width)."),
+    Field("allpass_deg", 90, CLASSIFY, "All-pass: phase turns", "°", 10, 360, 0,
+          "A flat magnitude whose phase turns by at least this much across the sweep is an all-pass; less "
+          "is flat (a wire or an amplifier)."),
+    Field("notch_db", 10.0, CLASSIFY, "Notch / peak: at least", "dB", 1.0, 60.0, 1,
+          "A notch this deep makes a band-stop; two peaks this high with no flat passband read unknown; a "
+          "peak that falls this much on one side only is a peaking low-pass or high-pass."),
+    Field("shelf_lo", 3.0, CLASSIFY, "Shelf: step at least", "dB", 0.5, 20.0, 1,
+          "A flat stretch beyond the cut-offs at least this far below the level makes a shelf..."),
+    Field("shelf_hi", 20.0, CLASSIFY, "Shelf: step under", "dB", 3.0, 100.0, 1,
+          "... and less than this far below; deeper, it is the stopband of a low-pass or high-pass with a "
+          "finite rejection."),
+    Field("ripple_db", 0.3, CLASSIFY, "Ripple: at least", "dB", 0.01, 6.0, 2,
+          "A passband ripple at least this large (and the next factor times the scatter) gives the word "
+          "'ripple (Chebyshev-like)'."),
+    Field("ripple_scatter", 6.0, CLASSIFY, "Ripple: scatter times", "×", 1.0, 50.0, 1,
+          "The ripple must also be at least this many times the scatter, so that noise is not read as ripple."),
+    Field("peaking_db", 1.0, CLASSIFY, "Peaking: at least", "dB", 0.1, 20.0, 1,
+          "A peak this far over a flat level on the passband's side of a cut-off gives the word 'peaking'."),
+    Field("gain_db", 1.0, CLASSIFY, "Gain: more than", "dB", 0.1, 20.0, 1,
+          "A flat level further than this from 0 dB gives the word 'gain' or 'loss'."),
+    Field("min_stop_db", 10.0, CLASSIFY, "Stopband seen: at least", "dB", 1.0, 100.0, 1,
+          "A low-pass, high-pass or band-pass with less stopband than this below its level loses the "
+          "'little stopband' weight."),
+    Field("span_dec", 1.0, CLASSIFY, "Short span: under", "dec", 0.1, 5.0, 2,
+          "A sweep (without its noise ends) narrower than this is refused when no resonance lies whole "
+          "inside it, and otherwise loses the 'short span' weight (not a crystal-like one)."),
+    Field("noise_share", 0.5, CLASSIFY, "Refuse: noise ends over", "share", 0.05, 1.0, 2,
+          "Not classified when the noise ends cover more than this share of the usable points."),
+    Field("scatter_db", 1.0, CLASSIFY, "Refuse: scatter over", "dB", 0.05, 10.0, 2,
+          "Not classified when the scatter near the level (the noise, from the second differences that "
+          "change sign against both neighbours) is more than this."),
+    Field("scatter_warn", 0.3, CLASSIFY, "Scatter: weight over", "dB", 0.01, 10.0, 2,
+          "A scatter near the level over this loses the 'scatter' weight."),
+    Field("point_flag_share", 0.3, CLASSIFY, "Refuse: flagged points over", "share", 0.0, 1.0, 2,
+          "Not classified when more than this share of the points carry a flag that marks a single point "
+          "(clipped, for example); a flag on the whole sweep never refuses."),
+    Field("min_score", 40, CLASSIFY, "Refuse: score under", "%", 0, 100, 0,
+          "A type whose confidence comes out under this is not given: 'Not classified', with the reasons."),
+    # Score weights (design section 3.4): each reason that holds subtracts its weight from 100 %
+    Field("w_wide_flag", 10, WEIGHTS, "Flag on the whole sweep", "%", 0, 100, 0,
+          "Subtracted when a flag marks every point (skew unchecked)."),
+    Field("w_short_passband", 20, WEIGHTS, "Short passband at an end", "%", 0, 100, 0,
+          "Subtracted when a passband at an end of the sweep spans less than the short-passband width."),
+    Field("w_limit", 10, WEIGHTS, "Order only a limit", "%", 0, 100, 0,
+          "Subtracted when a roll-off's order is only a limit (≥)."),
+    Field("w_from_peak", 15, WEIGHTS, "Type read from a peak", "%", 0, 100, 0,
+          "Subtracted when a low-pass or high-pass is read from a peak, or its passband was never seen flat."),
+    Field("w_noise_end", 5, WEIGHTS, "Each noise end", "%", 0, 100, 0,
+          "Subtracted for each end of the sweep that lies in noise."),
+    Field("w_scatter", 10, WEIGHTS, "Scatter", "%", 0, 100, 0,
+          "Subtracted when the scatter near the level is over its weight limit."),
+    Field("w_no_phase", 30, WEIGHTS, "Flat without phase", "%", 0, 100, 0,
+          "Subtracted from a flat type when the phase was not measured: an all-pass looks the same."),
+    Field("w_few_points", 15, WEIGHTS, "Too few points on a resonance", "%", 0, 100, 0,
+          "Subtracted when a resonance the type rests on (crystal-like, a band-pass from a peak) has too few "
+          "points across it."),
+    Field("w_little_stop", 20, WEIGHTS, "Little stopband seen", "%", 0, 100, 0,
+          "Subtracted when a low-pass, high-pass or band-pass shows less stopband than the stopband limit."),
+    Field("w_short_span", 30, WEIGHTS, "Sweep under the short span", "%", 0, 100, 0,
+          "Subtracted when the sweep spans less than the short span (not for crystal-like)."),
 )
 _BY_KEY = {f.key: f for f in FIELDS}
 
