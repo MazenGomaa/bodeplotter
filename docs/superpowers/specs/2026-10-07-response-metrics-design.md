@@ -85,7 +85,7 @@ The cut-off level is the passband level minus 3 dB. From each side of each passb
 
 ### 3.3 Slope and order
 
-For each cut-off, the **roll-off** is the stretch from the cut-off outwards to the first of: a stopband floor, a notch (3.5), the end of the curve, a gap. The slope is taken over every window of half a decade inside it, and the **slope** of the roll-off is the median of those: the slope the curve settles to. A roll-off shorter than half a decade is one window, and needs three points. The **order** is the slope divided by 20 dB/decade, rounded, at least 1.
+For each cut-off, the **roll-off** is the stretch from the cut-off outwards to the first of: a stopband floor, a notch (3.5), the end of the curve, a gap (a floor or a notch past a gap does not count: fixed 2026-11-02). The slope is taken over every window of half a decade inside it, and the **slope** of the roll-off is the median of those: the slope the curve settles to. A roll-off shorter than half a decade is one window, and needs three points. The **order** is the slope divided by 20 dB/decade, rounded, at least 1.
 
 Slope and order are limits ("≥", section 3.6) when the roll-off is shorter than half a decade, or when it runs to the end of the curve and its outermost window is more than 2 dB/decade steeper than the median: the curve was still getting steeper.
 
@@ -96,6 +96,8 @@ A roll-off that ends in a notch gets no slope and no order.
 ### 3.4 Stopband attenuation
 
 For each cut-off: the passband level minus the level of the stopband floor its roll-off ends in. With no floor, it is the passband level minus the lowest gain reached in the roll-off, as a limit, with the note that the sweep ends before the stop band levels off when the roll-off runs to the end of the curve.
+
+Into a notch (the user's option 1, 2026-11-02, replacing the notch's depth as a limit, which overstated an elliptic filter's or an LC trap's rejection: 59 dB shown where the stop band comes back to −41.5 dB): the passband level minus the HIGHEST gain beyond the notch, out to the end of the curve or a gap, the noisy ends left out: the worst-case rejection, as a filter designer means it. It is a plain number, not a limit. When that highest gain is the last point and the curve has not levelled off there (no flat stretch holds it), the gain was still rising where the curve ends: the number stays as the sweep saw it, with the note that the stop band may come back higher (it is then an upper bound of the rejection, which "≥" cannot say). When another passband lies beyond the notch (a band-stop, the RLC notch, a crystal's parallel resonance), there is no stopband value: it would read about 0 dB; the notch's depth is in its own Notch group (3.5). Between two resonances without flat stretches (`two_res`) the gain beyond the valley is the other resonance's top, and the row reads how far that lies below the level.
 
 ### 3.5 Resonances
 

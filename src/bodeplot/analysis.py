@@ -28,8 +28,10 @@ GROUPS = {
     "Roll-off": "How fast the gain falls beyond a cut-off: the slope the curve settles to, in dB per decade, and "
                 "the filter order that goes with it (20 dB per decade for each order). '≥': at least this "
                 "steep; the sweep ends, or the stop band's floor comes, before the slope has settled.",
-    "Stopband": "How far below the passband level the trace gets beyond a cut-off. A plain number when the "
-                "trace levels off there; '≥' (at least) when it is still falling or runs into a notch.",
+    "Stopband": "How far below the passband level the trace stays beyond a cut-off. A plain number when the "
+                "trace levels off there; '≥' (at least) when it is still falling. Beyond a notch: down to the "
+                "highest gain that comes back after it (the worst case); the notch's own depth is in its Notch "
+                "group. No row when another passband follows the notch.",
     "Peak": "A resonance: a peak that stands at least 1 dB clear of the trace on both sides. Q (width): f0 "
             "divided by the width 3 dB below its top. Q (phase): from how fast the phase turns across it. "
             "Points: how many measured points lie on it; with fewer than five its numbers are uncertain.",
@@ -198,6 +200,10 @@ def notes(m: Metrics) -> list[str]:
     falling = [name for name, cut in zip(cut_names(m), m.cutoffs) if cut.falling]
     if falling:
         out.append("Beyond %s the sweep ends before the stop band levels off." % " and ".join(falling))
+    rising = [name for name, cut in zip(cut_names(m), m.cutoffs) if cut.rising]
+    if rising:
+        out.append("Beyond %s the gain still rises where the sweep ends, past the notch: the stop band may come "
+                   "back higher than the sweep shows." % " and ".join(rising))
     for n in m.noise:
         where = ("Below", hz(n.hi)) if n.at_low else ("Above", hz(n.lo))
         out.append("%s %s the gain is lost in the noise (about %.0f dB): that part is left out of the analysis."

@@ -87,6 +87,7 @@ class Cutoff:
     order: Value | None = None
     attenuation: Value | None = None    # dB, positive
     falling: bool = False       # the sweep ends before the stop band levels off
+    rising: bool = False        # beyond a notch the gain still rises where the curve ends: it may come back higher
 
 
 @dataclass
@@ -554,7 +555,7 @@ def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonan
     end = b if step > 0 else a
     stops = [band.first if step > 0 else band.last for band in bands if band.kind == "floor"]
     stops += [r.index for r in resonances if r.kind == "notch"]
-    beyond = [k for k in stops if (k - cut.outer) * step >= 0]
+    beyond = [k for k in stops if (k - cut.outer) * step >= 0 and a <= k <= b]     # not across a gap
     stop = min(beyond, key=lambda k: abs(k - cut.outer)) if beyond else end
     at_end = not beyond
     lo, hi = sorted((cut.inner, stop))
@@ -593,6 +594,14 @@ def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonan
                  or (at_floor and span < SETTLE_DECADES - EPS))
         cut.slope = Value(settled, limit, flagged)
         cut.order = Value(float(max(1, round(abs(settled) / 20.0))), limit, flagged)
+    if at_notch:                                        # the worst case: the highest gain that comes back beyond it
+        far = list(range(stop, end + 1)) if step > 0 else list(range(end, stop + 1))
+        if any(band.kind == "pass" and band.first in far for band in bands):
+            return                                      # a band-stop: the other passband; the depth is the notch's
+        top = max(far, key=lambda k: c.db[k])
+        cut.attenuation = Value(level - c.db[top], False, any(c.flagged[k] for k in far))
+        cut.rising = top == end and not any(band.first <= end <= band.last for band in bands)
+        return
     floor = next((band for band in bands if band.kind == "floor" and (band.first if step > 0 else band.last) == stop),
                  None) if beyond else None
     if floor is not None:

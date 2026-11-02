@@ -173,7 +173,7 @@ def test_rlc_notch_has_two_passbands_a_notch_and_no_slope():
     assert [b.kind for b in m.bands] == ["pass", "pass"]
     assert [c.side for c in m.cutoffs] == ["high", "low"]
     assert all(c.slope is None and c.order is None for c in m.cutoffs)      # into a notch there is no order
-    assert all(c.attenuation.limit and not c.falling for c in m.cutoffs)
+    assert all(c.attenuation is None and not c.falling for c in m.cutoffs)     # the depth is in the Notch group
     (notch,) = m.resonances
     assert notch.kind == "notch" and notch.f0 == pytest.approx(F0, rel=0.01) and notch.height > 30.0
     assert notch.q_width == pytest.approx(1.0, rel=0.05) and notch.q_phase is None
@@ -480,3 +480,59 @@ def test_two_noisy_ends_leave_enough_of_the_curve_or_none_is_taken():
     m = analyse(by_hand(f, db))
     left = sum(1 for i in range(len(f)) if not any(n.first <= i <= n.last for n in m.noise))
     assert m.noise == [] or left >= 5
+
+
+# LC traps: a series LC to ground at 30 kHz after a low-pass. Over a shelf (the gain comes back to a
+# floor 19 dB down), and inside a 3rd-order roll-off (it comes back to a hump, then falls on).
+TRAP_SHELF = TF.custom(poly([1.0, w(30e3) / 20, w(30e3) ** 2], [w(10e3) ** 2 / w(30e3) ** 2]),
+                       poly([1.0, w(10e3) / 0.7, w(10e3) ** 2]))
+TRAP_ROLL = TF.custom(poly([1.0, w(30e3) / 20, w(30e3) ** 2], [butter(3, 10e3).den[-1] / w(30e3) ** 2]),
+                      butter(3, 10e3).den)
+
+
+def _worst_beyond_notch(c, m):
+    """The passband level minus the highest gain beyond the first notch, read off the points."""
+    f_notch = m.resonances[[r.kind for r in m.resonances].index("notch")].f0
+    return m.level - max(d for f, d, ok in zip(c.f, c.db, c.ok) if ok and f > f_notch)
+
+
+@pytest.mark.parametrize("tf, expect", [(ELLIPTIC, 41.5), (TRAP_SHELF, 19.1), (TRAP_ROLL, None)])
+def test_beyond_a_notch_the_stopband_is_the_highest_gain_that_comes_back(tf, expect):
+    """A roll-off that ends in a notch: the rejection a filter designer means is the worst case,
+    the passband level minus the highest gain beyond the notch, not the depth of the notch."""
+    c = of(tf)
+    m = analyse(c)
+    (cut,) = m.cutoffs
+    worst = _worst_beyond_notch(c, m)
+    assert cut.attenuation.v == pytest.approx(worst, abs=0.05)
+    if expect is not None:
+        assert worst == pytest.approx(expect, abs=0.3)
+    assert not cut.attenuation.limit and not cut.falling and not cut.rising
+    assert cut.slope is None                                    # into a notch there is still no order
+
+
+def test_a_sweep_that_ends_while_the_gain_beyond_a_notch_still_rises_says_so():
+    """Past the notch at 16 kHz the gain climbs to a stopband peak at 18.8 kHz; a sweep that ends at
+    18 kHz has not seen that peak: the number is what the sweep saw, and a flag says it may be less."""
+    c = of(ELLIPTIC, grid(50.0, 18e3, 40))
+    m = analyse(c)
+    (cut,) = m.cutoffs
+    assert cut.attenuation.v == pytest.approx(m.level - c.db[-1], abs=0.05)
+    assert cut.rising and not cut.attenuation.limit and not cut.falling
+
+
+def test_a_notch_between_two_passbands_has_no_stopband_row_only_its_depth():
+    """Beyond the RLC notch lies the other passband: a 'stopband' there would read about 0 dB."""
+    m = analyse(of(NOTCH))
+    assert len(m.cutoffs) == 2 and all(cut.attenuation is None and not cut.rising for cut in m.cutoffs)
+    (notch,) = m.resonances
+    assert notch.height > 30.0
+
+
+def test_a_roll_off_ends_at_a_gap_and_does_not_reach_a_notch_beyond_it():
+    freqs = grid()
+    hs = [ELLIPTIC.h(f) if not 12e3 < f < 14e3 else complex("nan") for f in freqs]
+    m = analyse(curve(freqs, hs))
+    (cut,) = [c for c in m.cutoffs if c.f < 12e3]
+    assert cut.slope is not None                                # it ends at the gap, not in the notch past it
+    assert cut.attenuation.limit and not cut.rising

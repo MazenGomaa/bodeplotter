@@ -156,3 +156,31 @@ def test_table_for_the_clipboard():
     both = table("Analysis of: Sweep, compared with: RC", rows(m, m), [], compare=True).splitlines()
     assert both[1] == "Quantity\tValue\tCompare\tDifference"
     assert "fc\t%s\t%s\t+0.0 %%" % (fc, fc) in both
+
+
+def _elliptic():
+    """A 5th-order Butterworth low-pass at 10 kHz with notches at 16 and 25 kHz."""
+    w = lambda f: 2 * math.pi * f
+    poles = [w(10e3) * complex(math.cos(math.pi * (2 * k + 4) / 10), math.sin(math.pi * (2 * k + 4) / 10))
+             for k in range(1, 6)]
+    den = [1.0 + 0j]
+    for p in poles:
+        den = [a - p * b for a, b in zip(den + [0j], [0j] + den)]
+    den = [d.real for d in den]
+    k = den[-1] / (w(16e3) * w(25e3)) ** 2
+    num = [k, 0.0, k * (w(16e3) ** 2 + w(25e3) ** 2), 0.0, k * (w(16e3) * w(25e3)) ** 2]
+    return TF.custom(num, den)
+
+
+def test_beyond_a_notch_the_stopband_is_a_plain_number_and_a_band_stop_has_none():
+    t = rows(m_of(_elliptic()))
+    assert cell(t, "Stopband", "Beyond fc").value == "41.50 dB"         # the worst case, not "≥ 59"
+    assert not [x for x in notes(m_of(_elliptic())) if x.startswith("Beyond")]
+    notch = rows(m_of(TF.rlc_notch(100.0, 1e-3, 100e-9)))
+    assert not [r for r in notch if r.group == "Stopband"] and [r for r in notch if r.group.startswith("Notch at ")]
+
+
+def test_a_sweep_that_ends_while_the_gain_beyond_a_notch_rises_has_a_note():
+    n = notes(m_of(_elliptic(), grid(50.0, 18e3)))
+    assert [x for x in n if x.startswith("Beyond")] == ["Beyond fc the gain still rises where the sweep ends, past the notch: the stop band may come "
+                 "back higher than the sweep shows."]
