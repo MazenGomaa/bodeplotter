@@ -8,6 +8,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-02-classification-design.md` (read it first; section numbers below are its sections). Step 2 of its order of work (every part 1 constant a setting) is done (commit `b8770b5`).
 
+**Before Task 1:** ask the user the open question of `docs/STATE.md` (build as shown / crystal stricter / change a default), multiple choice, and fold the answer into Task 2.
+
 **Where the rules come from.** Section 3 was run in a scratchpad prototype (`proto_classify_final.py` in the session's scratchpad, not in the repository) on 900 log sweeps and 132 linear sweeps of every theory circuit: 876 + 132 right, the 24 wrong all under-sampled (design, "Changed after the approval"). The code of Task 2 is that prototype, cleaned and with every number read from the settings. If a test of Task 2 does not behave as the design says, stop and find out why; do not adjust a test to make it pass.
 
 ## Global Constraints
@@ -57,6 +59,7 @@
 
 - [ ] **Step 1: tests first**, `tests/test_classify.py`, built as the prototype's sweeps (`sweep(tf, ppd, noise, lin, rng, lo, hi, n)` helper in the test file; seeded `random.Random`):
   - `test_every_theory_circuit_gets_its_type`: parametrised over the design's success criterion 1 (crystal on a linear 0.9–1.2 MHz sweep of 200 points), at 20 points per decade, clean and 0.02 dB.
+  - `test_gain_only_from_a_flat_level` (design change 8): an RC sweep from 800 Hz has no "gain" word; amp has "gain +20.0 dB".
   - `test_shape_words`: rc "order 1"; butter_lpf "order 5"; rlc_lpf "peaking +6.3 dB" (±0.2); cheby_lpf "ripple 1.0 dB (Chebyshev-like)"; amp "gain +20.0 dB"; `ELLIPTIC` of `tests/test_metrics.py` "stopband notches (elliptic-like)"; rlc_bpf "Q 1"; crystal "fs" and "fp" within 0.5 %.
   - `test_noise_changes_no_type`: every circuit, 0.2 dB, 12 and 40 points per decade, four grid offsets.
   - `test_linear_sweeps`: the prototype's 132 linear sweeps, all right.
