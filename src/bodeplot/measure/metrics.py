@@ -25,6 +25,7 @@ PROMINENCE_DB = 1.0         # a peak or notch stands this far clear of its surro
 NOISE_WINDOW = 1.0          # decades over which the scatter of the curve is estimated
 NOISE_FACTOR = 8.0          # ... and a peak or notch stands this many times the scatter clear
 NOISE_DB = 0.5              # dB of scatter (over FLAT_WINDOW): from here to an end of the curve it is noise
+NOISE_RISE = 12.0           # dB over the noise's level: a point this high is still the curve (noise peaks reach ~10)
 TROUGH_DB = 0.1             # a dip inside the passband counts for the ripple from this depth
 SLOPE_WINDOW = 0.5          # decades of the window that measures a roll-off
 STEEPENING = 2.0            # dB/decade: the outermost window is this much steeper than the settled slope: a limit
@@ -198,7 +199,9 @@ def _scatter(c: Curve, x, a: int, b: int, i: int, width: float = NOISE_WINDOW) -
 def noise_ends(c: Curve) -> list[Noise]:
     """The ends of the curve that are lost in the noise: from an end inwards, the points whose
     scatter is over NOISE_DB, at least FLAT_POINTS of them, lying FLOOR_DB or more below the
-    highest gain of the rest. A curve that is noise all through has none (nothing would be left)."""
+    highest gain of the rest. The sudden bend of a steep edge scatters the second differences
+    too: points at the inner end that stand NOISE_RISE over the noise's level are given back.
+    A curve that is noise all through has none (nothing would be left)."""
     segs = segments(c)
     if not segs:
         return []
@@ -212,8 +215,15 @@ def noise_ends(c: Curve) -> list[Noise]:
         first, last = sorted((start, k - step))
         if last - first + 1 < FLAT_POINTS:
             continue
-        rest = [c.db[i] for i in c.usable() if not first <= i <= last]
         level = statistics.median(c.db[first:last + 1])
+        while first <= last and c.db[last if step > 0 else first] > level + NOISE_RISE:
+            if step > 0:
+                last -= 1
+            else:
+                first += 1
+        if last - first + 1 < FLAT_POINTS:
+            continue
+        rest = [c.db[i] for i in c.usable() if not first <= i <= last]
         if len(rest) >= MIN_POINTS and level <= max(rest) - FLOOR_DB:
             out.append(Noise(first, last, c.f[first], c.f[last], level, step > 0))
     if len(out) == 2 and out[0].last >= out[1].first:  # one stretch of noise from end to end

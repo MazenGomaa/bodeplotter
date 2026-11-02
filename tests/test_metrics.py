@@ -305,6 +305,16 @@ def test_no_resonance_is_found_in_the_noise_at_the_low_end(seed):
     assert [r.kind for r in m.resonances][:1] == ["peak"] and m.resonances[0].f0 == pytest.approx(1e4, rel=0.02)
 
 
+@pytest.mark.parametrize("seed", [1, 2, 3])
+@pytest.mark.parametrize("tf", [cheby(8, 1.0, 10e3), butter(10, 10e3)])
+def test_a_sharp_edge_is_not_taken_for_noise(tf, seed):
+    m = analyse(floored(tf, seed=seed))                         # its bend is sudden, not a scatter
+    (cut,) = m.cutoffs
+    assert 9e3 < cut.f < 11e3
+    (noise,) = m.noise
+    assert noise.lo > 1.15 * cut.f and noise.level < -60.0
+
+
 def test_a_clean_curve_or_a_noisy_whole_has_no_noise_floor():
     assert analyse(of(RC, db=0.2)).noise == []
     assert analyse(floored(TF.custom([1e-5], [1.0]))).noise == []     # all of it in the noise: nothing is left out
