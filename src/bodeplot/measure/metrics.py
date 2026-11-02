@@ -25,9 +25,16 @@ PROMINENCE_DB = 1.0         # a peak or notch stands this far clear of its surro
 NOISE_WINDOW = 1.0          # decades over which the scatter of the curve is estimated
 NOISE_FACTOR = 8.0          # ... and a peak or notch stands this many times the scatter clear
 NOISE_DB = 0.5              # dB of scatter (over FLAT_WINDOW): from here to an end of the curve it is noise
+NOISE_FLIPS = 0.35          # ... and its second differences change sign this often (noise ~0.73, a bend ~0)
+NOISE_POINTS = 9            # the fewest points that test is made on, and the fewest a noisy end must have
+NOISE_GAP = 3               # points: a gap this short in the noise, where it looks clean by chance, does not end it
+NOISE_TURNS = 0.4           # a noisy end turns up or down this often from point to point (noise ~0.67)
+NOISE_NEAR = 30.0           # dB over a noise floor's level: the scatter there is judged close around each point
+SCATTER_POINTS = 41         # a scatter is taken over at most this many points (a decade at 40 per decade)
 NOISE_RISE = 12.0           # dB over the noise's level: a point this high is still the curve (noise peaks reach ~10)
 TROUGH_DB = 0.1             # a dip inside the passband counts for the ripple from this depth
 SLOPE_WINDOW = 0.5          # decades of the window that measures a roll-off
+SETTLE_DECADES = 1.0        # a floor nearer the cut-off than this: the slope has not settled, it is a limit
 STEEPENING = 2.0            # dB/decade: the outermost window is this much steeper than the settled slope: a limit
 FEW_POINTS = 5              # fewer points across a resonance: its top and its Q are uncertain
 MIN_POINTS = 5              # fewer usable points: no analysis
@@ -153,6 +160,34 @@ def line_slope(xs, ys) -> float | None:
     return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den
 
 
+class _Sums:
+    """Running sums of x and y: the slope of the least-squares line over any range of points
+    in constant time (a narrow linear sweep puts thousands of points in one window)."""
+
+    def __init__(self, x, y):
+        x0 = x[0] if x else 0.0                         # centred: the sums keep their precision
+        self.n, self.x, self.y, self.xx, self.xy = [0], [0.0], [0.0], [0.0], [0.0]
+        for u, v in zip(x, y):
+            u -= x0
+            self.n.append(self.n[-1] + 1)
+            self.x.append(self.x[-1] + u)
+            self.y.append(self.y[-1] + v)
+            self.xx.append(self.xx[-1] + u * u)
+            self.xy.append(self.xy[-1] + u * v)
+
+    def slope(self, j0: int, j1: int) -> float | None:
+        """As line_slope(x[j0:j1 + 1], y[j0:j1 + 1])."""
+        n = j1 - j0 + 1
+        if n < 2:
+            return None
+        sx, sy = self.x[j1 + 1] - self.x[j0], self.y[j1 + 1] - self.y[j0]
+        sxx, sxy = self.xx[j1 + 1] - self.xx[j0], self.xy[j1 + 1] - self.xy[j0]
+        den = n * sxx - sx * sx
+        if den <= 1e-9 * n * sxx:                       # all x the same, but for rounding
+            return None
+        return (n * sxy - sx * sy) / den
+
+
 def _window(x, a: int, b: int, i: int, width: float) -> tuple[int, int]:
     """The points of the run a..b inside a window of that width around point i; at an end of
     the run the window is moved inwards, not cut."""
@@ -161,6 +196,18 @@ def _window(x, a: int, b: int, i: int, width: float) -> tuple[int, int]:
     centre = min(max(x[i], x[a] + width / 2), x[b] - width / 2)
     j0 = bisect.bisect_left(x, centre - width / 2 - EPS, a, b + 1)
     j1 = bisect.bisect_right(x, centre + width / 2 + EPS, a, b + 1) - 1
+    return j0, j1
+
+
+def _around(x, a: int, b: int, i: int, width: float, least: int = 0) -> tuple[int, int]:
+    """The window of a scatter: _window, widened to at least `least` points, then cut to the
+    SCATTER_POINTS nearest point i."""
+    j0, j1 = _window(x, a, b, i, width)
+    while j1 - j0 + 1 < least and (j0 > a or j1 < b):
+        j0, j1 = max(a, j0 - 1), min(b, j1 + 1)
+    if j1 - j0 + 1 > SCATTER_POINTS:
+        j0 = max(j0, min(i - SCATTER_POINTS // 2, j1 - SCATTER_POINTS + 1))
+        j1 = j0 + SCATTER_POINTS - 1
     return j0, j1
 
 
@@ -179,28 +226,55 @@ def local_slopes(c: Curve, x=None) -> list:
     """dB per decade at every point, over a window of FLAT_WINDOW; None where there is none."""
     x = x or _logs(c)
     out: list = [None] * len(c.f)
+    sums = _Sums(x, c.db)
     for a, b in segments(c):
         for i in range(a, b + 1):
             j0, j1 = _window(x, a, b, i, FLAT_WINDOW)
             if j1 - j0 < 2:
                 j0, j1 = max(a, i - 1), min(b, i + 1)
             if j1 - j0 >= 2:
-                out[i] = line_slope(x[j0:j1 + 1], c.db[j0:j1 + 1])
+                out[i] = sums.slope(j0, j1)
     return out
 
 
 def _scatter(c: Curve, x, a: int, b: int, i: int, width: float = NOISE_WINDOW) -> float:
     """The scatter of the gain around point i, from the second differences of its neighbourhood."""
-    j0, j1 = _window(x, a, b, i, width)
+    j0, j1 = _around(x, a, b, i, width)
     d2 = [abs(c.db[j - 1] - 2 * c.db[j] + c.db[j + 1]) for j in range(max(j0, a + 1), min(j1, b - 1) + 1)]
     return 1.4826 * statistics.median(d2) / math.sqrt(6.0) if d2 else 0.0
 
 
+def _near_scatter(c: Curve, x, a: int, b: int, i: int) -> float:
+    """The scatter close around point i (FLAT_WINDOW, at least NOISE_POINTS points) from the
+    second differences that change sign against both neighbours, as noise does; the bends of
+    the curve keep their sign and are not counted, and neither is point i's own (i - 1 to i + 1)."""
+    j0, j1 = _around(x, a, b, i, FLAT_WINDOW, NOISE_POINTS)
+    d2 = {j: c.db[j - 1] - 2 * c.db[j] + c.db[j + 1] for j in range(max(j0, a + 1), min(j1, b - 1) + 1)}
+    noise = [abs(v) for j, v in d2.items()
+             if abs(j - i) > 1 and v * d2.get(j - 1, -v) < 0 and v * d2.get(j + 1, -v) < 0]
+    return 1.4826 * statistics.median(noise) / math.sqrt(6.0) if len(noise) >= 3 else 0.0
+
+
+def _noisy(c: Curve, x, a: int, b: int, i: int) -> bool:
+    """Point i lies in noise: around it (FLAT_WINDOW, at least NOISE_POINTS points) the gain
+    scatters by more than NOISE_DB and its second differences keep changing sign. The bend of a
+    notch or of a sharp edge gives large second differences too, but of one sign."""
+    j0, j1 = _around(x, a, b, i, FLAT_WINDOW, NOISE_POINTS)
+    d2 = [c.db[j - 1] - 2 * c.db[j] + c.db[j + 1] for j in range(max(j0, a + 1), min(j1, b - 1) + 1)]
+    if len(d2) < 3:
+        return False
+    flips = sum(1 for u, v in zip(d2, d2[1:]) if u * v < 0) / (len(d2) - 1)
+    return 1.4826 * statistics.median(abs(v) for v in d2) / math.sqrt(6.0) > NOISE_DB and flips >= NOISE_FLIPS
+
+
 def noise_ends(c: Curve) -> list[Noise]:
-    """The ends of the curve that are lost in the noise: from an end inwards, the points whose
-    scatter is over NOISE_DB, at least FLAT_POINTS of them, lying FLOOR_DB or more below the
+    """The ends of the curve that are lost in the noise: from an end inwards, the points that
+    lie in noise (_noisy), at least NOISE_POINTS of them (fewer: a sparse sweep across a notch
+    looks the same), lying FLOOR_DB or more below the
     highest gain of the rest. The sudden bend of a steep edge scatters the second differences
-    too: points at the inner end that stand NOISE_RISE over the noise's level are given back.
+    too: the points up to the outermost one that stands NOISE_RISE over the noise's level are
+    given back (noise never reaches that high). What is left must turn up or down at NOISE_TURNS
+    of its points, as noise does; a sparse sweep across a notch runs one way for many points.
     A curve that is noise all through has none (nothing would be left)."""
     segs = segments(c)
     if not segs:
@@ -209,24 +283,31 @@ def noise_ends(c: Curve) -> list[Noise]:
     out = []
     for (a, b), step in ((segs[0], +1), (segs[-1], -1)):
         start = a if step > 0 else b
-        k = start
-        while a <= k <= b and _scatter(c, x, a, b, k, FLAT_WINDOW) > NOISE_DB:
+        k, end = start, None                            # end: the innermost noisy point so far
+        while a <= k <= b:
+            if _noisy(c, x, a, b, k):
+                end = k
+            elif end is None or abs(k - end) > NOISE_GAP:
+                break
             k += step
-        first, last = sorted((start, k - step))
-        if last - first + 1 < FLAT_POINTS:
+        if end is None:
+            continue
+        first, last = sorted((start, end))
+        if last - first + 1 < NOISE_POINTS:
             continue
         level = statistics.median(c.db[first:last + 1])
-        while first <= last and c.db[last if step > 0 else first] > level + NOISE_RISE:
-            if step > 0:
-                last -= 1
-            else:
-                first += 1
-        if last - first + 1 < FLAT_POINTS:
+        high = [i for i in range(first, last + 1) if c.db[i] > level + NOISE_RISE]
+        if high:                                        # the curve, up to the outermost point that high
+            first, last = (first, min(high) - 1) if step > 0 else (max(high) + 1, last)
+        if last - first + 1 < NOISE_POINTS:
             continue
+        d1 = [c.db[i + 1] - c.db[i] for i in range(first, last)]
+        if sum(1 for u, v in zip(d1, d1[1:]) if u * v < 0) / (len(d1) - 1) < NOISE_TURNS:
+            continue                                    # long runs one way: a sparse curve, not noise
         rest = [c.db[i] for i in c.usable() if not first <= i <= last]
         if len(rest) >= MIN_POINTS and level <= max(rest) - FLOOR_DB:
             out.append(Noise(first, last, c.f[first], c.f[last], level, step > 0))
-    if len(out) == 2 and out[0].last >= out[1].first:  # one stretch of noise from end to end
+    if len(out) == 2 and out[1].first - out[0].last - 1 < MIN_POINTS:      # all of it noise, but for a few
         return []
     return out
 
@@ -286,8 +367,10 @@ def _bands(c: Curve, x, slopes) -> list[Band]:
         calm = order[:max(3, (len(order) + 3) // 4)]    # the flattest quarter: a shoulder or the foot of a hump at
                                                         # its edge does not pull the level
         vals = c.db[a:b + 1]
+        at_low = all(slopes[i] is None for i in idx if i < a)      # nothing before it but points without a
+        at_high = all(slopes[i] is None for i in idx if i > b)     # slope (a linear sweep's first ones)
         out.append(Band(a, b, c.f[a], c.f[b], statistics.median(c.db[i] for i in calm), max(vals) - min(vals),
-                        "flat", a == idx[0], b == idx[-1], any(c.flagged[a:b + 1])))
+                        "flat", at_low, at_high, any(c.flagged[a:b + 1])))
     if out:
         top = max(band.level for band in out)
         for band in out:
@@ -359,9 +442,12 @@ def marker_pair(p: Passband) -> list[Cutoff]:
 
 
 # ---- resonances
-def _extremes(c: Curve, x, a: int, b: int, highest: bool, floor: float = PROMINENCE_DB):
+def _extremes(c: Curve, x, a: int, b: int, highest: bool, floor: float = PROMINENCE_DB,
+              quiet: float | None = None):
     """The peaks (highest) or notches of the run a..b that stand clear: (index, how far it
-    stands clear, the foot on its left, the foot on its right; a foot is a gain in dB)."""
+    stands clear, the foot on its left, the foot on its right; a foot is a gain in dB).
+    quiet: the level of a noise floor; within NOISE_NEAR of it the noise grows quickly as the
+    gain falls, and the scatter close around the point counts as well."""
     s = 1.0 if highest else -1.0
     y = [s * v for v in c.db]
     out = []
@@ -376,7 +462,10 @@ def _extremes(c: Curve, x, a: int, b: int, highest: bool, floor: float = PROMINE
                 low = min(low, y[k])
             feet.append(low)
         clear = y[i] - max(feet)
-        if clear >= max(floor, NOISE_FACTOR * _scatter(c, x, a, b, i)):
+        scatter = _scatter(c, x, a, b, i)
+        if quiet is not None and c.db[i] < quiet + NOISE_NEAR:
+            scatter = max(scatter, _near_scatter(c, x, a, b, i))
+        if clear >= max(floor, NOISE_FACTOR * scatter):
             out.append((i, clear, s * feet[0], s * feet[1]))
     return out
 
@@ -417,12 +506,12 @@ def _q_from_phase(c: Curve, f0: float, pairs) -> float | None:
     return statistics.median(qs) if qs else None
 
 
-def _resonances(c: Curve, x, phase: bool, bands: list[Band]) -> list[Resonance]:
+def _resonances(c: Curve, x, phase: bool, bands: list[Band], quiet: float | None = None) -> list[Resonance]:
     out = []
     flat = {i for band in bands for i in range(band.first, band.last + 1)}
     for a, b in segments(c):
         for highest in (True, False):
-            for i, clear, left, right in _extremes(c, x, a, b, highest):
+            for i, clear, left, right in _extremes(c, x, a, b, highest, quiet=quiet):
                 if i in flat:                           # the top of a flat stretch is no resonance
                     continue
                 f0, db = refine(c, i, highest)
@@ -476,23 +565,32 @@ def _roll_off(c: Curve, x, cut: Cutoff, level: float, bands: list[Band], resonan
     flagged = any(c.flagged[k] for k in idx)
     sign = -1.0 if step > 0 else 1.0                     # the gain falls away from the passband
     slopes = []                                         # of every window of SLOPE_WINDOW, in ascending frequency
+    sums = _Sums(x, c.db)
+    windows = []
     if span < SLOPE_WINDOW - EPS:
-        slopes.append(line_slope(x[lo:hi + 1], c.db[lo:hi + 1]))
+        slopes.append(sums.slope(lo, hi))
     else:
         for s in idx:
             e = bisect.bisect_right(x, x[s] + SLOPE_WINDOW + EPS, lo, hi + 1) - 1
             if x[e] - x[s] < SLOPE_WINDOW - 2 * (x[e] - x[e - 1] if e > s else 0.0) - EPS:
                 break                                   # what is left of the roll-off is shorter than a window
             if e - s >= 2:
-                slopes.append(line_slope(x[s:e + 1], c.db[s:e + 1]))
+                windows.append((s, e))
+    at_notch = bool(beyond) and stop in [r.index for r in resonances if r.kind == "notch"]
+    if beyond and not at_notch:                         # into a floor: the windows clear of the bend into it
+        clear = [(s, e) for s, e in windows
+                 if (x[e] <= x[hi] - FLAT_WINDOW + EPS if step > 0 else x[s] >= x[lo] + FLAT_WINDOW - EPS)]
+        windows = clear or windows
+    slopes += [sums.slope(s, e) for s, e in windows]
     slopes = [v for v in slopes if v is not None]
     if not slopes:
         return
-    at_notch = bool(beyond) and stop in [r.index for r in resonances if r.kind == "notch"]
     if not at_notch:                                    # into a notch the curve has no slope that means an order
         settled = statistics.median(slopes)             # the slope the roll-off settles to
         last = slopes[-1] if step > 0 else slopes[0]    # the window farthest from the passband
-        limit = span < SLOPE_WINDOW - EPS or (at_end and sign * last - sign * settled > STEEPENING)
+        at_floor = bool(beyond) and not at_notch            # every window holds the knee or the bend into it
+        limit = (span < SLOPE_WINDOW - EPS or (at_end and sign * last - sign * settled > STEEPENING)
+                 or (at_floor and span < SETTLE_DECADES - EPS))
         cut.slope = Value(settled, limit, flagged)
         cut.order = Value(float(max(1, round(abs(settled) / 20.0))), limit, flagged)
     floor = next((band for band in bands if band.kind == "floor" and (band.first if step > 0 else band.last) == stop),
@@ -520,7 +618,7 @@ def analyse(c: Curve, phase: bool = True) -> Metrics:
     x = _logs(c)
     p = passband(c)
     m.level, m.source, m.bands, m.cutoffs = p.level, p.source, p.bands, p.cutoffs
-    m.resonances = _resonances(c, x, phase, m.bands)
+    m.resonances = _resonances(c, x, phase, m.bands, max((n.level for n in m.noise), default=None))
     passes = [b for b in m.bands if b.kind == "pass"]
     if passes:
         m.level_flagged = any(b.flagged for b in passes)

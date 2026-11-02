@@ -315,6 +315,49 @@ def test_a_sharp_edge_is_not_taken_for_noise(tf, seed):
     assert noise.lo > 1.15 * cut.f and noise.level < -60.0
 
 
+def span(lo, hi, ppd):
+    """A log sweep from lo to hi with about ppd points per decade, both ends on the grid."""
+    n = max(6, int(math.log10(hi / lo) * ppd) + 1)
+    return [lo * (hi / lo) ** (k / (n - 1)) for k in range(n)]
+
+
+ELLIPTIC = TF.custom(np.polymul(np.polymul([1.0, 0.0, w(16e3) ** 2], [1.0, 0.0, w(25e3) ** 2]),
+                                [butter(5, 10e3).den[-1] / (w(16e3) * w(25e3)) ** 2]),
+                     butter(5, 10e3).den)       # a 5th-order low-pass with notches at 16 and 25 kHz
+
+
+@pytest.mark.parametrize("tf, freqs", [(NOTCH, span(32.0, 17683.0, 20)), (cheby(5, 1.0, 10e3), span(121.0, 18327.0, 10)),
+                                       (TWO, span(52.0, 123518.0, 20)), (ELLIPTIC, span(256.0, 43863.0, 10))])
+def test_a_sparse_clean_sweep_ending_past_a_notch_or_an_edge_is_not_noise(tf, freqs):
+    m = analyse(of(tf, freqs, db=0.02, seed=11))                # the bends are sudden but do not scatter
+    assert m.noise == []
+    if tf is NOTCH:
+        assert [r.kind for r in m.resonances] == ["notch"] and m.resonances[0].f0 == pytest.approx(F0, rel=0.03)
+    else:
+        assert m.cutoffs
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+@pytest.mark.parametrize("tf, real", [(TF.loop3(), []), (TF.rlc_lpf(), ["peak"])])
+def test_no_resonance_where_the_roll_off_meets_the_noise(tf, real, seed):
+    """Where the curve comes down to the noise, the noise grows quickly: the scatter close
+    around a point counts there (100 points per decade, the noise at -78 dB)."""
+    m = analyse(floored(tf, freqs=grid(20.0, 5e6, 100), seed=seed))
+    assert [r.kind for r in m.resonances] == real
+
+
+@pytest.mark.parametrize("tf, order, floor", [(butter(5, 1e4), 5, 1e-3), (butter(5, 1e4), 5, 3e-4),
+                                              (butter(4, 1e4), 4, 3e-3)])
+def test_a_roll_off_that_meets_a_floor_soon_is_only_a_lower_limit(tf, order, floor):
+    """A smooth floor (crosstalk) less than a decade beyond the cut-off: no window of the
+    roll-off is free of the knee and of the bend into the floor; the order is not certain."""
+    freqs = grid(100.0, 2e7, 20)
+    c = curve(freqs, [math.hypot(abs(tf.h(f)), floor) * cmath.exp(1j * cmath.phase(tf.h(f))) for f in freqs])
+    (cut,) = analyse(c).cutoffs
+    assert cut.order.v == order or (cut.order.limit and cut.slope.limit and cut.order.v < order)
+    assert cut.attenuation.v == pytest.approx(-20 * math.log10(floor), abs=1.0)
+
+
 def test_a_clean_curve_or_a_noisy_whole_has_no_noise_floor():
     assert analyse(of(RC, db=0.2)).noise == []
     assert analyse(floored(TF.custom([1e-5], [1.0]))).noise == []     # all of it in the noise: nothing is left out
@@ -418,3 +461,22 @@ def test_every_circuit_of_the_simulator_shows_what_it_is_for():
     assert [r.f0 for r in m.resonances] == pytest.approx([1e6, 1.05e6], rel=0.01)
     m = analyse(of(TF.amp()))
     assert m.level == pytest.approx(20.0, abs=0.05) and m.cutoffs[0].f == pytest.approx(50e3, rel=0.02)
+
+
+def test_on_a_linear_sweep_a_passband_from_the_first_point_touches_the_low_end():
+    """Its first point has no slope (too few points in its window); the band still reaches the
+    end of the sweep, so its level is uncertain (the note of analysis.notes)."""
+    m = analyse(of(RC, [100.0 * k for k in range(1, 1001)]))           # 100 Hz to 100 kHz, linear
+    (band,) = [b for b in m.bands if b.kind == "pass"]
+    assert band.at_low and not band.at_high
+
+
+def test_two_noisy_ends_leave_enough_of_the_curve_or_none_is_taken():
+    rnd = random.Random(4)
+    f = grid(20.0, 2e6, 20)
+    mid = len(f) // 2
+    db = [20 * math.log10(abs(complex(rnd.gauss(0, 1), rnd.gauss(0, 1)))) - 80 for _ in f]
+    db[mid - 1:mid + 3] = [0.0, 0.0, 0.0, 0.0]                  # four clean points between two floors
+    m = analyse(by_hand(f, db))
+    left = sum(1 for i in range(len(f)) if not any(n.first <= i <= n.last for n in m.noise))
+    assert m.noise == [] or left >= 5

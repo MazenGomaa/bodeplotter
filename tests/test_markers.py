@@ -361,3 +361,27 @@ def test_no_notch_or_margin_in_the_noise_floor():
         assert not m["nt"].found, (seed, m["nt"].freq)
         assert m["GM"].freq is None or m["GM"].freq < 20e3, (seed, m["GM"].freq)
         assert m["fc"].freq == pytest.approx(10e3, rel=0.02)
+
+
+def test_the_automatic_markers_are_quick_on_a_long_narrow_sweep():
+    """They are worked out after every measured point: a narrow linear sweep of 2000 points (a
+    crystal's) must not take a large part of a point's time (about one second on the bench)."""
+    import time
+    tf = theory.TransferFunction.crystal()
+    rnd = random.Random(1)
+    freqs = [0.99e6 + 0.07e6 * k / 1999 for k in range(2000)]
+    c = curve(freqs, [tf.h(f) + complex(rnd.gauss(0, 3e-4), rnd.gauss(0, 3e-4)) for f in freqs])
+    ms = MarkerSet()
+    ms.kinds = {"cutoff", "peak", "notch"}
+    t = time.perf_counter()
+    ms.evaluate(c)
+    assert time.perf_counter() - t < 0.3
+
+
+def test_a_clean_notch_at_the_end_of_a_sparse_sweep_keeps_its_marker():
+    """The sudden bend of a notch is not noise (measure/metrics.py: noise_ends)."""
+    tf = theory.build("rlc_notch", {k: v[0] for k, v in theory.PARAMS["rlc_notch"].items()})
+    freqs = [32.0 * (17683.0 / 32.0) ** (k / 54) for k in range(55)]          # 20 per decade, past the notch
+    rnd = random.Random(11)
+    m = every(curve(freqs, [tf.h(f) * 10 ** (rnd.gauss(0, 0.02) / 20) for f in freqs]))
+    assert m["nt"].found and m["nt"].freq == pytest.approx(15.92e3, rel=0.03)

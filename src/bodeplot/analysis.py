@@ -27,7 +27,7 @@ GROUPS = {
             "difference, and Q the centre divided by the bandwidth.",
     "Roll-off": "How fast the gain falls beyond a cut-off: the slope the curve settles to, in dB per decade, and "
                 "the filter order that goes with it (20 dB per decade for each order). '≥': at least this "
-                "steep; the sweep ends before the slope has settled.",
+                "steep; the sweep ends, or the stop band's floor comes, before the slope has settled.",
     "Stopband": "How far below the passband level the trace gets beyond a cut-off. A plain number when the "
                 "trace levels off there; '≥' (at least) when it is still falling or runs into a notch.",
     "Peak": "A resonance: a peak that stands at least 1 dB clear of the trace on both sides. Q (width): f0 "
