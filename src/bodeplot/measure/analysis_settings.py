@@ -52,7 +52,9 @@ FIELDS = (
           "... and of at least this many points."),
     Field("drop_db", 3.0, FLAT, "Cut-off below the level", "dB", 0.5, 20.0, 1,
           "The cut-off lies this far below the passband level; also the width at which a resonance's Q is "
-          "read. A flat stretch within this of the highest one is a passband."),
+          "read. A flat stretch within this of the highest one is a passband. In the type: a flat trace with "
+          "no resonance this high is flat or all-pass, and a notch the gain comes back to within this is a "
+          "band-stop."),
     Field("floor_db", 10.0, FLAT, "Stopband floor below the level", "dB", 3.0, 100.0, 1,
           "A flat stretch at least this far below the passband level is a stopband floor. The noise at an "
           "end of the sweep must lie this far below the rest, too."),
@@ -113,7 +115,8 @@ FIELDS = (
           "A peak with a notch above it, closer than this ratio of their frequencies, is crystal-like (a "
           "ceramic resonator reads the same)."),
     Field("crystal_q", 10, CLASSIFY, "Crystal: Q at least", "", 1, 1000, 0,
-          "Both the peak and the notch of a crystal-like pair must be at least this sharp (Q from their width)."),
+          "The peak of a crystal-like pair must be at least this sharp (Q from its width). The notch is not "
+          "held to it: measured from a flat level, a crystal's notch is broad."),
     Field("allpass_deg", 90, CLASSIFY, "All-pass: phase turns", "°", 10, 360, 0,
           "A flat magnitude whose phase turns by at least this much across the sweep is an all-pass; less "
           "is flat (a wire or an amplifier)."),
@@ -121,13 +124,16 @@ FIELDS = (
           "A notch this deep makes a band-stop; two peaks this high with no flat passband read unknown; a "
           "peak that falls this much on one side only is a peaking low-pass or high-pass."),
     Field("shelf_lo", 3.0, CLASSIFY, "Shelf: step at least", "dB", 0.5, 20.0, 1,
-          "A flat stretch beyond the cut-offs at least this far below the level makes a shelf..."),
+          "A flat stretch beyond the cut-offs at least this far below the level makes a shelf... (set above "
+          "'Shelf: step under', no shelf is ever found)"),
     Field("shelf_hi", 20.0, CLASSIFY, "Shelf: step under", "dB", 3.0, 100.0, 1,
           "... and less than this far below; deeper, it is the stopband of a low-pass or high-pass with a "
           "finite rejection."),
     Field("ripple_db", 0.3, CLASSIFY, "Ripple: at least", "dB", 0.01, 6.0, 2,
           "A passband ripple at least this large (and the next factor times the scatter) gives the word "
-          "'ripple (Chebyshev-like)'."),
+          "'ripple (Chebyshev-like)', on a low-pass, high-pass or band-pass only."),
+    Field("ripple_max_db", 3.0, CLASSIFY, "Ripple: at most", "dB", 0.1, 20.0, 1,
+          "A larger 'ripple' is a resonance, not a Chebyshev passband: no ripple word."),
     Field("ripple_scatter", 6.0, CLASSIFY, "Ripple: scatter times", "×", 1.0, 50.0, 1,
           "The ripple must also be at least this many times the scatter, so that noise is not read as ripple."),
     Field("peaking_db", 1.0, CLASSIFY, "Peaking: at least", "dB", 0.1, 20.0, 1,
@@ -146,7 +152,8 @@ FIELDS = (
           "Not classified when the scatter near the level (the noise, from the second differences that "
           "change sign against both neighbours) is more than this."),
     Field("scatter_warn", 0.3, CLASSIFY, "Scatter: weight over", "dB", 0.01, 10.0, 2,
-          "A scatter near the level over this loses the 'scatter' weight."),
+          "A scatter near the level over this loses the 'scatter' weight (set above 'Refuse: scatter over', "
+          "the trace is refused first and the weight never applies)."),
     Field("point_flag_share", 0.3, CLASSIFY, "Refuse: flagged points over", "share", 0.0, 1.0, 2,
           "Not classified when more than this share of the points carry a flag that marks a single point "
           "(clipped, for example); a flag on the whole sweep never refuses."),

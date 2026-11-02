@@ -37,6 +37,7 @@ def test_every_field_has_a_default_inside_its_range_and_a_tooltip():
 
 CLASSIFY_KEYS = {
     "Classification": ["crystal_ratio", "crystal_q", "allpass_deg", "notch_db", "shelf_lo", "shelf_hi", "ripple_db",
+                       "ripple_max_db",
                        "ripple_scatter", "peaking_db", "gain_db", "min_stop_db", "span_dec", "noise_share",
                        "scatter_db", "scatter_warn", "point_flag_share", "min_score"],
     "Score weights": ["w_wide_flag", "w_short_passband", "w_limit", "w_from_peak", "w_noise_end", "w_scatter",

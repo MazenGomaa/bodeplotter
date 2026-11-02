@@ -88,6 +88,17 @@ def test_shape_words():
     assert k.score == 100
 
 
+def test_ripple_only_on_a_filter_and_never_a_resonance():
+    """A 19 dB 'ripple' is a resonance, and a flat trace has no Chebyshev passband."""
+    for off in range(4):
+        k = of(sweep(TF.rc_shelf(), ppd=5, off=off, seed=off))
+        assert not any("ripple" in w for w in k.words), (off, k.kind, k.words)
+    k = of(sweep(TF.crystal(), lo=0.1e6, hi=10e6, ppd=12, off=1))
+    assert not any("ripple" in w for w in k.words), (k.kind, k.words)
+    assert not any("ripple" in w for w in of(sweep(TF.cheby_lpf(ripple=4.0)),
+                                             s=dataclasses.replace(DEFAULTS, ripple_max_db=3.0)).words)
+
+
 def _hz(text):
     number, unit = text.split()
     return float(number) * {"Hz": 1, "kHz": 1e3, "MHz": 1e6}[unit]
@@ -151,6 +162,14 @@ def test_a_slice_of_a_slope_is_refused():
     assert k.kind == "Not classified" and "decade" in k.refused and k.score is None
 
 
+@pytest.mark.parametrize("ppd", [20, 40, 100, 1000])
+def test_a_crystal_on_a_wide_log_sweep_is_crystal_like(ppd):
+    """Measured from the flat level, a crystal's notch is broad (Q about 8 even at 1000 points per
+    decade): the sharp peak makes it crystal-like, the notch only has to be above it."""
+    k = of(sweep(TF.crystal(), lo=0.1e6, hi=10e6, ppd=ppd))
+    assert k.kind == "Crystal-like", (k.kind, k.score, k.words, k.reasons)
+
+
 def test_a_narrow_sweep_across_a_crystal_is_not_refused():
     k = of(sweep(TF.crystal(), **CRYSTAL_LIN))
     assert not k.refused and k.kind == "Crystal-like"
@@ -171,6 +190,24 @@ def test_mostly_noise_is_refused():
 def test_heavy_scatter_refuses():
     k = of(sweep(TF.through(), noise=2.0))
     assert k.refused and "scatter" in k.refused, (k.kind, k.refused)
+
+
+@pytest.mark.parametrize("seed", range(8))
+@pytest.mark.parametrize("ppd, amp", [(20, 1e-3), (40, 1e-3), (10, 1e-2), (20, 0.3)])
+def test_pure_noise_is_refused(ppd, amp, seed):
+    """An open probe: nothing but noise over 6 decades. Too few points lie near its 'level' for
+    the scatter there, so the scatter is taken over the whole trace, not read as 0."""
+    rnd = random.Random(seed)
+    fs = [10 ** (2 + i / ppd) for i in range(6 * ppd + 1)]
+    k = of(curve(fs, [complex(rnd.gauss(0, amp), rnd.gauss(0, amp)) for _f in fs]))
+    assert k.refused, (k.kind, k.score, k.words)
+
+
+@pytest.mark.parametrize("name", ["through", "rc_hpf", "butter_lpf", "rlc_notch"])
+@pytest.mark.parametrize("noise", [3.0, 5.0])
+def test_more_noise_never_gives_a_type_back(name, noise):
+    k = of(sweep(TF.from_preset(name), noise=noise))
+    assert k.refused, (k.kind, k.score, k.words)
 
 
 def test_noise_is_not_ripple():
@@ -235,7 +272,7 @@ def test_settings_move_the_answer():
     k = of(c, s=dataclasses.replace(DEFAULTS, shelf_hi=50.0))
     assert k.kind == "Shelf" and any(w.startswith("high-frequency step") for w in k.words), k.words
     c = sweep(TF.crystal(), **CRYSTAL_LIN)
-    assert of(c, s=dataclasses.replace(DEFAULTS, crystal_q=200)).kind != "Crystal-like"
+    assert of(c, s=dataclasses.replace(DEFAULTS, crystal_q=200)).kind == "Band-pass"     # rule 7: its peak
 
 
 def test_the_score_adds_up():

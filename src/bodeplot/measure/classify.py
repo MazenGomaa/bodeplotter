@@ -57,14 +57,23 @@ def _refuse(why: str, score: int | None = None, reasons=None) -> Classification:
 def scatter(m: Metrics, c: Curve, s: AnalysisSettings = DEFAULTS) -> float:
     """The noise near the level (design section 3): over the usable points outside the noise ends
     within floor_db of the level, the second differences that change sign against both neighbours
-    (noise does, a bend keeps its sign), their median as a sigma; 0 with fewer than noise_points."""
+    (noise does, a bend keeps its sign), their median as a sigma. With fewer than noise_points
+    there, the same over every usable point outside the noise ends: a trace that is all noise
+    (an open probe) has too few points near its 'level', and is not clean for that. 0 with
+    fewer than noise_points there too: nothing scatters."""
     if not m.ok or m.level is None:
         return 0.0
     c = without_noise(c, m.noise)
-    near = [ok and abs(v - m.level) <= s.floor_db for ok, v in zip(c.ok, c.db)]
-    d2 = {j: c.db[j - 1] - 2 * c.db[j] + c.db[j + 1] for j in range(1, len(c.f) - 1)
-          if near[j - 1] and near[j] and near[j + 1]}
-    noise = [abs(v) for j, v in d2.items() if j - 1 in d2 and j + 1 in d2 and v * d2[j - 1] < 0 and v * d2[j + 1] < 0]
+
+    def flips(near):
+        d2 = {j: c.db[j - 1] - 2 * c.db[j] + c.db[j + 1] for j in range(1, len(c.f) - 1)
+              if near[j - 1] and near[j] and near[j + 1]}
+        return [abs(v) for j, v in d2.items()
+                if j - 1 in d2 and j + 1 in d2 and v * d2[j - 1] < 0 and v * d2[j + 1] < 0]
+
+    noise = flips([ok and abs(v - m.level) <= s.floor_db for ok, v in zip(c.ok, c.db)])
+    if len(noise) < s.noise_points:
+        noise = flips(c.ok)
     return SIGMA_OF_D2 * statistics.median(noise) if len(noise) >= s.noise_points else 0.0
 
 
@@ -81,8 +90,8 @@ class _Read:
 def _crystal(m: Metrics, s: AnalysisSettings) -> _Read | None:
     for p in (r for r in m.resonances if r.kind == "peak"):
         for n in (r for r in m.resonances if r.kind == "notch"):
-            if (p.f0 < n.f0 < s.crystal_ratio * p.f0 and p.q_width is not None and n.q_width is not None
-                    and p.q_width >= s.crystal_q and n.q_width >= s.crystal_q):
+            # the peak's sharpness only: measured from a flat level, a crystal's notch is broad
+            if p.f0 < n.f0 < s.crystal_ratio * p.f0 and p.q_width is not None and p.q_width >= s.crystal_q:
                 return _Read(CRYSTAL, ["fs " + _hz(p.f0), "fp " + _hz(n.f0)], on=[p, n])
     return None
 
@@ -171,7 +180,8 @@ def _words(r: _Read, m: Metrics, sc: float, s: AnalysisSettings) -> list[str]:
                 out.append("peaking " + _db(p.db - m.level))
                 peaking = True
                 break
-    if (m.ripple is not None and not peaking and m.ripple >= s.ripple_db - EPS
+    if (r.kind in ROLLING and m.ripple is not None and not peaking
+            and s.ripple_db - EPS <= m.ripple <= s.ripple_max_db
             and m.ripple >= s.ripple_scatter * sc):
         out.append("ripple %.1f dB (Chebyshev-like)" % m.ripple)
     if r.kind in ROLLING and any(k.slope is None and k.attenuation is not None for k in m.cutoffs):

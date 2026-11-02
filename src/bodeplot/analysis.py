@@ -8,7 +8,7 @@ import math
 from dataclasses import dataclass
 
 from .measure.analysis_settings import DEFAULTS, AnalysisSettings
-from .measure.classify import FULL, Classification
+from .measure.classify import FULL, UNKNOWN, Classification
 from .measure.metrics import DB_PER_ORDER, Metrics, Resonance
 from .units import fmt_si
 
@@ -26,15 +26,15 @@ def group_tips(s: AnalysisSettings = DEFAULTS) -> dict[str, str]:
     tooltip), with the numbers of the settings in force."""
     return {
         "Type": "What kind of circuit the trace is, read from the numbers below. Tried in this order: crystal-like "
-                "(a peak with a notch less than %s times its frequency above it, both of Q %d or more; a ceramic "
+                "(a peak of Q %d or more with a notch less than %s times its frequency above it; a ceramic "
                 "resonator reads the same), flat or all-pass (the phase turns %d° or more), unknown (two peaks %s dB "
                 "high and no flat passband), band-stop (a notch the gain comes back from), low-pass or high-pass (a "
                 "shelf when the stop band levels off %s to %s dB down), band-pass, band-stop, and unknown for "
                 "anything else. Shape: the order, peaking, ripple, notches in the stop band, Q and gain. Confidence: "
-                "100 %% less the amount of each reason in the notes. Not classified under %d %%, and when the noise "
+                "100 %% less the amount of each reason in the notes (none shown for unknown). Not classified under %d %%, and when the noise "
                 "covers more than %d %% of the points, the scatter is more than %s dB, more than %d %% of the "
                 "points are flagged, or the sweep spans less than %s decade with no whole resonance in it."
-                % (_n(s.crystal_ratio), s.crystal_q, s.allpass_deg, _n(s.notch_db), _n(s.shelf_lo), _n(s.shelf_hi),
+                % (s.crystal_q, _n(s.crystal_ratio), s.allpass_deg, _n(s.notch_db), _n(s.shelf_lo), _n(s.shelf_hi),
                    s.min_score, round(FULL * s.noise_share), _n(s.scatter_db), round(FULL * s.point_flag_share),
                    _n(s.span_dec)),
         "Passband": "The flat part of the trace: a stretch of at least %s decade where the gain changes by no more "
@@ -186,11 +186,11 @@ def _type_rows(k: Classification, ko: Classification | None, tip: str) -> list[R
     def cells(c: Classification | None) -> tuple[str, str, str]:
         if c is None:
             return "", "", ""
-        return c.kind, ", ".join(c.words), "" if c.score is None else "%d %%" % c.score
+        return c.kind, ", ".join(c.words), "" if c.score is None or c.kind == UNKNOWN else "%d %%" % c.score
     a, b = cells(k), cells(ko)
     both = ko is not None and not k.refused and not ko.refused
     kind = ("same" if k.kind == ko.kind else "differs") if both else ""
-    points = ("%+d points" % (k.score - ko.score)).replace("-", "−") if both else ""
+    points = ("%+d points" % (k.score - ko.score)).replace("-", "−")         if both and UNKNOWN not in (k.kind, ko.kind) else ""
     return [Row("Type", "Type", a[0], b[0], kind, tip), Row("Type", "Shape", a[1], b[1], "", tip),
             Row("Type", "Confidence", a[2], b[2], points, tip)]
 

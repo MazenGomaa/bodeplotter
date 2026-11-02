@@ -236,6 +236,24 @@ def test_type_rows_compare():
     assert cell(t, "Type", "Type").diff == "" and cell(t, "Type", "Confidence").diff == ""
 
 
+def test_unknown_shows_no_confidence():
+    """'Unknown, 100 %' reads as a contradiction: an unknown type has no confidence shown, and
+    none to compare."""
+    m, k = mk_of(TF.two_res())
+    assert k.kind == "Unknown"
+    t = rows(m, k=k)
+    assert cell(t, "Type", "Confidence").value == ""
+    mr, kr = mk_of(RC)
+    assert cell(rows(m, mr, k=k, ko=kr), "Type", "Confidence").diff == ""
+
+
+def test_the_type_tip_holds_the_crystal_rule():
+    from bodeplot.analysis import group_tips
+    from bodeplot.measure.analysis_settings import DEFAULTS
+    tip = group_tips(DEFAULTS)["Type"]
+    assert "a peak of Q 10 or more with a notch less than 1.2 times its frequency above it" in tip
+
+
 def test_clipboard_has_the_type():
     m, k = mk_of(RC)
     lines = table("Analysis of: Sweep", rows(m, k=k), notes(m, k=k)).splitlines()

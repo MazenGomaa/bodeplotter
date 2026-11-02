@@ -300,6 +300,16 @@ def test_analysis_curve_splits_the_flags(plot):
     assert c.wide_flags == [] and [i for i, b in enumerate(c.point_flagged) if b] == [3]
 
 
+def test_low_snr_does_not_count_as_a_fault(plot, panel):
+    """The sweep sets LOW_SNR on every point of a deep stopband: a real low-pass sweep is
+    not refused for it (the noise rules judge the SNR); part 1's (flagged) marks stay."""
+    plot.set_points([point(f, RC.h(f), Flag.LOW_SNR if abs(RC.h(f)) < 0.03 else Flag.NONE) for f in FREQS])
+    c = plot.analysis_curve(plot.set.live.id)
+    assert not any(c.point_flagged) and any(c.flagged)
+    panel.analyse()
+    assert value(panel, "Type", "Type") == "Low-pass"
+
+
 # ---------------------------------------------------------------------- the type (classification design, section 6)
 def test_the_type_comes_first_after_analyse(plot, panel):
     plot.set_points(sweep())

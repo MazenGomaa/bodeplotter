@@ -27,6 +27,9 @@ from .marker_layer import MarkerLayer
 from .si_widgets import SiAxis
 
 QUIET = Flag.REMEASURED | Flag.BUILTIN | Flag.PREVIEW | Flag.CALIBRATED   # flags that do not mark a point as suspect
+# Not a fault of the point for the classification: LOW_SNR is on every point of a deep stopband,
+# and the noise rules judge it; SKEW_UNCHECKED is the sweep's (classification design, section 4)
+NOT_A_FAULT = QUIET | Flag.LOW_SNR | Flag.SKEW_UNCHECKED
 # Vertical unit of the upper plot: key -> (box text, axis label, axis unit, smallest span shown)
 UNITS = {"db": ("dB", "Gain", "dB", 1.0),
          "v": ("Voltage", "Output", "Vpp", 0.0),
@@ -342,7 +345,7 @@ class BodePlot(QWidget):
         curve, points = got
         if points is not None:
             curve.flagged = [bool(p.flags & ~QUIET) for p in points]
-            curve.point_flagged = [bool(p.flags & ~QUIET & ~Flag.SKEW_UNCHECKED) for p in points]
+            curve.point_flagged = [bool(p.flags & ~NOT_A_FAULT) for p in points]
             every = points and all(p.flags & Flag.SKEW_UNCHECKED for p in points)
             curve.wide_flags = ["skew unchecked"] if every else []
         return curve
