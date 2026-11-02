@@ -390,7 +390,8 @@ def test_settings_dialog_holds_every_stored_setting(qtbot):
     s = AppSettings(simulate=True, startup_mode="last", sim=dict(SIM))
     d = SettingsDialog(s)
     qtbot.addWidget(d)
-    assert [d.tabs.tabText(i) for i in range(d.tabs.count())] == ["General", "Advanced", "Instruments", "Simulation"]
+    assert [d.tabs.tabText(i) for i in range(d.tabs.count())] == ["General", "Advanced", "Analysis", "Instruments",
+                                                                        "Simulation"]
     assert d.startup.currentData() == "last" and d.gap.minimum() == 100
     d.startup.setCurrentIndex(d.startup.findData("simulation"))
     d.gap.setValue(250)

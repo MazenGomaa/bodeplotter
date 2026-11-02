@@ -7,38 +7,50 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from .measure.metrics import FEW_POINTS, Metrics, Resonance
+from .measure.analysis_settings import DEFAULTS, AnalysisSettings
+from .measure.metrics import DB_PER_ORDER, Metrics, Resonance
 from .units import fmt_si
 
-SHORT_DECADES = 1.0             # a passband seen over less than this at an end of the sweep: its level is uncertain
-PAIR_FACTOR = 1.2               # two resonances this close in frequency are the same one in both traces
 AT_LEAST = "≥ "                 # a lower limit: the sweep ends before the number has settled
 FLAG = " (flagged)"
 NONE = "none"
-# the groups of the table in their order: title -> the rule behind its numbers (the tooltip)
-GROUPS = {
-    "Passband": "The flat part of the trace: a stretch of at least a third of a decade where the gain changes by "
-                "no more than 3 dB per decade (from ... to: where it lies). Level: its typical gain. Ripple: how "
-                "far the gain moves between the cut-offs, a hump included. Without a flat stretch the level is "
-                "the highest gain.",
-    "Cut-off": "Where the gain has fallen 3 dB below the passband level, found between two measured points. "
-               "One cut-off is fc; two are fL and fH.",
-    "Band": "From the two cut-offs: the centre is the geometric mean of fL and fH, the bandwidth their "
-            "difference, and Q the centre divided by the bandwidth.",
-    "Roll-off": "How fast the gain falls beyond a cut-off: the slope the curve settles to, in dB per decade, and "
-                "the filter order that goes with it (20 dB per decade for each order). '≥': at least this "
-                "steep; the sweep ends, or the stop band's floor comes, before the slope has settled.",
-    "Stopband": "How far below the passband level the trace stays beyond a cut-off. A plain number when the "
-                "trace levels off there; '≥' (at least) when it is still falling. Beyond a notch: down to the "
-                "highest gain that comes back after it (the worst case); the notch's own depth is in its Notch "
-                "group. No row when another passband follows the notch.",
-    "Peak": "A resonance: a peak that stands at least 1 dB clear of the trace on both sides. Q (width): f0 "
-            "divided by the width 3 dB below its top. Q (phase): from how fast the phase turns across it. "
-            "Points: how many measured points lie on it; with fewer than five its numbers are uncertain.",
-    "Notch": "A resonance: a notch that stands at least 1 dB clear of the trace on both sides. Q (width): f0 "
-             "divided by the width 3 dB below its shoulder. Points: how many measured points lie in it; with "
-             "fewer than five its numbers are uncertain.",
-}
+
+
+def _n(v: float) -> str:
+    return "%g" % round(v, 3)
+
+
+def group_tips(s: AnalysisSettings = DEFAULTS) -> dict[str, str]:
+    """The groups of the table in their order: title -> the rule behind its numbers (the
+    tooltip), with the numbers of the settings in force."""
+    return {
+        "Passband": "The flat part of the trace: a stretch of at least %s decade where the gain changes by no more "
+                    "than %s dB per decade (from ... to: where it lies). Level: its typical gain. Ripple: how far the "
+                    "gain moves between the cut-offs, a hump included. Without a flat stretch the level is the "
+                    "highest gain." % (_n(s.flat_span), _n(s.flat_slope)),
+        "Cut-off": "Where the gain has fallen %s dB below the passband level, found between two measured points. "
+                   "One cut-off is fc; two are fL and fH." % _n(s.drop_db),
+        "Band": "From the two cut-offs: the centre is the geometric mean of fL and fH, the bandwidth their "
+                "difference, and Q the centre divided by the bandwidth.",
+        "Roll-off": "How fast the gain falls beyond a cut-off: the slope the curve settles to, in dB per decade, and "
+                    "the filter order that goes with it (%s dB per decade for each order). '≥': at least this "
+                    "steep; the sweep ends, or the stop band's floor comes, before the slope has settled."
+                    % _n(DB_PER_ORDER),
+        "Stopband": "How far below the passband level the trace stays beyond a cut-off. A plain number when the "
+                    "trace levels off there; '≥' (at least) when it is still falling. Beyond a notch: down to the "
+                    "highest gain that comes back after it (the worst case); the notch's own depth is in its Notch "
+                    "group. No row when another passband follows the notch.",
+        "Peak": "A resonance: a peak that stands at least %s dB clear of the trace on both sides. Q (width): f0 "
+                "divided by the width %s dB below its top. Q (phase): from how fast the phase turns across it. "
+                "Points: how many measured points lie on it; with fewer than %d its numbers are uncertain."
+                % (_n(s.prominence_db), _n(s.drop_db), s.few_points),
+        "Notch": "A resonance: a notch that stands at least %s dB clear of the trace on both sides. Q (width): f0 "
+                 "divided by the width %s dB below its shoulder. Points: how many measured points lie in it; with "
+                 "fewer than %d its numbers are uncertain." % (_n(s.prominence_db), _n(s.drop_db), s.few_points),
+    }
+
+
+GROUPS = group_tips()           # the order of the groups, and their tips with the default settings
 
 
 @dataclass
@@ -141,13 +153,13 @@ def _resonance(r: Resonance, phase: bool) -> list[tuple[str, Cell]]:
     return out
 
 
-def _pairs(a: list[Resonance], b: list[Resonance]) -> list[tuple[Resonance | None, Resonance | None]]:
+def _pairs(a: list[Resonance], b: list[Resonance], factor: float) -> list[tuple[Resonance | None, Resonance | None]]:
     """The resonances of two traces side by side: one of the first with the nearest of the
-    same kind of the second within PAIR_FACTOR; the rest alone. In ascending frequency."""
+    same kind of the second within factor in frequency; the rest alone. In ascending frequency."""
     free = list(b)
     out: list[tuple[Resonance | None, Resonance | None]] = []
     for r in a:
-        near = [o for o in free if o.kind == r.kind and max(o.f0, r.f0) <= PAIR_FACTOR * min(o.f0, r.f0)]
+        near = [o for o in free if o.kind == r.kind and max(o.f0, r.f0) <= factor * min(o.f0, r.f0)]
         other = min(near, key=lambda o: abs(math.log(o.f0 / r.f0))) if near else None
         if other is not None:
             free.remove(other)
@@ -156,22 +168,23 @@ def _pairs(a: list[Resonance], b: list[Resonance]) -> list[tuple[Resonance | Non
     return sorted(out, key=lambda p: (p[0] or p[1]).f0)
 
 
-def rows(m: Metrics, other: Metrics | None = None, phase: bool = True) -> list[Row]:
+def rows(m: Metrics, other: Metrics | None = None, phase: bool = True, s: AnalysisSettings = DEFAULTS) -> list[Row]:
     """The table for m, with other next to it when given. A quantity only one of the two
     has still gets its row, with the other cell empty."""
     a, b = _entries(m), _entries(other)
     da, db = {e[0]: e for e in a}, {e[0]: e for e in b}
     keys = [e[0] for e in a] + [e[0] for e in b if e[0] not in da]
-    order = list(GROUPS)
+    tips = group_tips(s)
+    order = list(tips)
     out = []
     for key in sorted(keys, key=lambda k: order.index((da.get(k) or db[k])[1])):      # stable: by group only
         ea, eb = da.get(key), db.get(key)
         _key, group, name, _cell_ = ea or eb
         out.append(Row(group, name, ea[3].text if ea else "", eb[3].text if eb else "",
-                       _diff(ea[3] if ea else None, eb[3] if eb else None), GROUPS[group]))
+                       _diff(ea[3] if ea else None, eb[3] if eb else None), tips[group]))
     mine = m.resonances if m.ok else []
     theirs = other.resonances if other is not None and other.ok else []
-    for ra, rb in _pairs(mine, theirs):
+    for ra, rb in _pairs(mine, theirs, s.pair_factor):
         r = ra or rb
         kind = "Peak" if r.kind == "peak" else "Notch"
         group = "%s at %s" % (kind, hz(r.f0))
@@ -179,11 +192,11 @@ def rows(m: Metrics, other: Metrics | None = None, phase: bool = True) -> list[R
         cb = dict(_resonance(rb, phase)) if rb else {}
         for name, _c in _resonance(r, phase):
             xa, xb = ca.get(name), cb.get(name)
-            out.append(Row(group, name, xa.text if xa else "", xb.text if xb else "", _diff(xa, xb), GROUPS[kind]))
+            out.append(Row(group, name, xa.text if xa else "", xb.text if xb else "", _diff(xa, xb), tips[kind]))
     return out
 
 
-def notes(m: Metrics) -> list[str]:
+def notes(m: Metrics, s: AnalysisSettings = DEFAULTS) -> list[str]:
     """What the numbers do not say by themselves, one sentence each."""
     if not m.ok:
         return ["No analysis: %s." % m.reason]
@@ -191,10 +204,11 @@ def notes(m: Metrics) -> list[str]:
     if m.source == "peak":
         out.append("No flat stretch: the passband level is the highest gain of the trace.")
     for b in m.bands:
-        if b.kind == "pass" and m.cutoffs and (b.at_low or b.at_high) and math.log10(b.hi / b.lo) < SHORT_DECADES:
-            out.append("The flat part runs to the %s end of the sweep and spans less than a decade: the passband "
+        if b.kind == "pass" and m.cutoffs and (b.at_low or b.at_high) and math.log10(b.hi / b.lo) < s.short_decades:
+            span = "a decade" if s.short_decades == 1 else "%s decades" % _n(s.short_decades)
+            out.append("The flat part runs to the %s end of the sweep and spans less than %s: the passband "
                        "level, and with it the cut-off, is uncertain; start the sweep %s."
-                       % (("low", "lower") if b.at_low else ("high", "higher")))
+                       % ((("low",) if b.at_low else ("high",)) + (span,) + (("lower",) if b.at_low else ("higher",))))
     if not m.cutoffs:
         out.append("No cut-off inside the sweep.")
     falling = [name for name, cut in zip(cut_names(m), m.cutoffs) if cut.falling]
@@ -209,7 +223,7 @@ def notes(m: Metrics) -> list[str]:
         out.append("%s %s the gain is lost in the noise (about %.0f dB): that part is left out of the analysis."
                    % (where + (n.level,)))
     for r in m.resonances:
-        if r.points < FEW_POINTS:
+        if r.points < s.few_points:
             out.append("Too few points on the %s at %s (%d): its top and its Q are uncertain; sweep finer "
                        "around it." % (r.kind, hz(r.f0), r.points))
     if m.flagged_share > 0:

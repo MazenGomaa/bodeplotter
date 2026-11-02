@@ -227,6 +227,11 @@ class BodePlot(QWidget):
         """True when each marker carries its values on the plot; False: its name only."""
         return self._marker_values
 
+    def set_analysis_settings(self, s) -> None:
+        """The numbers of the analysis (measure/analysis_settings.py): the -3 dB marker follows them."""
+        self.markers.analysis = s
+        self._update_markers()
+
     def set_marker_values(self, on: bool) -> None:
         self._marker_values = bool(on)
         self._update_markers()

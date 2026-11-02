@@ -9,7 +9,8 @@ import time
 import numpy as np
 import pytest
 
-from bodeplot.measure.metrics import FEW_POINTS, TOO_FEW, analyse, marker_pair, passband
+from bodeplot.measure.analysis_settings import DEFAULTS
+from bodeplot.measure.metrics import analyse, marker_pair, passband, too_few
 from bodeplot.measure.response import Curve, curve
 from bodeplot.measure.theory import TransferFunction as TF
 
@@ -165,7 +166,7 @@ def test_rlc_band_pass_is_a_peak_with_both_q():
     (peak,) = m.resonances
     assert peak.kind == "peak" and peak.f0 == pytest.approx(F0, rel=0.01)
     assert peak.q_width == pytest.approx(1.0, rel=0.03) and peak.q_phase == pytest.approx(1.0, rel=0.1)
-    assert peak.points >= FEW_POINTS
+    assert peak.points >= DEFAULTS.few_points
 
 
 def test_rlc_notch_has_two_passbands_a_notch_and_no_slope():
@@ -206,7 +207,7 @@ def test_a_crystal_shows_its_series_and_its_parallel_resonance():
 
 def test_a_resonance_with_too_few_points_says_so():
     (peak,) = analyse(of(TF.custom(*bp2(1e4, 50)))).resonances          # 20 points per decade on a Q of 50
-    assert peak.points < FEW_POINTS and peak.f0 == pytest.approx(1e4, rel=0.03)
+    assert peak.points < DEFAULTS.few_points and peak.f0 == pytest.approx(1e4, rel=0.03)
 
 
 def test_without_phase_there_is_no_q_from_the_phase():
@@ -258,7 +259,7 @@ def test_a_gap_is_not_bridged():
 def test_too_few_points_give_no_analysis():
     for freqs in ([], [100.0, 1e3, 1e4, 1e5]):
         m = analyse(of(RC, freqs) if freqs else curve([], []))
-        assert not m.ok and m.reason == TOO_FEW and m.cutoffs == [] and m.resonances == []
+        assert not m.ok and m.reason == too_few() and m.cutoffs == [] and m.resonances == []
     assert passband(curve([], [])).level is None and marker_pair(passband(curve([], []))) == []
 
 

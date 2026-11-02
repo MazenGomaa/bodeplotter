@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout, QHB
 
 from .. import analysis
 from ..measure import metrics
+from ..measure.analysis_settings import DEFAULTS
 from . import theme
 
 COLUMNS = ("Quantity", "Value", "Compare", "Difference")
@@ -46,6 +47,7 @@ class AnalysisPanel(QWidget):
         self.plot = plot
         self._shown: dict | None = None     # what the table holds: trace ids, names, time, the curves' prints
         self._text = ""                     # the same as clipboard text
+        self.settings = DEFAULTS            # the numbers of the analysis (Settings, Analysis tab)
         lay = QVBoxLayout(self)
 
         form = QGridLayout()
@@ -144,6 +146,12 @@ class AnalysisPanel(QWidget):
         c = self.plot.analysis_curve(trace_id) if trace_id is not None else None
         return None if c is None else (tuple(c.f), tuple(c.db), tuple(c.deg), tuple(c.flagged))
 
+    def set_settings(self, s) -> None:
+        """New numbers for the analysis; the table waits for the next Analyse, and the state line
+        says that it was made with others."""
+        self.settings = s
+        self._update_state()
+
     def stale(self) -> bool:
         """The table no longer belongs to the traces as they are now."""
         s = self._shown
@@ -156,8 +164,10 @@ class AnalysisPanel(QWidget):
             self.state.setText(theme.status_html("idle", IDLE))
             return
         text = "%s, analysed %s" % (s["title"], s["when"].strftime("%H:%M:%S"))
-        if self.stale():
-            self.state.setText(theme.status_html("warning", text + ": trace changed since this analysis"))
+        why = [w for w, old in (("trace changed", self.stale()), ("settings changed", s["settings"] != self.settings))
+               if old]
+        if why:
+            self.state.setText(theme.status_html("warning", text + ": %s since this analysis" % " and ".join(why)))
         else:
             self.state.setText(theme.status_html("good", text))
 
@@ -173,15 +183,16 @@ class AnalysisPanel(QWidget):
         curve = plot.analysis_curve(trace.id)
         other_curve = plot.analysis_curve(other.id) if other is not None else None
         phase = plot.has_phase
-        m = metrics.analyse(curve, phase) if curve is not None else metrics.Metrics(reason="the trace has no points")
-        mo = metrics.analyse(other_curve, phase) if other_curve is not None else None
-        rows = analysis.rows(m, mo, phase)
-        notes = analysis.notes(m)
+        s = self.settings
+        m = metrics.analyse(curve, phase, s) if curve is not None else metrics.Metrics(reason="the trace has no points")
+        mo = metrics.analyse(other_curve, phase, s) if other_curve is not None else None
+        rows = analysis.rows(m, mo, phase, s)
+        notes = analysis.notes(m, s)
         if other is not None and (mo is None or not mo.ok):     # of the compared trace only that it has no numbers
             notes.append("%s: no analysis, %s." % (other.name, mo.reason if mo is not None else "the trace has no points"))
         title = trace.name + (", compared with %s" % other.name if other is not None else "")
         self._shown = {"trace": trace.id, "compare": other.id if other is not None else None, "title": title,
-                       "when": datetime.now(), "print": self._print(trace.id),
+                       "when": datetime.now(), "print": self._print(trace.id), "settings": s,
                        "compare_print": self._print(other.id) if other is not None else None}
         self._text = analysis.table("Analysis of: " + title, rows, notes, compare=other is not None)
         self._fill(rows, other is not None)

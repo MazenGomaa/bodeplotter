@@ -142,7 +142,8 @@ def test_settings_dialog_edits_the_new_settings(qtbot, tmp_path):
     s = AppSettings(simulate=True)
     d = SettingsDialog(s)
     qtbot.addWidget(d)
-    assert [d.tabs.tabText(i) for i in range(d.tabs.count())] == ["General", "Advanced", "Instruments", "Simulation"]
+    assert [d.tabs.tabText(i) for i in range(d.tabs.count())] == ["General", "Advanced", "Analysis", "Instruments",
+                                                                        "Simulation"]
     assert not d.skew_on_connect.isChecked() and d.tooltips.isChecked() and d.tooltip_delay.value() == 3.0
     assert d.auto_keep.value() == 0 and d.folder.text() == "" and d.grid_color == "" and not d.debug.isChecked()
     assert all(box.isChecked() for box in d.panels.values()) and set(d.panels) == set(s.startup_panels)
@@ -405,3 +406,22 @@ def test_no_toolbar_button_hands_its_checked_flag_to_its_slot(qtbot, tmp_path, m
     probe.trigger()
     assert got == [()]
     win.close()
+
+
+def test_settings_dialog_analysis_tab(qtbot):
+    """Every analysis number has its box; only a changed one is stored; Defaults puts them back.
+    A default the box rounds (a third of a decade) is not stored when the box is left alone."""
+    from bodeplot.gui.dialogs import SettingsDialog
+    from bodeplot.measure import analysis_settings as A
+    s = AppSettings(simulate=True, analysis={"floor_db": 20.0})
+    d = SettingsDialog(s)
+    qtbot.addWidget(d)
+    assert set(d.analysis_boxes) == {f.key for f in A.FIELDS}
+    assert all(box.toolTip().endswith(".") and "Default" in box.toolTip() for box in d.analysis_boxes.values())
+    assert d.analysis_boxes["floor_db"].value() == 20.0
+    d.analysis_boxes["few_points"].setValue(8)
+    d.apply_to(s)
+    assert s.analysis == {"floor_db": 20.0, "few_points": 8}
+    d.analysis_defaults_btn.click()
+    d.apply_to(s)
+    assert s.analysis == {}

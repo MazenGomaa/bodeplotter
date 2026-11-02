@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QComboBox, QDockWidget, QFileDialog, QInputDialog
 from .. import __version__
 from ..io import export_csv, export_image, export_touchstone, presets
 from ..io.settings import AppSettings, load_settings, measure_overrides, save_settings
-from ..measure import skew
+from ..measure import analysis_settings, skew
 from ..models import EngineState, LogEntry, Method, PointResult, SweepResult, SweepType, ThroughCal
 from ..sweep import calibration
 from ..sweep import plan as plan_mod
@@ -462,7 +462,7 @@ class MainWindow(QMainWindow):
 
     def apply_settings(self) -> None:
         """Put the stored settings into effect: explanations, grid colour, debug logging, the
-        advanced measurement limits, the folder for files. Called at start and after the
+        advanced measurement limits, the analysis numbers, the folder for files. Called at start and after the
         Settings dialog."""
         from ..logging_setup import set_debug
         s = self.settings
@@ -472,6 +472,9 @@ class MainWindow(QMainWindow):
             theme.style_plot(plot)
         set_debug(s.debug_logging)
         self.config.advanced = measure_overrides(s.advanced)
+        numbers = analysis_settings.from_stored(s.analysis)
+        self.plot.set_analysis_settings(numbers)
+        self.analysis_panel.set_settings(numbers)
         self.traces_panel.folder = self.start_folder()
 
     def start_folder(self) -> str:

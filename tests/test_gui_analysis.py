@@ -267,3 +267,20 @@ def test_analyse_in_the_window_after_a_simulated_sweep(win, qtbot):
     assert fc(win.analysis_panel) == pytest.approx(FC, rel=0.01)
     win.plot.clear()                                    # a new sweep starts
     assert win.analysis_panel.stale()
+
+
+# ---------------------------------------------------------------------- the analysis numbers (Settings, Analysis tab)
+def test_changed_settings_wait_for_analyse_and_the_line_says_so(plot, panel):
+    import dataclasses
+    from bodeplot.measure.analysis_settings import DEFAULTS
+    plot.set_points(sweep())
+    panel.analyse_btn.click()
+    assert fc(panel) == pytest.approx(FC, rel=0.02)
+    panel.set_settings(dataclasses.replace(DEFAULTS, drop_db=6.0))
+    assert "settings changed since this analysis" in panel.state.text()
+    assert fc(panel) == pytest.approx(FC, rel=0.02)                     # the table waits
+    panel.analyse_btn.click()
+    assert "changed" not in panel.state.text()
+    assert fc(panel) == pytest.approx(FC * math.sqrt(10 ** 0.6 - 1), rel=0.02)
+    tips = [panel.table.topLevelItem(i).toolTip(0) for i in range(panel.table.topLevelItemCount())]
+    assert any("fallen 6 dB below" in t for t in tips)                  # the rules name the numbers in force

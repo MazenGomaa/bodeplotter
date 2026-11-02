@@ -21,7 +21,7 @@ Persistence (`io/`): settings and presets are JSON in the user config folder, lo
 
 **Markers** are outside it too. `markers.py` holds what is switched on and the rules; `measure/response.py` is the maths on one curve, which `traces.py` also uses for the reference trace and which v3 (response metrics) is to build on. `gui/markers_panel.py` holds the controls and follows the plot's `markers_changed`. The plot asks `TraceSet.curve` for the chosen trace, lets `MarkerSet.evaluate` read it, and hands texts and positions to `gui/marker_layer.py` and to the image export.
 
-**The analysis** (v3, part 1) sits beside the markers. `measure/metrics.py` reads the shape of one curve; `markers.py` takes its −3 dB cut-offs from it (`passband`, `marker_pair`) and leaves out the same noisy ends (`noise_ends`, `without_noise`), so the marker and the Analysis table show the same cut-off. `analysis.py` turns a `Metrics` into rows of text; `gui/analysis_panel.py` asks the plot for a trace as a curve (`BodePlot.analysis_curve`: always absolute and in dB) when Analyse is pressed, and follows the plot's `markers_changed` only to tell whether its table is still current.
+**The analysis** (v3, part 1) sits beside the markers. `measure/metrics.py` reads the shape of one curve; `markers.py` takes its −3 dB cut-offs from it (`passband`, `marker_pair`) and leaves out the same noisy ends (`noise_ends`, `without_noise`), so the marker and the Analysis table show the same cut-off. `analysis.py` turns a `Metrics` into rows of text; `gui/analysis_panel.py` asks the plot for a trace as a curve (`BodePlot.analysis_curve`: always absolute and in dB) when Analyse is pressed, and follows the plot's `markers_changed` only to tell whether its table is still current. Every threshold of the analysis is a field of `measure/analysis_settings.py` (the user, 2026-11-02: no hard-coded value), stored in `AppSettings.analysis` and edited on the Settings dialog's Analysis tab; `MainWindow.apply_settings` hands the same `AnalysisSettings` to the plot (for the −3 dB marker) and to the panel.
 
 ## Two levels of simulation
 
@@ -36,10 +36,10 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 |---|---|---|
 | `__init__.py` | package version | - |
 | `__main__.py` | entry point: `python -m bodeplot [--sim] [--debug]` | `__init__.py`, `app.py` |
-| `analysis.py` | the Analysis table as text: rows for one trace or two with their difference, notes, clipboard text; no Qt | `measure/metrics.py`, `units.py` |
+| `analysis.py` | the Analysis table as text: rows for one trace or two with their difference, notes, clipboard text, the groups' rules with the numbers in force; no Qt | `measure/analysis_settings.py`, `measure/metrics.py`, `units.py` |
 | `app.py` | QApplication bootstrap, theme, main window | `gui/main_window.py`, `gui/theme.py`, `logging_setup.py` |
 | `logging_setup.py` | rotating log file, `log_path()` | - |
-| `markers.py` | the markers of the Bode plot: what is switched on, the user's markers, the rules (-3 dB, peak, notch, margins), label and clipboard texts; no Qt | `measure/metrics.py`, `measure/response.py`, `units.py` |
+| `markers.py` | the markers of the Bode plot: what is switched on, the user's markers, the rules (-3 dB, peak, notch, margins), label and clipboard texts; no Qt | `measure/analysis_settings.py`, `measure/metrics.py`, `measure/response.py`, `units.py` |
 | `models.py` | config dataclasses, `PointResult`, `SkewCheck`, `SweepResult`, `Flag`, `from_dict` / `to_jsonable` | - |
 | `traces.py` | the traces of the Bode plot (live, kept, file, theory), the relative-to maths, a trace as a response curve | `measure/response.py`, `measure/theory.py`, `models.py` |
 | `units.py` | SI prefixes: `fmt_si`, `parse_si` | - |
@@ -53,12 +53,12 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `drivers/uni_t_upo1000.py` | scope driver `UniTUPO1000`: single shot, running read, resync, panel lock, save / restore of the settings | `drivers/base.py`, `drivers/scpi.py`, `drivers/step_tables.py`, `drivers/transport.py` |
 | `drivers/uni_t_utg900e.py` | generator driver `UniTUTG900E` | `drivers/base.py`, `drivers/scpi.py`, `drivers/transport.py` |
 | `drivers/visa_util.py` | the only pyvisa import: resource manager, discovery, the `BODEPLOT_NO_HARDWARE` guard | - |
-| `gui/analysis_panel.py` | the Analysis dock: the trace to analyse and the one to compare with, Analyse / Copy table, the table in groups, the line that says when it is old, the notes | `analysis.py`, `gui/theme.py`, `measure/metrics.py` |
+| `gui/analysis_panel.py` | the Analysis dock: the trace to analyse and the one to compare with, Analyse / Copy table, the table in groups, the line that says when it is old (trace or settings changed), the notes | `analysis.py`, `gui/theme.py`, `measure/analysis_settings.py`, `measure/metrics.py` |
 | `gui/bode_plot.py` | gain and phase plots of a trace set, the difference display, follow / fit view, vertical unit, re-measure request; the markers' state, texts and positions, the right-click menus | `gui/color_menu.py`, `gui/marker_layer.py`, `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `markers.py`, `measure/sinefit.py`, `models.py`, `traces.py`, `units.py` |
 | `gui/color_menu.py` | the marker palette as a pop-up grid of colour squares | `gui/theme.py` |
 | `gui/config_panel.py` | the input panel; builds the config dataclasses and presets | `gui/si_widgets.py`, `io/presets.py`, `models.py` |
-| `gui/dialogs.py` | settings, connections, simulation settings, the circuit form and theory dialog, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
-| `gui/main_window.py` | toolbar, menus, status bar, sweep control, exports; the engine's only client | `__init__.py`, `gui/analysis_panel.py`, `gui/bode_plot.py`, `gui/config_panel.py`, `gui/dialogs.py`, `gui/markers_panel.py`, `gui/status_log.py`, `gui/theme.py`, `gui/traces_panel.py`, `gui/waveform_view.py`, `io/export_csv.py`, `io/export_image.py`, `io/export_touchstone.py`, `io/presets.py`, `io/settings.py`, `logging_setup.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py`, `sweep/engine.py`, `sweep/plan.py`, `traces.py`, `units.py` |
+| `gui/dialogs.py` | settings, connections, simulation settings, the circuit form and theory dialog, image export, skew wizard, calibration dialog | `drivers/connect.py`, `drivers/registry.py`, `drivers/visa_util.py`, `gui/si_widgets.py`, `gui/theme.py`, `io/export_image.py`, `io/settings.py`, `measure/analysis_settings.py`, `measure/skew.py`, `measure/theory.py`, `models.py`, `sweep/calibration.py`, `units.py` |
+| `gui/main_window.py` | toolbar, menus, status bar, sweep control, exports; the engine's only client | `__init__.py`, `gui/analysis_panel.py`, `gui/bode_plot.py`, `gui/config_panel.py`, `gui/dialogs.py`, `gui/markers_panel.py`, `gui/status_log.py`, `gui/theme.py`, `gui/traces_panel.py`, `gui/waveform_view.py`, `io/export_csv.py`, `io/export_image.py`, `io/export_touchstone.py`, `io/presets.py`, `io/settings.py`, `logging_setup.py`, `measure/analysis_settings.py`, `measure/skew.py`, `models.py`, `sweep/calibration.py`, `sweep/engine.py`, `sweep/plan.py`, `traces.py`, `units.py` |
 | `gui/marker_layer.py` | the markers as graphics on both plots: lines, dots, labels that do not overlap, dragging | `gui/theme.py`, `markers.py` |
 | `gui/markers_panel.py` | the Markers dock: the trace the markers measure, the automatic markers' tick boxes, the table of values with a colour square per marker, add / remove / copy, values on the plot | `gui/bode_plot.py`, `gui/color_menu.py`, `gui/theme.py`, `markers.py` |
 | `gui/si_widgets.py` | k / M number entry, SI axis | `units.py` |
@@ -70,10 +70,11 @@ Paths are relative to `src/bodeplot/`. "Imports" lists the modules of this packa
 | `io/export_image.py` | PNG / SVG / PDF with matplotlib | `io/export_csv.py`, `measure/sinefit.py`, `models.py` |
 | `io/export_touchstone.py` | `.s2p` writer | `io/export_csv.py`, `models.py` |
 | `io/presets.py` | presets as JSON files; what differs between two sets of settings | `io/settings.py`, `models.py`, `units.py` |
-| `io/settings.py` | `AppSettings`, the config folder (`BODEPLOT_CONFIG_DIR`) | `drivers/visa_util.py` |
+| `io/settings.py` | `AppSettings`, the config folder (`BODEPLOT_CONFIG_DIR`) | `drivers/visa_util.py`, `measure/analysis_settings.py` |
+| `measure/analysis_settings.py` | every number of the analysis as a setting: `AnalysisSettings`, `FIELDS` (default, range, unit, tooltip), what is stored; no Qt | - |
 | `measure/builtin.py` | gain and phase from the scope's own measurements (simulation only) | `drivers/base.py` |
 | `measure/meters.py` | `DualChannelScopeMeter`: one frequency point, auto-range, bad-capture retry | `drivers/base.py`, `drivers/scpi.py`, `measure/builtin.py`, `measure/sinefit.py`, `models.py`, `sweep/autorange.py` |
-| `measure/metrics.py` | what the shape of one response curve says: flat stretches, passband level and ripple, cut-offs, slope and order, stopband attenuation, resonances with Q from width and phase, the ends lost in the noise; no Qt | `measure/response.py` |
+| `measure/metrics.py` | what the shape of one response curve says: flat stretches, passband level and ripple, cut-offs, slope and order, stopband attenuation, resonances with Q from width and phase, the ends lost in the noise; no Qt | `measure/analysis_settings.py`, `measure/response.py` |
 | `measure/response.py` | one response curve (gain in dB, unwrapped phase): value at a frequency, level crossings, refined extremes; no Qt | - |
 | `measure/sinefit.py` | sine fit, SNR, `gain_phase`, `unwrap_deg` | - |
 | `measure/theory.py` | transfer functions of ideal circuits: the simulated DUT and the plot's theory curves | `units.py` |

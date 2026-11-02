@@ -15,6 +15,7 @@ from pathlib import Path
 from platformdirs import user_config_dir
 
 from ..drivers.visa_util import BACKENDS, DEFAULT_BACKEND
+from ..measure import analysis_settings
 
 log = logging.getLogger("bodeplot.io")
 SCHEMA_VERSION = 1
@@ -116,6 +117,8 @@ class AppSettings:
     startup_panels: dict = field(default_factory=lambda: {name: True for name in PANELS})
     debug_logging: bool = False             # log every instrument command, as --debug does
     advanced: dict = field(default_factory=dict)        # see ADVANCED and measure_overrides()
+    analysis: dict = field(default_factory=dict)        # the analysis numbers that differ from their defaults
+                                                        # (measure/analysis_settings.py)
     # ---- the skew check's own settings, edited in the wizard
     skew_freq_lo_hz: float = SKEW_DEFAULTS[0]
     skew_freq_hi_hz: float = SKEW_DEFAULTS[1]
@@ -161,6 +164,7 @@ class AppSettings:
         s.marker_colors = {k: v for k, v in s.marker_colors.items() if isinstance(k, str) and isinstance(v, str)}
         s.startup_panels = {name: bool(s.startup_panels.get(name, True)) for name in PANELS}
         s.advanced = {k: v for k, v in s.advanced.items() if k in ADVANCED}
+        s.analysis = analysis_settings.clean(s.analysis)
         if not (0 < s.skew_freq_lo_hz < s.skew_freq_hi_hz):
             s.skew_freq_lo_hz, s.skew_freq_hi_hz = SKEW_DEFAULTS[0], SKEW_DEFAULTS[1]
         s.skew_captures = min(max(s.skew_captures, 1), SKEW_CAPTURES_MAX)

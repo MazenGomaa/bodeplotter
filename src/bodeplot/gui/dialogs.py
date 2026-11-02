@@ -5,13 +5,14 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox,
-                               QFormLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
-                               QProgressBar, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                               QFormLayout, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
+                               QProgressBar, QPushButton, QScrollArea, QSizePolicy, QSpinBox, QTabWidget, QVBoxLayout,
+                               QWidget)
 
 from ..drivers import registry, visa_util
 from ..io.export_image import ImageOptions
 from ..io.settings import AUTO_KEEP_MAX, SCOPE_MIN_GAP_MS, SKEW_CAPTURES_MAX, SKEW_DEFAULTS, AppSettings, measure_overrides
-from ..measure import skew, theory
+from ..measure import analysis_settings, skew, theory
 from ..measure.theory import TransferFunction
 from ..models import MeasureSettings, SkewCheck, ThroughCal
 from ..sweep import calibration
@@ -284,7 +285,7 @@ STARTUP_LABELS = (("instruments", "Real instruments"), ("simulation", "Simulatio
 
 
 class SettingsDialog(QDialog):
-    """Every stored setting in one place: General, Advanced, Instruments, Simulation."""
+    """Every stored setting in one place: General, Advanced, Analysis, Instruments, Simulation."""
 
     def __init__(self, settings: AppSettings, parent=None, connected: bool = False, open_folders=None):
         super().__init__(parent)
@@ -463,6 +464,7 @@ class SettingsDialog(QDialog):
         row.addStretch(1)
         form.addRow(row)
         self.tabs.addTab(adv, "Advanced")
+        self.tabs.addTab(self._analysis_tab(settings), "Analysis")
 
         self.connections = ConnectionsPanel(settings, self, connected)
         self.tabs.addTab(self.connections, "Instruments")
@@ -516,6 +518,71 @@ class SettingsDialog(QDialog):
         if path:
             self.folder.setText(path)
 
+    def _analysis_tab(self, settings: AppSettings) -> QWidget:
+        """The numbers of the analysis, one box per field of measure/analysis_settings.py, in its
+        groups. The tab scrolls: the dialog still fits a small screen."""
+        now = analysis_settings.from_stored(settings.analysis)
+        inner = QWidget()
+        form = QFormLayout(inner)
+        note = QLabel("The rules of the Analysis tab and of the -3 dB marker. The defaults are what the analysis "
+                      "was tested with on the theory circuits; a change applies at the next Analyse.")
+        note.setWordWrap(True)
+        note.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)     # it wraps; it never widens the dialog
+        note.setMinimumWidth(0)
+        form.addRow(note)
+        self.analysis_boxes: dict = {}
+        for group in analysis_settings.GROUPS:
+            title = QLabel(group)
+            title.setStyleSheet("color: %s; font-weight: 600; padding-top: 6px;" % theme.INK_2)
+            form.addRow(title)
+            for f in (f for f in analysis_settings.FIELDS if f.group == group):
+                box = QSpinBox() if f.decimals == 0 else QDoubleSpinBox()
+                if f.decimals:
+                    box.setDecimals(f.decimals)
+                    box.setSingleStep(10.0 ** -f.decimals * (10 if f.decimals > 1 else 1))
+                box.setRange(f.lo, f.hi) if f.decimals else box.setRange(int(f.lo), int(f.hi))
+                box.setValue(getattr(now, f.key))
+                if f.unit:
+                    box.setSuffix(" " + f.unit)
+                box.setToolTip("%s Default %s." % (f.tip, self._shown_default(f)))
+                label = QLabel(f.label)
+                label.setToolTip(box.toolTip())
+                form.addRow(label, box)
+                self.analysis_boxes[f.key] = box
+        self.analysis_defaults_btn = QPushButton("Defaults")
+        self.analysis_defaults_btn.setToolTip("Put every value on this tab back to the one the analysis was tested with.")
+        self.analysis_defaults_btn.clicked.connect(self.analysis_defaults)
+        row = QHBoxLayout()
+        row.addWidget(self.analysis_defaults_btn)
+        row.addStretch(1)
+        form.addRow(row)
+        area = QScrollArea()
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        area.setFrameShape(QFrame.NoFrame)
+        area.setWidgetResizable(True)
+        area.setWidget(inner)
+        return area
+
+    @staticmethod
+    def _shown_default(f) -> str:
+        """The default as its box shows it."""
+        v = "%d" % f.default if f.decimals == 0 else "%.*f" % (f.decimals, f.default)
+        return v + (" " + f.unit if f.unit else "")
+
+    def analysis_defaults(self) -> None:
+        for f in analysis_settings.FIELDS:
+            self.analysis_boxes[f.key].setValue(f.default)
+
+    def _analysis(self) -> dict:
+        """The Analysis tab as stored: only what differs from the defaults as the boxes show them,
+        so that a default the box rounds (a third of a decade) stays exact."""
+        out: dict = {}
+        for f in analysis_settings.FIELDS:
+            v = self.analysis_boxes[f.key].value()
+            if v != (int(f.default) if f.decimals == 0 else round(f.default, f.decimals)):
+                out[f.key] = v
+        return out
+
     def advanced_defaults(self) -> None:
         d = MeasureSettings()
         self.autorange_lo.setValue(int(round(d.autorange_target[0] * 100)))
@@ -555,6 +622,7 @@ class SettingsDialog(QDialog):
         settings.startup_panels = {name: box.isChecked() for name, box in self.panels.items()}
         settings.debug_logging = self.debug.isChecked()
         settings.advanced = self._advanced()
+        settings.analysis = self._analysis()
         if self.connections.isEnabled():
             self.connections.apply_to(settings)
             settings.sim = self.result_sim

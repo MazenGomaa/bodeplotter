@@ -50,7 +50,7 @@ Success criteria:
 - No fit, no poles and zeros: part 4.
 - Nothing in the CSV or the image: part 5. The table can be copied as text.
 - Nothing reaches the instruments. No bench run.
-- No settings for the thresholds of section 3. They are constants in `measure/metrics.py`; they move into the Advanced settings only if they prove touchy.
+- No settings for the thresholds of section 3. They are constants in `measure/metrics.py`; they move into the Advanced settings only if they prove touchy. **Changed 2026-11-02** (the user: "never let values be hardcoded", "Everything, part 1 included"): every threshold is a field of `measure/analysis_settings.py`, on the Settings dialog's Analysis tab; the defaults are the values of this document (classification design, section 5).
 - No part values from f0 (L from a known C): the user did not pick it.
 
 ## 3. The metrics

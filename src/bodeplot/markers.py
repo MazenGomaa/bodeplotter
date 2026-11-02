@@ -11,7 +11,8 @@ import bisect
 import math
 from dataclasses import dataclass
 
-from .measure.metrics import DROP_DB, ends_extreme, marker_pair, noise_ends, passband, without_noise
+from .measure.analysis_settings import DEFAULTS, AnalysisSettings
+from .measure.metrics import ends_extreme, marker_pair, noise_ends, passband, without_noise
 from .measure.response import Curve, crossings
 from .units import fmt_si
 
@@ -76,6 +77,7 @@ class MarkerSet:
         self.user: dict[int, float] = {}        # number -> frequency
         self.ref: int | None = None
         self.trace_id: int = 0                  # the live sweep
+        self.analysis: AnalysisSettings = DEFAULTS  # the numbers of the analysis: the -3 dB marker agrees with its table
 
     # ---- what is switched on
     def set_kind(self, kind: str, on: bool) -> None:
@@ -117,14 +119,15 @@ class MarkerSet:
         left out. The automatic markers leave out the ends lost in the noise; user markers read
         the whole curve."""
         out: list[Marker] = []
-        whole, c = c, without_noise(c, noise_ends(c))
-        top, has_peak = ends_extreme(c, True)
+        s = self.analysis
+        whole, c = c, without_noise(c, noise_ends(c, s))
+        top, has_peak = ends_extreme(c, True, s)
         if "cutoff" in self.kinds:
-            out += _cutoffs(c)
+            out += _cutoffs(c, s)
         if "peak" in self.kinds:
             out.append(_at(c, "pk", "peak", top.f, top.db) if has_peak else Marker("pk", "peak"))
         if "notch" in self.kinds:
-            low, has_notch = ends_extreme(c, False)
+            low, has_notch = ends_extreme(c, False, s)
             out.append(_at(c, "nt", "notch", low.f, low.db) if has_notch else Marker("nt", "notch"))
         if "margins" in self.kinds and margins:
             out += [_gain_margin(c), _phase_margin(c)]
@@ -156,14 +159,14 @@ def _at(c: Curve, name: str, kind: str, f: float, db: float | None = None) -> Ma
     return Marker(name, kind, f, v[0] if db is None else db, v[1], c.flagged_at(f))
 
 
-def _cutoffs(c: Curve) -> list[Marker]:
+def _cutoffs(c: Curve, s: AnalysisSettings = DEFAULTS) -> list[Marker]:
     """The -3 dB markers: 3 dB below the passband level (measure/metrics.py: the level of the
     flat part of the curve; without one, its highest gain)."""
-    p = passband(c)
+    p = passband(c, s)
     cuts = marker_pair(p)
     if not cuts:
         return [Marker("fc", "cutoff")]
-    level = p.level - DROP_DB
+    level = p.level - s.drop_db
     if len(cuts) == 1 or cuts[1].f <= cuts[0].f:
         return [_at(c, "fc", "cutoff", cuts[0].f, level)]
     lo, hi = cuts[0].f, cuts[1].f
