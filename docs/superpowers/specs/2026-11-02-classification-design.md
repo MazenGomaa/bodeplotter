@@ -2,6 +2,18 @@
 
 Date: 2026-11-02. Status: **design approved by the user on 2026-11-02 (plan approved: "Approved, but remember to never let values be hardcoded, and add settings for it if possible", then "Everything, part 1 included" for what becomes a setting).** The rules of section 3 are mine and are to be tried in a scratchpad prototype against the theory circuits before the implementation plan is written; a rule the prototype finds wrong is replaced and listed at the top of this document, as part 1 did. It is part 3 of v3 (milestone B2 of the roadmap, `docs/spec/roadmap.md` sections 15 and 16). B3 (the model fit, the Crystal group and the narrow crystal sweep) comes after it, the user's order of 2026-11-02 (`docs/STATE.md`).
 
+**Changed after the approval, from the prototype (2026-11-02).** The rules were tried in a scratchpad prototype on every theory circuit before the plan was written: 900 log sweeps (15 circuits, 5 to 40 points per decade, noise 0, 0.02 and 0.2 dB, four grid offsets) and 132 linear sweeps from 0.1 to 10 times the circuit's frequency. Seven rules of the approved text gave wrong answers and were replaced; section 3 below is the corrected text, for the user to confirm with the plan:
+
+1. **The type from the cut-offs' sides (3.2)**, not from passbands that touch the ends: at 12 points per decade with 0.2 dB of noise the first points are not flat, the passband did not "touch" the end, and 13 of 900 sweeps fell to unknown.
+2. **One big peak for a band-pass (3.2):** two peaks 10 dB high or more with no flat passband are unknown (two_res read as band-pass, 60 of 60).
+3. **A roll-off into a notch that comes back to the passband is a band-stop (3.2):** a linear sweep sees too few points below an RLC notch to find the low passband; the gain beyond the notch coming back within 3 dB of the level says it (7 linear sweeps read high-pass).
+4. **A peak that falls less than 10 dB on one side is a peaking low-pass or high-pass (3.2)**, with the reason "passband not seen flat": a linear sweep of rlc_lpf never found the flat part below the hump and read band-pass at 100 % (9 sweeps).
+5. **The scatter (3.1, 3.3) is the noise near the level**, from the second differences that change sign against both neighbours (noise does; a bend keeps its sign) over the points within 10 dB of the level, at least 9 of them; not the passband's scatter: 2 dB of noise broke the passband up, nothing was measured, and it read band-pass at 90 %. This estimate reads 1.0 to 1.9 times the noise (it keeps the larger steps); the refusal at 1 dB is a setting.
+6. **Ripple needs 6 times the scatter (3.3):** 0.5 dB of noise read "ripple 1.1 dB (Chebyshev-like)".
+7. **A new reason, a span under a decade, −30 (3.4):** a narrow sweep that stepped over a crystal's peak read high-pass at 100 %; now it is refused.
+
+Known limits, left as they are: a response sampled too coarsely to show its features is misread with a middling score (two_res at 5 points per decade, its second peak never sampled: low-pass or high-pass at 70 %; the Q = 100 crystal with 50 points over 300 kHz: low-pass at 55 %). The notes' "too few points ... sweep finer" (part 1) and the finer sweep (part 2, B3) are the remedy. The LC trap over a −19 dB floor (`tests/test_metrics.py`, TRAP_SHELF) reads as a shelf, just inside the 20 dB limit.
+
 ## 1. Purpose
 
 Part 1 reads the numbers of a trace: passbands, cut-offs, roll-off and order, stopband, resonances, noise ends. Part 3 reads them as a whole and names the circuit: a type, a few shape words, a confidence in percent with its reasons, and a refusal when the sweep cannot carry a type. A crystal reads as crystal-like, not unknown.
@@ -40,41 +52,47 @@ Success criteria:
 
 All of it reads one `Metrics` (part 1) and the `Curve` it was made from. Every number in this section is a setting (section 5); the figure given is its default.
 
+**The scatter** used below is the noise near the level: over the usable points outside the noise ends whose gain lies within 10 dB (`floor_db`) of the level, the second differences that change sign against both neighbours, their median times the factor of part 1 (`metrics.SIGMA_OF_D2`); 0 with fewer than 9 (`noise_points`) of them.
+
 ### 3.1 Refusals, checked first
 
 In this order; the first that holds is the answer, "Not classified: <reason>":
 
 1. Part 1 has no analysis (fewer than 5 usable points).
 2. The noise ends cover more than 50 % of the usable points.
-3. The passband scatters more than 1 dB (the scatter of part 1, 3.5, over the passband's points).
+3. The scatter is more than 1 dB.
 4. More than 30 % of the points carry a flag that marks a single point (section 4).
-5. The sweep, without its noise ends, spans less than 1 decade AND no resonance lies whole inside it (both of its −3 dB points found).
+5. The sweep, without its noise ends, spans less than 1 decade AND no resonance lies whole inside it (Q from the width found).
 
 After the type and its score (3.2 to 3.4): a score under 40 % refuses too, with the reasons that took it down.
 
 ### 3.2 The type
 
-Tried in this order; the first that fits is the type.
+The cut-offs in ascending frequency give their sides: "high" (the passband lies below, a low-pass edge) or "low". Tried in this order; the first that fits is the type.
 
-- **Crystal-like**: a peak and a notch, the notch above the peak, f_notch / f_peak under 1.2, both with Q (width) of 10 or more. Shape words: "fs <f>, fp <f>". A ceramic resonator reads the same; the tooltip says so.
-- **Flat / all-pass**: one passband that touches both ends, no cut-off, no resonance 3 dB high or deep. With phase: when the phase turns by 90° or more across the sweep, **all-pass**, else **flat**. A magnitude-only sweep is flat, and the reason "phase not measured: an all-pass looks the same" takes its weight off the score.
-- **Band-stop / notch**: passbands at both ends, and between them either two cut-offs bounding the gap or a notch 10 dB deep or more.
-- **Band-pass**: one passband (or, with no flat stretch, part 1's peak) with a cut-off on each side.
-- **Shelf**: flat stretches at both ends whose levels lie 3 dB or more and less than 20 dB apart.
-- **Low-pass**: a passband at the low end, cut-offs on its high side only. A stopband floor 20 dB or more below is allowed (a low-pass with finite rejection).
-- **High-pass**: the mirror.
-- **Unknown**: anything else. The shape words say what was seen ("peaks at 10.0 kHz and 300 kHz").
+1. **Crystal-like**: a peak and a notch, the notch above the peak, f_notch / f_peak under 1.2, both with Q (width) of 10 or more. A ceramic resonator reads the same; the tooltip says so.
+2. **Flat / all-pass**: a passband, no cut-off, no resonance 3 dB high or deep. With phase: when the phase turns by 90° or more across the sweep, all-pass, else flat. A magnitude-only sweep is flat, with the reason "phase not measured".
+3. **Unknown, several peaks**: no flat passband and two or more peaks 10 dB high or more.
+4. **Band-stop, from a notch**: a notch, and a roll-off that ends in it beyond which the gain comes back within 3 dB of the level (its stopband value under 3 dB).
+5. **Peaking low-pass / high-pass**: no flat passband, cut-offs low then high, and the gain falls 10 dB or more on one side only: the side that falls less is the passband the sweep never saw flat (reason "passband not seen flat"; shape word "peaking").
+6. **Low-pass / high-pass / shelf**: every cut-off on the high side (low-pass) or every one on the low side (high-pass). When a flat stretch beyond the cut-offs lies 3 dB or more and less than 20 dB below the level, it is a **shelf** instead, with its step.
+7. **Band-pass**: cut-offs low then high.
+8. **Band-stop**: cut-offs high then low, with two passbands or a notch 10 dB deep or more.
+9. **Unknown**: anything else; the shape words list the resonances seen.
 
 ### 3.3 Shape words
 
 Joined with commas after the type, each only when it applies:
 
-- "order N" from the roll-off, "order ≥ N" when it is a limit; for a band-pass with two orders, both.
-- "peaking +x dB": a peak at the passband's edge standing 1 dB or more.
-- "ripple x dB (Chebyshev-like)": part 1's ripple is 0.3 dB or more and the passband has dips.
-- "stopband notches (elliptic-like)": a roll-off ends in a notch and the stop band comes back.
-- "gain +x dB" or "loss −x dB": the passband level lies more than 1 dB from 0 dB.
-- "Q x" for a band-pass or band-stop.
+- crystal-like: "fs <f>, fp <f>".
+- "order N" for each roll-off with an order (low-pass, high-pass, band-pass), "order ≥ N" when it is a limit.
+- "peaking +x dB": a peak at least 1 dB over a flat level on the passband's side of a cut-off; "peaking" alone for rule 5.
+- "ripple x dB (Chebyshev-like)": part 1's ripple is 0.3 dB or more and 6 times the scatter or more, and there is no peaking.
+- "stopband notches (elliptic-like)": a low-pass, high-pass or band-pass roll-off that ends in a notch (no slope, a stopband value).
+- shelf: "high-frequency step −x dB" or "low-frequency step"; "notch at <f>" when it has one.
+- "Q x" for a band-pass or band-stop with a centre.
+- "gain +x dB" or "loss −x dB": the level lies more than 1 dB from 0 dB (not for crystal-like, whose level is its peak).
+- unknown: "<peak or notch> at <f>" for each resonance.
 
 ### 3.4 The score
 
@@ -85,13 +103,14 @@ Start at 100 and subtract, for each reason that holds (the reason is listed with
 | A flag on the whole sweep (skew unchecked) | 10 |
 | Points with a single-point flag | their share × 100 |
 | A passband at an end spans less than a decade (part 1's note) | 20 |
-| The order is only a limit | 10 |
-| A low-pass or high-pass read from a peak with no flat stretch | 15 |
+| An order is only a limit | 10 |
+| A low-pass or high-pass read from a peak, or rule 5 | 15 |
 | Each noise end | 5 |
-| The passband scatters more than 0.3 dB | 10 |
+| The scatter is more than 0.3 dB | 10 |
 | Flat or all-pass without phase | 30 |
-| Too few points on a resonance the type rests on | 15 |
+| Too few points on a resonance the type rests on (crystal-like; a band-pass from a peak) | 15 |
 | Less than 10 dB of stopband seen (low-pass, high-pass, band-pass) | 20 |
+| The sweep spans less than a decade (not for crystal-like) | 30 |
 
 The score is at least 0. Under 40: refused (3.1).
 
@@ -136,8 +155,8 @@ Both survive `curve()` and `metrics.without_noise`. A curve built without them (
 
 ## 8. Decided by me, to be checked by the user
 
-1. Every default of section 3: the 1.2 ratio and Q 10 for crystal-like; 90° for all-pass; 10 dB for a notch that makes a band-stop; 3 to 20 dB for a shelf; 0.3 dB of ripple; 1 dB of peaking and of gain; every score weight; refusal at 30 % single-point flags.
-2. The order the types are tried in (3.2).
+1. Every default of section 3: the 1.2 ratio and Q 10 for crystal-like; 90° for all-pass; 10 dB for a notch that makes a band-stop, for several peaks and for the stopband a type needs; 3 to 20 dB for a shelf; 0.3 dB and 6 times the scatter for ripple; 1 dB of peaking and of gain; every score weight; refusal at 30 % single-point flags and at 1 dB of scatter.
+2. The order the types are tried in (3.2), and the seven changes at the top of this document.
 3. rc_shelf at its default values (stop band at −40 dB) is a low-pass with finite rejection, not a shelf.
 4. two_res is unknown, with both peaks in its shape words, rather than a new "multi-band" type.
 5. Every part 1 constant is a setting, including the noise detection's tuning; their tooltips explain what each does but most are not worth changing.
