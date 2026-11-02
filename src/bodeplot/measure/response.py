@@ -26,6 +26,8 @@ class Curve:
     deg: list[float] = field(default_factory=list)      # unwrapped from the first usable point
     ok: list[bool] = field(default_factory=list)        # False: a dead point
     flagged: list[bool] = field(default_factory=list)   # the caller's mark per point
+    point_flagged: list[bool] = field(default_factory=list)     # a flag that marks this point alone; empty: none
+    wide_flags: list[str] = field(default_factory=list)         # the flags on every point ("skew unchecked")
 
     def usable(self) -> list[int]:
         return [i for i, ok in enumerate(self.ok) if ok]

@@ -98,3 +98,4 @@ def test_the_maths_holds_no_threshold_of_its_own():
     """The user, 2026-11-02: 'never let values be hardcoded'. A number of metrics.py is a field of
     AnalysisSettings, or a named constant of arithmetic at the top of the module."""
     assert _bare_numbers(SRC / "measure" / "metrics.py") == []
+    assert _bare_numbers(SRC / "measure" / "classify.py") == []
