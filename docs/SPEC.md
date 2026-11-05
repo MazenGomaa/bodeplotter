@@ -57,9 +57,9 @@ These live in `docs/`:
 
 | File | Covers | Status |
 |---|---|---|
-| `docs/Uni-T_UPO1000_Programming_Manual_0424.pdf` | **Scope SCPI, the manual to cite** (UPO1000 series, channels 1 to 4; 99 pages). Page references in scope driver code use this manual. | present |
-| `docs/Uni-T_UPO1002_Programming_Manual_0824.pdf` | Scope SCPI for the two-channel UPO1002 series. Same command set; used in Milestone 0 before the UPO1000 manual was supplied. | present, superseded |
-| `docs/UTG900E Programming Manual V1.0.pdf` | Generator SCPI (UTG900E series, which includes the UTG932E) | present |
+| `docs/Uni-T_UPO1000_Programming_Manual_0424.pdf` | **Scope SCPI, the manual to cite** (UPO1000 series, channels 1 to 4; 99 pages). Page references in scope driver code use this manual. | download (README, Manuals) |
+| `docs/Uni-T_UPO1002_Programming_Manual_0824.pdf` | Scope SCPI for the two-channel UPO1002 series. Same command set; used in Milestone 0 before the UPO1000 manual was supplied. | download (README, Manuals), superseded |
+| `docs/UTG900E Programming Manual V1.0.pdf` | Generator SCPI (UTG900E series, which includes the UTG932E) | download (README, Manuals) |
 | `docs/UTG_Series_Programming_Manual_ELV.pdf` | Alternate English UTG900 manual (cross-reference) | not provided |
 | `docs/UTG900_eevblog_commands.pdf` (optional) | Community-extracted UTG900 SCPI command list | not provided |
 | `HW_REPORT.md` (project root) | Milestone 0, 0b and 0c results: what each command really does on this hardware | present |

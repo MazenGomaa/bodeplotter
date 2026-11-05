@@ -16,6 +16,9 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | 5: persistence and export | Done. |
 | 6: real drivers and probe tool | Done 2026-10-06, tested against simulated instruments only. |
 | 7: hardware bring-up | Done 2026-10-06, accepted by the user from the GUI (`HW_REPORT.md` section 13). A few items stay open, listed below. |
+| v2: through calibration, trace overlay and theory curves, markers | Done 2026-10-07; the calibration was run on the bench. |
+| v3 part 1: response metrics and the Analysis tab | Done 2026-11-02, simulation only. |
+| v3 part 3: classification (type, shape words, confidence, refusals) | Done 2026-11-02, simulation only. |
 
 **The app runs on the real instruments, from the GUI.** Measured on the bench with the UPO1054 and UTG932E:
 
@@ -27,13 +30,13 @@ Target instruments: UNI-T UPO1054 scope and UNI-T UTG932E generator, over USB. T
 | Scope channels | CH1 / CH2 and CH3 / CH4 |
 | Scope USB cable pulled during a sweep | generator off after 2.6 s, points kept, reconnect without a power cycle |
 
-**What comes next** (`docs/SPEC.md` sections 15 and 16): v2 (through calibration, done and run on the bench on 2026-10-07; then a connection spec for other transports, trace overlay and theory curves, built on 2026-10-07; markers, built and accepted on 2026-10-07: v2 is done), v3 (filter recognition; started: part 1, the response metrics and the Analysis tab, was built on 2026-10-11; part 3, the classification, on 2026-11-02; part 2 is a finer sweep around a found feature), a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
+**What comes next** (`docs/SPEC.md` sections 15 and 16, `docs/STATE.md`): the rest of v3, the model fit of gain and phase together with a Crystal group (fs, fp, ESR, Q, C0, C1) and a narrow sweep around a crystal, and a finer sweep around a found feature; then a full re-verification on Windows, Linux under WSL, and a Raspberry Pi version with a web frontend. Parked ideas are in `docs/feature.md`.
 
 Open: what occasionally puts the scope into another channel-alignment state (the skew check handles the state itself); a scope that freezes while still on USB could not be provoked; Linux is untested; LAN is not supported.
 
 Simulation mode (`--sim`) needs no hardware.
 
-`pytest` is green: 263 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
+`pytest` is green: 957 tests, no hardware and no display needed. The test suite cannot reach a real instrument: it sets `BODEPLOT_NO_HARDWARE`, which makes every VISA open fail.
 
 ## Run it
 
@@ -181,8 +184,24 @@ These come from the hardware gate and are built into the drivers (`docs/SPEC.md`
 | `docs/SPEC.md` | design: overview and index of the sections; the detail is in `docs/spec/` (drivers, sweep, skew, gui, web, roadmap) |
 | `docs/ARCHITECTURE.md` | modules, what calls what, where each concern lives (checked against the code by `tests/test_docs.py`) |
 | `docs/STATE.md` | what is done and what is next |
-| `docs/*.pdf` | instrument programming manuals |
+| `docs/*.pdf` | instrument programming manuals: not in the repository, download them (see Manuals) |
 | `HW_REPORT.md` | what the hardware really does: the current verified facts, and the index of the dated test runs in `docs/hw/` |
 | `hwcheck/` | bench scripts, including `iolayer.py` (the tested I/O reference) and `s0c_realign.py` (optional bench tool; not used by the app). Each script prints its file hash and git commit at start; commit before every bench run. |
 | `run.bat`, `run.sh` | launchers |
 | `scripts/99-usbtmc-unit.rules` | Linux udev rule example (untested) |
+
+## Manuals
+
+The drivers cite UNI-T's programming manuals by page (`U1K p.N`, `UTG p.N`). They are UNI-T's documents and are not kept in this repository; download them into `docs/` under these names:
+
+| File | Where |
+|---|---|
+| `docs/Uni-T_UPO1000_Programming_Manual_0424.pdf` | [TestEquity copy](https://assets.testequity.com/te1/Documents/pdf/uni-t/Uni-T_UPO1000_Programming_Manual_0424.pdf) (the scope manual the code cites) |
+| `docs/Uni-T_UPO1002_Programming_Manual_0824.pdf` | [TestEquity copy](https://assets.testequity.com/te1/Documents/pdf/uni-t/Uni-T_UPO1002_Programming_Manual_0824.pdf) (older two-channel manual, same command set) |
+| `docs/UTG900E Programming Manual V1.0.pdf` | [UNI-T download center](https://instruments.uni-trend.com/download): UTG900E Series Waveform Generators, Programming Manual V1.0 |
+
+The UNI-T download center also has the UPO1000 user manual and the other documents of both series.
+
+## License
+
+MIT, see `LICENSE`.
